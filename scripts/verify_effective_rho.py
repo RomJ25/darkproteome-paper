@@ -31,11 +31,11 @@ def simulate(t, mN, mC, reps=400):
     return DN, DC
 
 if __name__ == "__main__":
-    print("=== (A) two-spectrum counterexample (Oracle sec 2.3) ===")
+    print("=== (A) two-spectrum counterexample (manuscript's worked example) ===")
     mN = np.array([900]+[1]*100); mC = np.array([100]+[9]*100)
     print("  rho_global               =", mN.sum()/mC.sum())
-    print("  rho_eff(t=0.01)          =", round(rho_eff(0.01,mN,mC),4), " (Oracle ~0.213)")
-    print("  rho_eff(t=0.01) swapped  =", round(rho_eff(0.01,mC,mN),4), " (Oracle ~4.69)")
+    print("  rho_eff(t=0.01)          =", round(rho_eff(0.01,mN,mC),4), " (manuscript: ~0.213)")
+    print("  rho_eff(t=0.01) swapped  =", round(rho_eff(0.01,mC,mN),4), " (manuscript: ~4.69)")
 
     print("\n=== (B) heterogeneous regime: does emp D_N/D_C track rho_eff(t)? ===")
     S_low,S_high = 4000,200

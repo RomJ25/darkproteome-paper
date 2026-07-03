@@ -1,4 +1,4 @@
-# The core auditor (schema, consensus_bar, audit) uses only the Python standard library.
+# The core auditor (schema, axes, audit) uses only the Python standard library.
 numpy>=1.24      # manuscript figures / verify_effective_rho.py
 matplotlib==3.10.5  # manuscript figures; pinned exactly -- a newer minor version changes PDF/PNG
                      # byte layout (tight-bbox font-metric shifts) even though rendered content is

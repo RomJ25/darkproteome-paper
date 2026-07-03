@@ -69,13 +69,30 @@ Self-check that the environment is intact: `tier1_nonnovelty.py` must print `5/2
 The class-decoy ledger tool (`src/darkproteome/class_decoy_ledger.py`) is demonstrated end to
 end on a real deposited run in `examples/` — see `examples/README.md`.
 
+## Run the tests
+
+Stdlib only, no test framework needed — each file is also its own runner:
+
+```bash
+python3 tests/test_class_decoy_ledger.py
+python3 tests/test_eco_diagnostic.py
+```
+
 ### Reproducing the derived data tables (needs the external inputs; see below)
+
+All of these read from `data/external/` — set `$DARKPROTEOME_DATA` if you keep that data
+elsewhere (see `data/external/README.md`).
 
 ```bash
 python3 src/darkproteome/ingest_cohorts.py       # -> data/claim_catalog_real.csv (needs openpyxl)
 python3 src/darkproteome/ingest_atlases.py       # -> data/claim_catalog_scaled.csv (306,844 claims; gitignored, large)
 python3 src/darkproteome/reference_model.py      # -> data/claim_catalog_scored.csv + Fig. 1 survivorship funnel
 python3 src/darkproteome/ieatlas_frame_audit.py  # the 56.3% canonical-self headline (Results I, Fig. 2)
+python3 src/darkproteome/deepen_specificity.py           # falsification-tested normal-tissue overlap (Results I)
+python3 src/darkproteome/pseudogene_specificity.py       # -> data/pseudogene_specificity.csv, the 16/43 HLA Ligand Atlas floor
+python3 src/darkproteome/gtex_specificity.py             # -> data/gtex_pseudogene_specificity.csv, measured GTEx floor (43/43 parents expressed)
+python3 src/darkproteome/gtex_class_specificity.py       # -> data/gtex_class_specificity.csv, class-resolved (altORF/lncRNA-ORF) GTEx floor
+python3 src/darkproteome/lncrna_ensg_specificity.py      # -> data/lncrna_ensg_specificity.csv, lncRNA-ORF floor at ENSG resolution
 ```
 
 ## Data sources (all public)
