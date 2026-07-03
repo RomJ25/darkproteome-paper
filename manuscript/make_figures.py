@@ -1,5 +1,7 @@
 """
-Generate Figures 1-4 for the manuscript. Reproducible (re-run -> identical figures).
+Generate Figures 1-4 for the manuscript. Deterministic content -- re-running reproduces
+identical data and layout; the PDF/PNG bytes themselves differ run-to-run only by
+matplotlib's embedded creation timestamp.
 Every number cites its verified source (the analysis scripts / live script runs).
 Fig 3b reproduces scripts/verify_effective_rho.py exactly (seed 0).
 Run:  python3 manuscript/make_figures.py   ->  manuscript/figures/*.pdf,*.png
