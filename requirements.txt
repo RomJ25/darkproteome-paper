@@ -1,4 +1,6 @@
 # The core auditor (schema, consensus_bar, audit) uses only the Python standard library.
 numpy>=1.24      # manuscript figures / verify_effective_rho.py
-matplotlib>=3.7  # manuscript figures
+matplotlib==3.10.5  # manuscript figures; pinned exactly -- a newer minor version changes PDF/PNG
+                     # byte layout (tight-bbox font-metric shifts) even though rendered content is
+                     # identical, which breaks a byte-diff against the committed figures
 openpyxl>=3.1    # ingest_cohorts.py / lncrna_ensg_specificity.py (reading the .xlsx cohort supplements)
