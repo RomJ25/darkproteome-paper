@@ -1,0 +1,4 @@
+analysis_id	software	unit	alpha	fdr_convention	class	T_class	D_class	class_fdr_hat	f	global_T	global_D
+T5-1546_Ovarian_MSFragger_MHC_ClassI_101821.pepXML	MSFragger(pepXML)	psm	0.03	(D+1)/T	canonical	1133	8	0.00794	0.21241	5334	160
+T5-1546_Ovarian_MSFragger_MHC_ClassI_101821.pepXML	MSFragger(pepXML)	psm	0.03	(D+1)/T	noncanonical	3822	150	0.03951	0.71654	5334	160
+T5-1546_Ovarian_MSFragger_MHC_ClassI_101821.pepXML	MSFragger(pepXML)	psm	0.03	(D+1)/T	variant	379	2	0.00792	0.07105	5334	160

@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.DS_Store
+
+# Large generated catalog (~72 MB). Regenerate with src/darkproteome/ingest_atlases.py
+# from the atlas sources documented in data/SOURCES.md. Smaller derived tables ARE tracked
+# (claim_catalog_real.csv, claim_catalog_scored.csv).
+data/claim_catalog_scaled.csv
+
+# Large public external inputs (~168 MB: SwissProt, IEAtlas, CrypticProteinDB, HLA Ligand
+# Atlas, the 2 cohort supplements). Not committed (size + redistribution terms).
+# src/darkproteome/paths.py resolves them; re-download via data/external/README.md +
+# data/SOURCES.md. The recovery README itself stays tracked.
+data/external/*
+!data/external/README.md
+
+# Manuscript PDF build artifact (regenerate from manuscript.md via tectonic; manuscript.html
+# is the tracked, committed render).
+manuscript/manuscript.pdf
+manuscript/tex/manuscript.pdf

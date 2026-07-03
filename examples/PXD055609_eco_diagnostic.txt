@@ -1,0 +1,31 @@
+# eco_diagnostic  (alpha=0.03; canonical vs rest)
+
+sample       f_i      q_i   theta_C   theta_N
+T1         0.759   0.0300    0.0178    0.0339
+T2         0.688   0.0300    0.0077    0.0400
+T3         0.745   0.0300    0.0129    0.0358
+T4         0.768   0.0300    0.0104    0.0359
+T5         0.788   0.0300    0.0071    0.0362
+
+=== (a) MEASURED per-class FDR — the trustworthy number, direct from decoy counts ===
+  canonical:    mean=0.0112  range=[0.0071, 0.0178]
+  noncanonical: mean=0.0364  range=[0.0339, 0.0400]
+
+=== (b) constancy check — does ecological regression's key assumption hold? ===
+  theta_C (canonical)      fold(max/min)=2.51x  CV=34.9%  constancy: LIKELY VIOLATED
+  theta_N (noncanonical)   fold(max/min)=1.18x  CV=5.5%  constancy: plausible, not clearly violated
+
+=== (c) what naive ecological regression (q_i ~ a + b*f_i) WOULD tell you ===
+  q_i itself: fold(max/min)=1.00x  CV=0.05%  (clamped near alpha -> regression has no honest signal)
+  fitted:  theta_C_hat=0.0297  (SE ~ 0.0001)
+           theta_N_hat=0.0301  (SE ~ 0.0000)
+  gap vs. measured mean: canonical 0.0185, noncanonical 0.0063
+
+=== VERDICT ===
+  DECEPTIVE FAILURE: constancy is violated, but the regression's own SE is tiny
+  (~0.0000) — it will LOOK highly confident while being off by 0.0185 from the measured rate.
+  This is the clamped-regressand failure mode: q_i barely varies across samples, so the
+  fit has almost no honest signal but reports a tiny SE anyway. DO NOT trust the SE as a
+  sign of accuracy here.
+  Use the MEASURED per-class rates in (a) directly, or report D_N per class
+  (class_decoy_ledger.py) rather than reconstructing it from pooled aggregates.

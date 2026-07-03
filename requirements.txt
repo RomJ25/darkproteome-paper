@@ -1,0 +1,4 @@
+# The core auditor (schema, consensus_bar, audit) uses only the Python standard library.
+numpy>=1.24      # manuscript figures / verify_effective_rho.py
+matplotlib>=3.7  # manuscript figures
+openpyxl>=3.1    # ingest_cohorts.py / lncrna_ensg_specificity.py (reading the .xlsx cohort supplements)

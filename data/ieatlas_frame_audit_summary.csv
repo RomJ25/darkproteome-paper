@@ -1,0 +1,3 @@
+group,n_unique_epitopes,orf_gene_coding_pct,in_own_gene_canonical_pct
+canonical_self,98193,89.5,88.8
+not_canonical_self,76272,75.5,0.0

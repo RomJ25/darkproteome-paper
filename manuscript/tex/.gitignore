@@ -1,0 +1,10 @@
+# tectonic build outputs (regenerate: tectonic manuscript/tex/manuscript.tex)
+manuscript.pdf
+_preview/
+*.aux
+*.log
+*.out
+*.synctex.gz
+_ft/
+_cmp/
+v_*.pdf

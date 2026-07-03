@@ -1,0 +1,127 @@
+% Restrained serif typeset (Libertinus via fontspec/unicode-math), small-caps section
+% headings, hairline rules, one restrained teal-blue accent.
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\allowdisplaybreaks
+
+\usepackage{libertinus}   % Serif + Sans + Math + Mono via fontspec/unicode-math (XeTeX/tectonic-native; fixes the T1 libertinust1math glyph bug that mis-rendered % ~ approx times primes)
+
+\usepackage[protrusion=true,expansion=false,final]{microtype}
+
+\usepackage[letterpaper,top=1.2in,bottom=1.25in,left=1.5in,right=1.5in,
+            headheight=15pt,headsep=15pt,footskip=26pt]{geometry}
+
+\usepackage{xcolor}
+\usepackage{graphicx}
+\graphicspath{{../figures/}{figures/}}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{etoolbox}
+
+\usepackage[nobottomtitles*]{titlesec}\renewcommand{\bottomtitlespace}{0.16\textheight}
+\usepackage{titling}
+\usepackage{fancyhdr}
+\usepackage[framemethod=default]{mdframed}
+
+\usepackage{hyperref}
+\usepackage{xurl}
+
+\definecolor{ink}{HTML}{1A1A1A}
+\definecolor{accent}{HTML}{1F5066}
+\definecolor{rulecol}{HTML}{343434}
+\definecolor{subtle}{HTML}{6B7280}
+\definecolor{sigbg}{HTML}{F4F6F7}
+
+\hypersetup{colorlinks=true,linkcolor=accent,citecolor=accent,urlcolor=accent,
+  filecolor=accent,breaklinks=true,bookmarksnumbered=false,
+  pdftitle={Canonical self in cryptic cancer-epitope catalogues and the class-decoy ledger needed to verify non-canonical antigen claims},pdfauthor={Rom Jan},
+  pdfsubject={Preprint}}
+\urlstyle{same}
+
+\setcounter{secnumdepth}{0}
+\linespread{1.07}\frenchspacing\raggedbottom
+\setlength{\parindent}{1.2em}
+\widowpenalty=10000\clubpenalty=10000
+\emergencystretch=1.6em \tolerance=1400 \hbadness=1400
+\lefthyphenmin=3 \righthyphenmin=3   % no 2-letter hyphen fragments (bi-/de-/se-/re-)
+\hyphenation{alt-ORF Cryptic-Protein-DB cancer}  % keep technical terms / the scare-quoted "cancer" intact
+\setlist{itemsep=2pt,topsep=4pt,parsep=0pt}
+\renewcommand{\arraystretch}{1.2}
+
+\titleformat{\section}{\normalfont\large\bfseries\scshape\color{ink}}{}{0pt}{}%
+  [\vspace{2pt}{\color{rulecol}\titlerule[0.4pt]}]
+\titleformat{\subsection}{\normalfont\normalsize\itshape\color{ink}}{}{0pt}{}
+\titlespacing*{\section}{0pt}{1.6\baselineskip}{0.5\baselineskip}
+\titlespacing*{\subsection}{0pt}{1.0\baselineskip}{0.25\baselineskip}
+
+\captionsetup{font=small,labelfont={sc,bf},labelsep=period,
+  justification=justified,singlelinecheck=false,skip=7pt}
+
+\newtheoremstyle{prep}{0.9\topsep}{0.9\topsep}{\itshape}{0pt}%
+  {\scshape\bfseries}{.}{0.5em}{}
+\theoremstyle{prep}
+\newtheorem{proposition}{Proposition}
+\renewcommand\qedsymbol{\textcolor{accent}{\rule[-0.02em]{0.55em}{0.55em}}}
+
+\renewenvironment{abstract}{%
+  \vspace{0.4em}\noindent{\color{rulecol}\rule{\linewidth}{0.4pt}}\par
+  \vspace{0.7em}\centerline{\normalsize\scshape\color{ink}Abstract}\par\vspace{0.5em}%
+  \begingroup\small\setlength{\leftskip}{1.9em}\setlength{\rightskip}{1.9em}%
+  \setlength{\parindent}{0pt}\noindent\ignorespaces}{%
+  \par\endgroup\vspace{0.7em}\noindent{\color{rulecol}\rule{\linewidth}{0.4pt}}\par\vspace{0.3em}}
+
+% significance: unboxed, discreet small-caps run-in label in the body ink (no box/color)
+\newenvironment{significance}{\par\addvspace{0.3em}\small\noindent
+  {\scshape\bfseries Significance.}\enspace\ignorespaces}{\par\addvspace{0.55em}\normalsize}
+
+\AtBeginEnvironment{thebibliography}{\footnotesize\setlength{\itemsep}{2.5pt}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\newcommand{\clsN}{\mathrm{N}}\newcommand{\clsC}{\mathrm{C}}
+\newcommand{\TN}{T_{\clsN}}\newcommand{\TC}{T_{\clsC}}
+\newcommand{\DN}{D_{\clsN}}\newcommand{\DC}{D_{\clsC}}
+\newcommand{\VN}{V_{\clsN}}\newcommand{\VC}{V_{\clsC}}
+\newcommand{\thn}{\theta_{\clsN}}\newcommand{\thc}{\theta_{\clsC}}
+\newcommand{\thnhat}{\hat{\theta}_{\clsN}}
+\newcommand{\SetN}{\Theta_{\clsN}}
+\newcommand{\rhoeff}{\rho_{\mathrm{eff}}}\newcommand{\rhoglob}{\rho_{\mathrm{global}}}
+\newcommand{\muN}{\mu_{\clsN}}\newcommand{\muC}{\mu_{\clsC}}
+\newcommand{\msN}{m_{s\clsN}}\newcommand{\msC}{m_{s\clsC}}
+\newcommand{\pisN}{\pi_{s\clsN}}\newcommand{\pisC}{\pi_{s\clsC}}
+\newcommand{\E}{\mathbb{E}}
+\DeclareMathOperator{\SE}{SE}
+\DeclareMathOperator{\Poisson}{Poisson}
+\newcommand{\Mlo}{m^{-}}\newcommand{\Mhi}{m^{+}}
+\newcommand{\Glo}{g^{-}}\newcommand{\Ghi}{g^{+}}
+\newcommand{\Slo}{s^{-}}\newcommand{\Shi}{s^{+}}
+
+\setlength{\droptitle}{-2.4em}
+\pretitle{\begin{center}\bfseries\LARGE\color{ink}\linespread{1.12}\selectfont}
+\posttitle{\par\end{center}\vspace{0.4em}}
+\preauthor{\begin{center}\large\color{ink}}
+\postauthor{\par\end{center}}
+\predate{\begin{center}\small\itshape\color{subtle}}
+\postdate{\par\end{center}\vspace{0.2em}}
+\title{Canonical self in cryptic cancer-epitope catalogues and the class-decoy ledger needed to verify non-canonical antigen claims}
+\author{Rom Jan\\[3pt]
+  {\normalsize\upshape Independent Researcher}\\[2pt]
+  {\footnotesize\upshape\color{subtle}\textsc{orcid}~\href{https://orcid.org/0009-0004-1015-1627}{0009-0004-1015-1627}\,\textbullet\,Correspondence: \href{mailto:romjacobjan2005@gmail.com}{romjacobjan2005@gmail.com}}}
+\date{Preprint \textemdash\ July 2026 \textbullet\ all analyses use public data and are fully scripted and reproducible}
+
+\pagestyle{fancy}\fancyhf{}\renewcommand{\headrulewidth}{0pt}
+\fancyhead[L]{\footnotesize\scshape\color{subtle}Canonical self in cryptic cancer-epitope catalogues}
+\fancyhead[R]{\footnotesize\scshape\color{subtle}R.\,Jan}
+\fancyfoot[C]{\small\color{subtle}\thepage}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\color{subtle}\thepage}%
+  \renewcommand{\headrulewidth}{0pt}}
+
+\begin{document}
+\maketitle\thispagestyle{plain}
+\input{_body}
+\end{document}

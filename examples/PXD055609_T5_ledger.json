@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "analysis_id": "T5-1546_Ovarian_MSFragger_MHC_ClassI_101821.pepXML",
+    "software": "MSFragger(pepXML)",
+    "unit": "psm",
+    "alpha": 0.03,
+    "fdr_convention": "(D+1)/T",
+    "fdr_basis": "target-decoy sweep on hyperscore",
+    "global_T": 5334,
+    "global_D": 160,
+    "global_fdr_hat": 0.03018,
+    "input_sha256": {
+      "T5-1546_Ovarian_MSFragger_MHC_ClassI_101821.pepXML": "235241dc0d4959b845c8bb022668d3bd1e0be4cbc7c19706171f3a7794fcd6aa"
+    },
+    "decoy_prefix": "rev_"
+  },
+  "ledger": [
+    {
+      "class": "canonical",
+      "T_class": 1133,
+      "D_class": 8,
+      "class_fdr_hat": 0.00794,
+      "f": 0.21241
+    },
+    {
+      "class": "noncanonical",
+      "T_class": 3822,
+      "D_class": 150,
+      "class_fdr_hat": 0.03951,
+      "f": 0.71654
+    },
+    {
+      "class": "variant",
+      "T_class": 379,
+      "D_class": 2,
+      "class_fdr_hat": 0.00792,
+      "f": 0.07105
+    }
+  ],
+  "canonical_self": {
+    "noncanonical": {
+      "n_target_peptides": 3563,
+      "canonical_self": 3315,
+      "canonical_self_frac": 0.9304
+    }
+  },
+  "multiplicity_strata": {
+    "canonical": {
+      "n=1": {
+        "T": 970,
+        "D": 8
+      },
+      "n=2": {
+        "T": 48,
+        "D": 0
+      },
+      "n>=3": {
+        "T": 18,
+        "D": 0
+      }
+    },
+    "noncanonical": {
+      "n=1": {
+        "T": 3412,
+        "D": 150
+      },
+      "n=2": {
+        "T": 111,
+        "D": 0
+      },
+      "n>=3": {
+        "T": 40,
+        "D": 0
+      }
+    },
+    "variant": {
+      "n=2": {
+        "T": 13,
+        "D": 0
+      },
+      "n=1": {
+        "T": 331,
+        "D": 2
+      },
+      "n>=3": {
+        "T": 5,
+        "D": 0
+      }
+    }
+  }
+}
