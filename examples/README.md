@@ -58,8 +58,8 @@ The tool makes the vehicle frictionless today.
 
 ## PSM-replication-depth stratification (`--stratify-multiplicity`)
 
-`--stratify-multiplicity` reports class-FDR broken out by how many accepted PSMs
-support each peptide (n=1/n=2/n≥3). Pooled across all 5
+`--stratify-multiplicity` reports
+class-FDR broken out by how many accepted PSMs support each peptide (n=1/n=2/n≥3). Pooled across all 5
 PXD055609 samples, singleton (n=1) IDs carry a materially higher class-FDR than multi-PSM peptides **in every
 class** (canonical 1.68%→0.29% n=1-to-n≥3; noncanonical 6.25%→0.66%) — a general target-decoy hygiene signal,
 not cryptic-specific — while the noncanonical class stays elevated over canonical by a consistent ~2.3–3.7× at

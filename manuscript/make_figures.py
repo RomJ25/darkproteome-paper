@@ -33,9 +33,14 @@ stages=["all unique non-canonical peptides","not canonical-self (provenance-clea
         "source-translation substantiated","human T-cell validated"]
 counts=[180650,82453,75471,80,0,0]
 fig,ax=plt.subplots(figsize=(6.6,3.3)); y=np.arange(len(stages))[::-1]
-ax.barh(y,counts,color=BLUE,alpha=.88)
-ax.set_yticks(y); ax.set_yticklabels(stages,fontsize=8)
 xmax=180650
+# minimum-visible-bar-width floor: the raw 80-peptide (0.044%) bar is sub-pixel at any
+# rasterization resolution and renders visually identical to the true-zero rows below it.
+# Floors only the DRAWN bar length for nonzero counts; every label below still uses the
+# true `counts`.
+vis_counts=[c if c==0 else max(c,xmax*0.004) for c in counts]
+ax.barh(y,vis_counts,color=BLUE,alpha=.88)
+ax.set_yticks(y); ax.set_yticklabels(stages,fontsize=8)
 def pstr(c):
     p=100*c/180650
     if c==0: return "0 (0%)"
@@ -54,7 +59,11 @@ save(fig,"fig2_survivorship")
 fig,(a,b)=plt.subplots(1,2,figsize=(8.2,3.2))
 labs=["altORF\n(Raja)","lncRNA\n(Raja)","pseudo.\n(Raja)","pseudo.\n(HCC)","IEAtlas\n(atlas)","Cryptic-\nProteinDB"]
 vals=[0.2,0.0,0.0,37.1,56.3,0.0]; cols=[GREEN,GREEN,GREEN,RED,DK,GREEN]
-a.bar(range(6),vals,color=cols,alpha=.88)
+# same minimum-visible-bar-width floor as Fig 2 above: the 0.2% altORF bar is thin enough
+# that its 1px antialiased edge blends with the axis spine instead of the intended fill
+# color. Floors only the drawn height; the label loop below still uses the true `vals`.
+vis_vals=[v if v==0 else max(v,0.5) for v in vals]
+a.bar(range(6),vis_vals,color=cols,alpha=.88)
 a.set_xticks(range(6)); a.set_xticklabels(labs,fontsize=6.6); a.set_ylabel("exact canonical-substring rate (%)")
 for i,v in enumerate(vals): a.text(i,v+1.2,f"{v:g}%",ha="center",fontsize=7)
 a.set_title("(a) Non-novelty floor — class- and atlas-resolved",loc="left")

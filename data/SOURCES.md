@@ -79,3 +79,4 @@ negatives + 2 mouse positives / 2 mouse + 4 binding negatives (HCC). This is the
 No single resource gives catalog + Ribo-seq + raw HLA + normal background. Stack:
 GENCODE+nuORFdb (catalog/translation) · PRIDE-reprocess + CrypticProteinDB + IEAtlas (presentation)
 · HLA Ligand Atlas + GTEx-median (+ Recount3) + IEAtlas-normal (specificity).
+
