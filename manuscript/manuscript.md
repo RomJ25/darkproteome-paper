@@ -8,7 +8,7 @@
 ---
 
 ## Abstract
-Non-canonical open reading frames (ncORFs) are increasingly reported as sources of tumor-specific HLA antigens, but their clinical reuse depends on whether each published claim stays checkable after publication. We audited **306,844 published non-canonical tumor-antigen claims** (180,650 unique peptides) from two flagship end-to-end cohorts and the two largest public cryptic-peptide atlases, scoring only evidence in the reported record. The largest measured defect is sequence-level: **56.3% of catalogued cryptic "cancer" epitopes in IEAtlas are exact substrings of the canonical human proteome** — canonical *self* by sequence, which cannot serve as evidence for the non-canonical, tumor-specific antigen claim the catalogue nominates it for, whatever ORF it is attributed to. The effect is class-resolved, not field-wide: primary-cohort altORF/lncRNA peptides are clean (≈0.2%), pseudogene-derived claims inherit canonical parent sequences (37.1%), and a clean atlas (CrypticProteinDB, 0.0%) shows the rate is avoidable; of the genuinely non-canonical remainder, 9.1% appear on normal tissue. Separately, of all 306,844 claims **none** carries a machine-readable per-claim evidence package — a **reusability** gap that even known-real MAGE/SSX antigens share, and that downstream pipelines inherit when they treat a catalogue row as a validated target — locating the problem in reporting, not biology. The gap is structural: from reported summary statistics the non-canonical class false-discovery rate is only *set*-identified. The single field that closes it — the per-class accepted decoy count **`D_N`**, a "class-decoy ledger" — makes future claims re-verifiable.
+Non-canonical open reading frames (ncORFs) are increasingly reported as sources of tumor-specific HLA antigens, but their clinical reuse depends on whether each published claim stays checkable after publication. We audited **306,844 published non-canonical tumor-antigen claims** (180,650 unique peptides) from two flagship end-to-end cohorts and the two largest public cryptic-peptide atlases, scoring only evidence in the reported record. The largest measured defect is sequence-level: **56.3% of catalogued cryptic "cancer" epitopes in IEAtlas are exact substrings of the canonical human proteome** — canonical *self* by sequence, which cannot serve as evidence for the non-canonical, tumor-specific antigen claim the catalogue nominates it for, whatever ORF it is attributed to. The effect is class-resolved, not field-wide: primary-cohort altORF/lncRNA peptides are clean (≈0.2%), pseudogene-derived claims inherit canonical parent sequences (37.1%), and a clean atlas (CrypticProteinDB, 0.0%) shows the rate is avoidable; of the genuinely non-canonical remainder, 9.1% appear on normal tissue. Separately, of all 306,844 claims **none** carries a machine-readable per-claim evidence package — a **reusability** gap that even known-real MAGE/SSX antigens share, and that downstream pipelines inherit when they treat a catalogue row as a validated target — locating the problem in reporting, not biology. The gap is structural: from reported summary statistics the non-canonical class false-discovery rate is only *set*-identified. The single field that closes it — the per-class accepted decoy count **`D_N`**, a "class-decoy ledger" — makes future claims re-verifiable on the three reporting-addressable axes it reaches (translation, presentation, specificity); immunogenicity requires its own reusable assay report.
 
 ## Significance
 A clinically important class of cancer antigens is being nominated faster than it can be checked from the published record. We show that a majority of catalogued cryptic "cancer" epitopes in the largest public atlas are canonical by sequence, that the published record rarely carries the per-claim evidence to re-verify a claim, and that the gap has a provable statistical core — then give the minimal reporting standard (a class-decoy ledger) that closes it.
@@ -107,7 +107,11 @@ spectrum), whatever ORF they are attributed to — **≈800× a composition-matc
 so the overlap is structural, not short-peptide coincidence. Nor is it an artifact of peptide length:
 restricting to the canonical HLA-I window (8–11mers) the rate is **53.9% (67,852 / 125,999)**, and it
 rises monotonically with length (46.2% at 8mer to 58.1% at 11mer, 62.6% beyond) — as expected, since a
-longer exact canonical substring is stronger, not weaker, evidence of canonical origin. Mechanistically these are predominantly **in-frame alternative ORFs of coding genes**: 88.8% of the canonical-self epitopes are exact substrings of the canonical protein of *their own annotated gene* (e.g. the IEAtlas ORF `RBM47_223aa` → RBM47), whereas the out-of-frame remainder that is *not* canonical-self maps to its own gene's canonical protein in **0.0%** of cases — an internal negative control confirming the substring test does not match spuriously (`src/darkproteome/ieatlas_frame_audit.py`). We use "canonical self" strictly as a
+longer exact canonical substring is stronger, not weaker, evidence of canonical origin. The rate is also
+stable under I/L collapse — leucine and isoleucine are isobaric (113.084 Da) and MS-indistinguishable in
+standard fragmentation, so we additionally test each substring match allowing I↔L substitution: **56.5%
+(98,546 / 174,465)**, a 0.2-percentage-point shift, confirming the headline rate is not an artifact of
+assuming a specific Leu/Ile assignment. Mechanistically these are predominantly **in-frame alternative ORFs of coding genes**: 88.8% of the canonical-self epitopes are exact substrings of the canonical protein of *their own annotated gene* (e.g. the IEAtlas ORF `RBM47_223aa` → RBM47), whereas the out-of-frame remainder that is *not* canonical-self maps to its own gene's canonical protein in **0.0%** of cases — an internal negative control confirming the substring test does not match spuriously (`src/darkproteome/ieatlas_frame_audit.py`). We use "canonical self" strictly as a
 *sequence / MS-origin* criterion: an exact canonical-proteome substring is not sequence-novel, and the
 spectrum alone cannot establish a non-canonical origin. This is not a claim that the source ORF is
 untranslated — but the sequence alone cannot support the non-canonical, tumor-specific claim built on
@@ -131,14 +135,20 @@ by contrast, carry an intrinsic risk of this failure — realized at 37.1% (43/1
 substring of its parent canonical gene (e.g. RPS3AP12→RPS3A), a consequence of pseudogene biology, not
 negligence, that renders the peptide MS-unfalsifiable as pseudogene-derived rather than parent-derived.
 The risk is avoidable by upstream filtering, not absent in careful studies: Raja's own pseudogene-ORF
-claims are 0/98, because that pipeline already excludes parent-gene-matching peptides before
-publication; HCC's did not, so the same biological hazard reached the published claim set. The
-canonical-self burden is thus concentrated in the aggregator atlas and in the pseudogene class; the primary-cohort
-altORF/lncRNA peptides are clean. Critically, it is **resource-specific and avoidable, not intrinsic to
-cryptic-peptide catalogues**: at a comparable peptide-length profile, CrypticProteinDB carries **0.0%
-(1 / 3,774)** canonical-self peptides versus IEAtlas's 56.3% — i.e. IEAtlas omits a canonical-overlap
-filter that another public atlas already applies, making CrypticProteinDB a clean negative control for
-the substring test.
+claims are observed clean at 0/98 (Raja's stated filter excludes transcript biotypes
+protein_coding/IG_C/IG_V, not a canonical-substring check specifically, so whether the 0/98 reflects
+a deliberate additional step or is incidental to their pipeline is not established by their reported
+methods); HCC's pseudogene-ORF claims were not clean, so the same biological hazard reached the
+published claim set regardless. The canonical-self burden is thus concentrated in the aggregator atlas
+and in the pseudogene class; the primary-cohort altORF/lncRNA peptides are clean. Critically, it is
+**resource-specific and avoidable, not intrinsic to cryptic-peptide catalogues**: at a comparable
+peptide-length profile, CrypticProteinDB carries **0.0% (1 / 3,774)** canonical-self peptides versus
+IEAtlas's 56.3%. IEAtlas's own methods [14] report a combined PSM-level search against both the ncORF
+library and the canonical UniProt/Swiss-Prot proteome (FDR 0.05, no protein FDR), retaining epitopes
+by ORF-source label; an exact canonical substring yields an identical theoretical spectrum, so this
+PSM-level competition has nothing to discriminate on and cannot remove such a peptide, unlike
+CrypticProteinDB's additional protein-level canonical-alignment filter (BLASTP, E<0.01) applied
+before cataloguing — making CrypticProteinDB a clean negative control for the substring test.
 
 Note the nulls differ by stratum: the ≈800-fold enrichment is an atlas-level
 statement, whereas the per-cohort altORF enrichment is ≈1×. These four resources are not independent
@@ -228,7 +238,7 @@ possible; **(b)** the lower endpoint is 0 — a global FDR statement forces no f
 non-canonical class, so summary statistics can never show a class FDR is *high*, only bound how high it
 could be.
 
-For the ovarian cohort [1] (α = 3%): the headline noncoding-cryptic subset is <1% of accepted
+For the ovarian cohort [1] (α = 3%, PSM-level; `f` below is on the same unit): the headline noncoding-cryptic subset is <1% of accepted
 identifications (`f < α`), so its class FDR set is **[0, 1]** — entirely unconstrained by the reported 3%.
 The broader cryptic class (`f = 4.4–7.1%`) gives `Θ_N = [0, 42–68%]`, an upper bound 14–23× the reported
 global figure (Fig 3a). This bounds what the *published statistics* support, not the realized class FDR —
@@ -358,7 +368,7 @@ the published record and the identifiability theory.
 
 We set out to measure whether the published dark-proteome tumor-antigen record can be independently
 re-verified. We found, first, a concrete measured defect — **56.3% of catalogued cryptic "cancer"
-epitopes are canonical by sequence** (≈800-fold over a composition-matched null, strongly
+epitopes in IEAtlas are canonical by sequence** (≈800-fold over a composition-matched null, strongly
 class-dependent, and to our knowledge unquantified by any atlas) — and, more broadly, that the record as
 reported essentially cannot be re-verified: of 306,844 claims, none carry reusable per-claim evidence
 across all four evidence axes, and known-real canonical antigens fail the same bar. The contribution of this work is to show that this is not merely uneven reporting but has a
@@ -414,8 +424,8 @@ level (823 peptides shared between {cohorts, CrypticProteinDB} and IEAtlas: 743 
 CrypticProteinDB — see Results I for the reading this supports). Claims are deduplicated and stored in a 19-column contract
 (Supplement). Headline rates use resource-specific
 denominators, stated at each use: the 56.3% canonical-self rate is over the 174,465 unique IEAtlas
-cancer peptides entering the substring test (the 293,222 catalogue rows after deduplication and the
-8–12-mer presentation filter), the 9.1% normal-tissue rate is over the 76,272 genuinely non-canonical
+cancer peptides entering the substring test (the 293,222 catalogue rows after deduplication; the peptides
+range 8–25 residues, with no upper length filter), the 9.1% normal-tissue rate is over the 76,272 genuinely non-canonical
 remainder, and 306,844 / 180,650 count claims / unique peptides across all resources. **Unit
 discipline:** every
 class-FDR quantity below is computed at one fixed statistical unit (PSM-, peptide-, or
@@ -512,8 +522,8 @@ half-width `≈1.96√(θ/(kn))`. At `n=311, θ=0.7, k=1`: `≈9.3` percentage p
 ### Software, data, reproducibility
 All inputs are public (PRIDE PXD055609; the two cohort supplements; IEAtlas; CrypticProteinDB; the HLA Ligand
 Atlas; UniProt/SwissProt) — accessions in Supplement. All analyses are scripted (`src/darkproteome/`,
-`scripts/verify_effective_rho.py`); code and derived tables are included in this repository.
-A reference implementation of the reporting standard (Table 1), `class_decoy_ledger.py`,
+`scripts/verify_effective_rho.py`); code and derived tables are released at
+https://github.com/RomJ25/darkproteome-paper. A reference implementation of the reporting standard (Table 1), `class_decoy_ledger.py`,
 emits the per-class decoy ledger from standard target-decoy outputs (a mokapot/Percolator table or a
 search-engine pepXML) and interoperates with general verifiable-FDR tooling [21]; a worked example on the
 PXD055609 deposit is included. FDR conventions and the statistical unit are stated for every reported quantity.
@@ -521,14 +531,14 @@ PXD055609 deposit is included. FDR conventions and the statistical unit are stat
 ---
 
 ## Data and code availability
-All inputs are public: PRIDE PXD055609; the two cohort supplements; IEAtlas; CrypticProteinDB; the HLA Ligand Atlas; UniProt/SwissProt (accessions in Supplement). All analyses are scripted (`src/darkproteome/`, `scripts/verify_effective_rho.py`); code and derived tables are included in this repository. A reference implementation of the Table 1 reporting standard (`src/darkproteome/class_decoy_ledger.py`) emits the per-class decoy ledger from standard target-decoy outputs (mokapot/Percolator or pepXML) and interoperates with general verifiable-FDR tooling [21]; a worked example on the PXD055609 deposit is provided (`examples/`).
+All inputs are public: PRIDE PXD055609; the two cohort supplements; IEAtlas; CrypticProteinDB; the HLA Ligand Atlas; UniProt/SwissProt (accessions in Supplement). All analyses are scripted and deposited at **https://github.com/RomJ25/darkproteome-paper** (`src/darkproteome/`, `scripts/verify_effective_rho.py`). A reference implementation of the Table 1 reporting standard (`src/darkproteome/class_decoy_ledger.py`) emits the per-class decoy ledger from standard target-decoy outputs (mokapot/Percolator or pepXML) and interoperates with general verifiable-FDR tooling [21]; a worked example on the PXD055609 deposit is provided (`examples/`).
 
 ## Author contributions / Competing interests
 R.J. designed and performed all analyses and wrote the manuscript. The author declares no competing interests.
 
 ## Figure legends
 
-**Figure 1. Non-novelty and inherited specificity floors.** (a) Exact canonical-substring rate by ORF class and atlas: altORF/lncRNA and Raja pseudogene ≈0%, HCC pseudogene-ORF 37.1%, and the IEAtlas catalogue 56.3% versus a clean CrypticProteinDB at 0.0% — the clean atlas applies the canonical-overlap filter IEAtlas omits. (b) Of IEAtlas cancer "cryptic" epitopes, 56.3% are canonical-self by sequence; of the genuine remainder, 9.1% appear on normal tissue. Separately, of the HCC cohort's own canonical-self pseudogene peptides (panel a), 16/43 are directly observed in the benign HLA Ligand Atlas.
+**Figure 1. Non-novelty and inherited specificity floors.** (a) Exact canonical-substring rate by ORF class and atlas: altORF/lncRNA and Raja pseudogene ≈0%, HCC pseudogene-ORF 37.1%, and the IEAtlas catalogue 56.3% versus a clean CrypticProteinDB at 0.0% — the clean atlas adds a protein-level canonical-alignment filter that IEAtlas's combined-database PSM-level search competition cannot replicate. (b) Of IEAtlas cancer "cryptic" epitopes, 56.3% are canonical-self by sequence; of the genuine remainder, 9.1% appear on normal tissue. Separately, of the HCC cohort's own canonical-self pseudogene peptides (panel a), 16/43 are directly observed in the benign HLA Ligand Atlas.
 
 **Figure 2. The re-verifiability audit.** Of 306,844 published claims (180,650 unique peptides), none strict-pass all four evidence axes; the known-real canonical positive control (MAGE/SSX) collapses identically. Counts surviving each successive axis are shown on a linear scale so each step's true attrition is visually comparable; the two terminal zero-survivor counts are plotted at their true value (x = 0). The first step's ratio (180,650→82,453) is pooled across the full corpus and is a distinct measurement from the IEAtlas-specific 56.3% canonical-self headline reported in Results I — different denominator and scope, not a discrepancy (Methods). The specificity step here (82,453→75,471, 8.5%) is pooled across all sources; it is a distinct measurement from the IEAtlas-specific 9.1% normal-tissue rate reported in Results I, which uses IEAtlas's own genuinely-non-canonical remainder (76,272) as its denominator.
 
