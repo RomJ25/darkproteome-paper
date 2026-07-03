@@ -21,7 +21,7 @@ def save(fig,name):
     fig.savefig(OUT/f"{name}.pdf",bbox_inches="tight"); fig.savefig(OUT/f"{name}.png",bbox_inches="tight")
     plt.close(fig); print("wrote",name)
 
-# ---- Fig 1: re-verifiability survivorship (reference_model.py) ----
+# ---- Fig 2: re-verifiability survivorship (reference_model.py) ----
 # Linear scale (not log): on a log axis the 54% first-step cut and the 8.5% second-step
 # cut render as nearly the same bar-length change as the 940x allele-assignment cliff,
 # anti-correlated with true attrition. Linear also lets the two terminal zero counts be
@@ -48,9 +48,9 @@ for yi,c in zip(y,counts):
 ax.text(xmax*0.10,1.0,"translation is independently $\\approx$0% of the\ncorpus — not solely a downstream effect\nof allele-assignment (Results I)",
         fontsize=6.3,color="#444",va="center",ha="left")
 ax.set_xlim(0,xmax*1.30); ax.set_xlabel("peptides")  # no in-figure title — the LaTeX caption describes it
-save(fig,"fig1_survivorship")
+save(fig,"fig2_survivorship")
 
-# ---- Fig 2: non-novelty (class-resolved) + IEAtlas reuse contamination ----
+# ---- Fig 1: non-novelty (class-resolved) + IEAtlas reuse contamination ----
 fig,(a,b)=plt.subplots(1,2,figsize=(8.2,3.2))
 labs=["altORF\n(Raja)","lncRNA\n(Raja)","pseudo.\n(Raja)","pseudo.\n(HCC)","IEAtlas\n(atlas)","Cryptic-\nProteinDB"]
 vals=[0.2,0.0,0.0,37.1,56.3,0.0]; cols=[GREEN,GREEN,GREEN,RED,DK,GREEN]
@@ -75,7 +75,7 @@ b.annotate("9.1% of this 43.7% slice\nappears on normal tissue",
 b.text(0.85,25,"pseudogene specificity (HCC cohort,\npanel a): 16/43 directly on normal\n(HLA Ligand Atlas)",
        fontsize=6.4,va="center",ha="left")
 b.set_title("(b) IEAtlas reuse: canonical-self + a normal floor",loc="left")
-save(fig,"fig2_floors")
+save(fig,"fig1_floors")
 
 # ---- Fig 3: the identifiability theory ----
 fig,(a,b)=plt.subplots(1,2,figsize=(7.8,3.3))

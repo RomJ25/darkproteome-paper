@@ -32,6 +32,8 @@ claims in it can even be re-verified from what was reported.**
   (SwissProt, IEAtlas, CrypticProteinDB, the HLA Ligand Atlas, raw PRIDE deposits) are not
   included here for size reasons; `data/external/README.md` documents exactly how to
   re-download each one.
+- **`scripts/verify_effective_rho.py`** — reproduces the Methods "Simulation" subsection cited
+  throughout the manuscript.
 
 ## Four independent evidence axes (encoded in `src/darkproteome/axes.py`)
 

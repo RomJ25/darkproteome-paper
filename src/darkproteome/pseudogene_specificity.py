@@ -99,6 +99,7 @@ def is_ribosomal(g):
 
 
 def main():
+    paths.require(paths.SPROT, paths.HLALA)
     pep = target_peptides()
     loci = locus_map()
     print(f"target = HCC pseudogene-ORF canonical-self peptides: N={len(pep)}")

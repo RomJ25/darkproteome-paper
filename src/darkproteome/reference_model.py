@@ -96,6 +96,9 @@ def curve(title, rows):
 
 
 def main():
+    paths.require(paths.SPROT, paths.IEATLAS_NORMAL, paths.HLALA)
+    if not os.path.exists(CAT):
+        sys.exit(f"need {CAT} (regenerate via ingest_atlases.py)")
     print("loading normal references ...")
     normal_d = d.load(d.NORMAL)                  # IEAtlas normal (cryptic-space)
     normal_seqs = set(normal_d)

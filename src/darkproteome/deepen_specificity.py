@@ -145,6 +145,7 @@ def uniform_null(cancer_list, normal, aa_weights):
 
 
 def main():
+    paths.require(paths.IEATLAS_CANCER, paths.IEATLAS_NORMAL, paths.SPROT, paths.HLALA)
     print("Loading IEAtlas ...")
     cancer_d = load(CANCER)
     normal_d = load(NORMAL)

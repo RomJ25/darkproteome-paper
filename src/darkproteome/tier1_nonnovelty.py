@@ -165,6 +165,7 @@ def audit(label, seqs, normal, seq2class):
 
 
 def main():
+    paths.require(paths.SPROT)
     cohorts = load_cohorts()
     print("PRIMARY-STUDY non-novelty audit (peptide-level cryptic sequences):")
     for lab, (seqs, dropped, _k) in cohorts.items():

@@ -1,9 +1,8 @@
 """Four independent evidence axes for a dark-proteome tumor-antigen claim.
 
 Why four axes and not one bar: a single HLA-I antigen is ONE short 8-12mer ligand, so the
-protein-existence consensus bar (≥2 unique tryptic peptides; see consensus_bar.py) is the
-right standard for the SOURCE-ORF axis only. A claim is a STRICT SURVIVOR only if it
-strict-passes all four:
+protein-existence consensus bar (≥2 unique tryptic peptides) is the right standard for the
+SOURCE-ORF axis only. A claim is a STRICT SURVIVOR only if it strict-passes all four:
 
   1. source_orf        — is the source ORF plausibly translated?
   2. hla_presentation  — is the peptide actually presented on HLA?
