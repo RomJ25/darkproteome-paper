@@ -49,10 +49,10 @@ def pstr(c):
 for yi,c in zip(y,counts):
     ax.text(c+xmax*0.017,yi,pstr(c),va="center",fontsize=7.5)
 # marginal-independence note: the funnel's sequential order isn't load-bearing for the
-# 0% headline — translation alone is reported for ≈0% of the corpus (Results I).
-ax.text(xmax*0.10,1.0,"translation is independently $\\approx$0% of the\ncorpus — not solely a downstream effect\nof allele-assignment (Results I)",
+# 0% headline: translation alone is reported for ≈0% of the corpus (Results I).
+ax.text(xmax*0.10,1.0,"translation is independently $\\approx$0% of the\ncorpus, not solely a downstream effect\nof allele-assignment (Results I)",
         fontsize=6.3,color="#444",va="center",ha="left")
-ax.set_xlim(0,xmax*1.30); ax.set_xlabel("peptides")  # no in-figure title — the LaTeX caption describes it
+ax.set_xlim(0,xmax*1.30); ax.set_xlabel("peptides")  # no in-figure title; the LaTeX caption describes it
 save(fig,"fig2_survivorship")
 
 # ---- Fig 1: non-novelty (class-resolved) + IEAtlas reuse contamination ----
@@ -66,7 +66,7 @@ vis_vals=[v if v==0 else max(v,0.5) for v in vals]
 a.bar(range(6),vis_vals,color=cols,alpha=.88)
 a.set_xticks(range(6)); a.set_xticklabels(labs,fontsize=6.6); a.set_ylabel("exact canonical-substring rate (%)")
 for i,v in enumerate(vals): a.text(i,v+1.2,f"{v:g}%",ha="center",fontsize=7)
-a.set_title("(a) Non-novelty floor — class- and atlas-resolved",loc="left")
+a.set_title("(a) Non-novelty floor: class- and atlas-resolved",loc="left")
 # (b) IEAtlas: 174,465 cancer cryptic epitopes
 # Leader-line callout, not a stacked sub-bar, for the 9.1% fact: on this 0-100%-of-whole-bar
 # axis a sub-bar sized to "9.1% of the 43.7% remainder" would render only a few points
@@ -95,9 +95,9 @@ a.axvspan(4.4,7.1,color=RED,alpha=.13)
 a.annotate("broad cryptic class\nf = 4.4–7.1%  $\\Rightarrow$  $\\leq$42–68%",xy=(7.5,0.60),fontsize=6.4,ha="left")
 a.annotate("noncoding subset\nf < 1%  $\\Rightarrow$  unconstrained",xy=(1.0,0.86),fontsize=6.4,ha="left")
 a.axhline(alpha,ls=":",color="grey",lw=.8); a.text(11.8,alpha+0.02,r"reported $\alpha$ = 3%",fontsize=6.3,color="grey",ha="right")
-a.set_xlabel(r"class fraction  $f=T_\mathrm{N}/T$  (%)"); a.set_ylabel("class FDR — sharp upper bound"); a.set_ylim(0,1.06)
+a.set_xlabel(r"class fraction  $f=T_\mathrm{N}/T$  (%)"); a.set_ylabel("class FDR: sharp upper bound"); a.set_ylim(0,1.06)
 a.legend(fontsize=6.3,loc="upper right"); a.set_title("(a) Class FDR is set-identified",loc="left")
-# (b) effective-rho drift — reproduce verify_effective_rho.py part B (seed 0)
+# (b) effective-rho drift: reproduce verify_effective_rho.py part B (seed 0)
 rng=np.random.default_rng(0); SL,SH=4000,200
 mN=np.concatenate([rng.integers(1,3,SL),rng.integers(400,1200,SH)])
 mC=np.concatenate([rng.integers(5,20,SL),rng.integers(20,120,SH)]); m=mN+mC; rg=mN.sum()/mC.sum()
@@ -136,6 +136,6 @@ for yi,hi in zip(y,his):
         ax.plot(0,yi,marker="D",color=DK,ms=8,zorder=3)
         ax.text(0.045,yi,r"$P=0$",va="center",fontsize=8)
 ax.set_yticks(y); ax.set_yticklabels(claims,fontsize=8); ax.set_xlim(-0.02,1.12); ax.set_ylim(-0.6,2.6)
-ax.set_xlabel(r"$P(\mathrm{claim\ true}\mid\mathrm{published\ record})$  —  sharp identified interval")
+ax.set_xlabel(r"$P(\mathrm{claim\ true}\mid\mathrm{published\ record})$:  sharp identified interval")
 save(fig,"fig4_partial_order")
 print("ALL FIGURES DONE ->", OUT)
