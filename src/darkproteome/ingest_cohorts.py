@@ -254,6 +254,7 @@ def ingest_ovarian(path):
 def main():
     hcc_path = sys.argv[1] if len(sys.argv) > 1 else HCC_DEFAULT
     ova_path = sys.argv[2] if len(sys.argv) > 2 else OVA_DEFAULT
+    paths.require(hcc_path, ova_path)
     rows = ingest_hcc(hcc_path) + ingest_ovarian(ova_path)
 
     bad = 0

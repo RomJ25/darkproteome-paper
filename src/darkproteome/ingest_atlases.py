@@ -110,7 +110,7 @@ def normal_overlap(cancer_seqs):
 
 
 def ingest_cpdb_immuno(rows_out):
-    path = f"{ATLAS}/immunopeptides_cryptic.csv"
+    path = paths.CPDB_IMMUNO
     n = 0
     with open(path, newline="", encoding="utf-8", errors="replace") as fh:
         rd = csv.DictReader(fh)
@@ -139,7 +139,7 @@ def ingest_cpdb_immuno(rows_out):
 
 def ingest_cpdb_epitopes(rows_out):
     """epitopes_cryptic.csv has an off-by-one header; parse by position (17 fields)."""
-    path = f"{ATLAS}/epitopes_cryptic.csv"
+    path = paths.CPDB_EPITOPES
     n = 0
     with open(path, newline="", encoding="utf-8", errors="replace") as fh:
         rd = csv.reader(fh)
@@ -177,6 +177,8 @@ def ingest_cpdb_epitopes(rows_out):
 
 
 def main():
+    paths.require(paths.IEATLAS_CANCER, paths.IEATLAS_NORMAL, paths.CPDB_IMMUNO, paths.CPDB_EPITOPES)
+
     rows = []
     # carry forward the cohort corpus, tagging its source
     with open(REAL, newline="", encoding="utf-8") as fh:

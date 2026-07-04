@@ -35,6 +35,8 @@ RAJA_SI        = os.path.join(BASE, "eupmc_extracted", "tables", "sciadv.ads7405
 HCC_SI         = os.path.join(BASE, "supp_tables.xlsx")
 GTEX_MEDIAN    = os.path.join(BASE, "gtex", "GTEx_v8_gene_median_tpm.gct.gz")  # genes x 54 tissues
 GENCODE_LNC    = os.path.join(BASE, "gencode", "gencode.v26.long_noncoding_RNAs.gtf.gz")  # ENST<->ENSG (v26 = GTEx v8)
+CPDB_IMMUNO    = os.path.join(ATLAS_DIR, "immunopeptides_cryptic.csv")
+CPDB_EPITOPES  = os.path.join(ATLAS_DIR, "epitopes_cryptic.csv")
 
 
 def require(*required):
