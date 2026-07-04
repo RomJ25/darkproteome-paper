@@ -378,7 +378,7 @@ structural core. The class-specific false-discovery rate underwriting the presen
 *set*-identified from the statistics papers report; the common budget bound is provably the tightest
 such bound; the quantity that governs the class allocation at a threshold can be a
 threshold-weighted *effective ρ* rather than the global candidate ratio (in a regime we characterize); and, propagated to the claim
-level, a calibrated per-claim truth probability is not identifiable at all. The honest referee output
+level, a calibrated per-claim truth probability is not identifiable at all. The honest audit output
 is a partial order. A single reported statistic, the per-class decoy count `D_N`, collapses the central
 uncertainty.
 

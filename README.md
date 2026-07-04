@@ -1,13 +1,13 @@
 # darkproteome
 
-**An audit-first referee for the dark-proteome tumor-antigen literature.**
+**An audit-first assessment of the dark-proteome tumor-antigen literature.**
 
 Code, derived data tables, and manuscript source accompanying the preprint *"Canonical self in
 cryptic cancer-epitope catalogues and the class-decoy ledger needed to verify non-canonical
 antigen claims"* (Rom Jan).
 
-Most "dark proteome" cancer-antigen claims — non-canonical ORFs (ncORFs) / microproteins
-presented on HLA — are nominated on evidence that isn't independently re-verifiable from what
+Most "dark proteome" cancer-antigen claims, non-canonical ORFs (ncORFs) / microproteins
+presented on HLA, are nominated on evidence that isn't independently re-verifiable from what
 gets published. This project audits the published record against the field's own evidence bar,
 characterizes the resulting gap as a statistical identifiability problem, and proposes the
 minimal reporting fix.
@@ -37,7 +37,7 @@ claims in it can even be re-verified from what was reported.**
 
 ## Four independent evidence axes (encoded in `src/darkproteome/axes.py`)
 
-A claim is scored on **four axes**, not one blended bar — because a single HLA-I antigen is
+A claim is scored on **four axes**, not one blended bar, because a single HLA-I antigen is
 one short 8–12mer ligand, so a protein-existence standard is the wrong test for it. A claim is
 a **strict survivor** only if it strict-passes all four:
 
@@ -45,10 +45,10 @@ a **strict survivor** only if it strict-passes all four:
 |---|---|---|
 | **source_orf** | Is the source ORF plausibly translated? | Ribo-seq ≥70% periodicity **or** the Prensner protein bar (≤0.1% FDR, ≥2 unique ≥9-aa peptides) |
 | **hla_presentation** | Is the peptide actually presented? | eluted-ligand MS, plausible 8–12mer, allele assigned (class-specific FDR confirmed downstream) |
-| **tumor_specificity** | Absent from normal presentation/expression? | broad normal panel (HLA Ligand Atlas / GTEx-Recount3) — "no public normal evidence", never "safe" |
+| **tumor_specificity** | Absent from normal presentation/expression? | broad normal panel (HLA Ligand Atlas / GTEx-Recount3); "no public normal evidence", never "safe" |
 | **immunogenicity** | Do T cells respond? | autologous / HLA-matched T-cell assay (in-vivo = weaker) |
 
-The auditor never recomputes FDR from raw spectra — it scores each axis **as reported**, and
+The auditor never recomputes FDR from raw spectra; it scores each axis **as reported**, and
 labels anything underspecified `unverifiable`. Headline = **strict survivor fraction** (passes
 all four) with a Wilson 95% CI, plus per-axis survival so you see exactly where claims die.
 
@@ -67,11 +67,11 @@ Self-check that the environment is intact: `tier1_nonnovelty.py` must print `5/2
 `43/116 = 37.1%`, `0 mismatches`, `54.4%`.
 
 The class-decoy ledger tool (`src/darkproteome/class_decoy_ledger.py`) is demonstrated end to
-end on a real deposited run in `examples/` — see `examples/README.md`.
+end on a real deposited run in `examples/`; see `examples/README.md`.
 
 ## Run the tests
 
-Stdlib only, no test framework needed — each file is also its own runner:
+Stdlib only, no test framework needed; each file is also its own runner:
 
 ```bash
 python3 tests/test_class_decoy_ledger.py
@@ -80,7 +80,7 @@ python3 tests/test_eco_diagnostic.py
 
 ### Reproducing the derived data tables (needs the external inputs; see below)
 
-All of these read from `data/external/` — set `$DARKPROTEOME_DATA` if you keep that data
+All of these read from `data/external/`; set `$DARKPROTEOME_DATA` if you keep that data
 elsewhere (see `data/external/README.md`).
 
 ```bash
@@ -107,9 +107,9 @@ UniProt/SwissProt. Full accessions, versions, and licenses in `data/SOURCES.md`.
 on all four axes at once; a known-real canonical control (MAGE/SSX) fails the identical bar,
 locating the gap in reporting, not the underlying biology. **56.3%** of catalogued cryptic
 "cancer" epitopes in the largest public atlas (IEAtlas) are exact substrings of the canonical
-human proteome — canonical *self* by sequence. The class-specific false-discovery rate
+human proteome: canonical *self* by sequence. The class-specific false-discovery rate
 underwriting these claims is only *set*-identified from what papers report; the fix is a
-one-line reporting standard — a **class-decoy ledger** — that makes it re-verifiable.
+one-line reporting standard, a **class-decoy ledger**, that makes it re-verifiable.
 
 ## License
 

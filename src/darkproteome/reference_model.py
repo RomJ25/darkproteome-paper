@@ -1,6 +1,6 @@
 """Reference model / evidence-control layer -- the capstone of the as-reported audit.
 
-Turns the 306k as-reported claim catalog into the reusable referee artifact:
+Turns the 306k as-reported claim catalog into the reusable audit artifact:
   (1) a per-peptide SCORED TABLE  -> data/claim_catalog_scored.csv
   (2) the EVIDENCE-SURVIVORSHIP CURVE printed for non-canonical claims AND the canonical
       cancer-testis control (MAGE/SSX), run through the SAME filters.
@@ -9,7 +9,7 @@ Scores strictly AS-REPORTED + our computed provenance/specificity features (cano
 normal-overlap, critical-organ). It does NOT recompute FDR from spectra -- that would be a
 separate re-analysis of raw spectra (the natural next study; not required for these results,
 which stand on the published record and the identifiability theory -- Methods).
-The honest ceiling: this completes the *reporting* referee; the immunogenicity cliff at the end
+The honest ceiling: this completes the *reporting* audit; the immunogenicity cliff at the end
 is the point, not a bug.
 
     python3 src/darkproteome/reference_model.py
