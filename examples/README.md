@@ -11,11 +11,18 @@ data the field already deposits.
 
 ```bash
 python3 src/darkproteome/class_decoy_ledger.py \
-    --pepxml T5-1546_Ovarian_MSFragger_MHC_ClassI_101821.pepXML \
+    --pepxml data/external/pxd055609_pepxml/T5-1546_Ovarian_MSFragger_MHC_ClassI_101821.pepXML \
     --alpha 0.03 \
     --canonical-fasta data/external/swissprot_human.fasta \
+    --stratify-multiplicity \
     --out examples/PXD055609_T5_ledger
 ```
+
+(`--pepxml` takes a path — if you set `$DARKPROTEOME_DATA` elsewhere, use
+`$DARKPROTEOME_DATA/pxd055609_pepxml/...` instead. The tracked
+`PXD055609_T5_ledger.json`/`.tsv` in this directory were generated with
+`--stratify-multiplicity`, so it's included above to reproduce them exactly —
+see the stratification section below for what that flag adds.)
 
 **Input:** one MSFragger `pepXML` from **PXD055609** (Raja et al., ovarian immunopeptidome — the cohort the
 manuscript audits end to end). The `pepXML` *intermediate* is the right input precisely because it **retains
@@ -66,6 +73,14 @@ not cryptic-specific — while the noncanonical class stays elevated over canoni
 every stratum, showing that gap isn't an artifact of cryptic peptides being disproportionately low-multiplicity
 (they aren't — canonical and noncanonical have statistically indistinguishable PSM-multiplicity distributions).
 `--unit unique-peptide` dedupes to one row per (class, peptide, decoy-status) as documented.
+
+The 1.68%→0.29% / 6.25%→0.66% figures above are the pooled-across-all-5-samples numbers from
+`psm_multiplicity_probe.py`, which reuses the ledger's own loader/classifier so its output is
+directly comparable:
+
+```bash
+python3 src/darkproteome/psm_multiplicity_probe.py data/external/pxd055609_pepxml/*.pepXML --alpha 0.03
+```
 
 ## Guarding against the ecological-inference mistake (`eco_diagnostic.py`)
 
