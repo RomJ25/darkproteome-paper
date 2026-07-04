@@ -15,7 +15,8 @@ data/claim_catalog_scaled.csv
 data/external/*
 !data/external/README.md
 
-# Manuscript PDF build artifact (regenerate from manuscript.md via tectonic; manuscript.html
-# is the tracked, committed render).
-manuscript/manuscript.pdf
+# manuscript/manuscript.pdf is the canonical, tracked PDF (GitHub renders it inline for
+# readers; rebuild via tectonic then `cp manuscript/tex/manuscript.pdf manuscript/manuscript.pdf`
+# after editing manuscript.md). The raw tex/ build output itself stays gitignored -- it's an
+# intermediate, not the copy readers see.
 manuscript/tex/manuscript.pdf
