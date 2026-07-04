@@ -54,17 +54,20 @@ all four) with a Wilson 95% CI, plus per-axis survival so you see exactly where 
 
 ## Run the audit
 
-Core auditor uses only the Python standard library:
+Core auditor uses only the Python standard library. Three of the four commands below need no
+external data; `tier1_nonnovelty.py` is the exception -- it reads the SwissProt FASTA (and the
+IEAtlas normal-tissue table) from `data/external/`, so populate that first (see "Reproducing the
+derived data tables" below) or it will exit with a `FileNotFoundError`.
 
 ```bash
 python3 src/darkproteome/audit.py data/sample_claims.csv          # smoke test on synthetic rows
 python3 src/darkproteome/probe_report.py data/claim_catalog_real.csv   # cohort headline + MAGE/SSX control
-python3 src/darkproteome/tier1_nonnovelty.py                       # class-resolved non-novelty floor
+python3 src/darkproteome/tier1_nonnovelty.py                       # class-resolved non-novelty floor (needs data/external/)
 python3 src/darkproteome/robustness.py data/claim_catalog_real.csv # leniency ladder + reusable-positive ceiling
 ```
 
-Self-check that the environment is intact: `tier1_nonnovelty.py` must print `5/2979`,
-`43/116 = 37.1%`, `0 mismatches`, `54.4%`.
+Self-check that the environment is intact (with `data/external/` populated): `tier1_nonnovelty.py`
+must print `5/2979`, `43/116 = 37.1%`, `0 mismatches`, `54.4%`.
 
 The class-decoy ledger tool (`src/darkproteome/class_decoy_ledger.py`) is demonstrated end to
 end on a real deposited run in `examples/`; see `examples/README.md`.
