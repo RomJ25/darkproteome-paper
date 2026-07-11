@@ -72,10 +72,13 @@ reporting standard that chiefly asks for the per-class decoy count `D_N` on the 
 provably collapses the identifiability gap, together with a proposal for a neutral, leakage-
 controlled benchmark for the field.
 
-Throughout, our claims concern the reporting and the statistics, never the biology: we do not assert
-that any specific antigen is false, and the failure of the canonical controls under the same audit
-is our central guard against that misreading. All inputs are public and all analyses are scripted
-and openly reproducible (see Data and code availability).
+Throughout, our claims concern the reporting and the statistics, never the biology: a reporting
+failure alone does not show that a peptide is unpresented or non-immunogenic, and the failure of the
+canonical controls under the same audit is our central guard against that misreading. Two narrower
+determinations do follow directly from what we measure: an exact canonical-substring match means the
+sequence and spectrum alone cannot establish a non-canonical origin, and a direct benign-ligandome
+match rules out strict absence from normal presentation, for that peptide sequence. All inputs are
+public and all analyses are scripted and openly reproducible (see Data and code availability).
 
 ## Results I. The audit: sequence non-novelty, specificity, and re-verifiability
 
@@ -122,7 +125,10 @@ protein-level BLASTP canonical-exclusion filter (below) is a concrete, already-i
 [15]. A related large-scale non-canonical proteome/immunopeptidome study resolves ambiguous ORF
 assignment by priority-mapping (start-codon confidence, Kozak strength, transcript expression) but does
 not report a canonical-sequence overlap rate [24]; what has not been reported is *how large the rate
-is* in these catalogues.
+is* in these catalogues. A complementary RNA-space approach, BamQuery, exhaustively enumerates the
+genomic regions capable of encoding a peptide and quantifies their expression in malignant and benign
+RNA-sequencing data; it addresses multi-locus origin attribution and RNA-level specificity rather than
+canonical-sequence exclusion [28].
 
 It is strongly
 **class-resolved**, not uniform (Fig 1): in the primary cohorts, altORF and lncRNA-ORF peptides are
@@ -166,7 +172,9 @@ be read as ORF-class-resolved slices of a largely shared corpus, not four indepe
 Among the genuinely non-canonical remainder (after removing the canonical-self peptides), **9.1%
 (6,976 / 76,272)** appear in IEAtlas's *own* normal-tissue epitope list, and nearly two-thirds of
 those map to a critical normal organ (brain/heart/liver/lung/kidney), a direct on-target/off-tumour
-signal that any pipeline reusing these atlases as a tumour-antigen source inherits. For the
+signal that any pipeline reusing these atlases as a tumour-antigen source inherits. As a positive
+control, **16.3% (15,960/98,193)** of IEAtlas's own canonical-self epitopes are independently
+re-detected on normal tissue by the HLA Ligand Atlas [12], 55.7% of those on a critical organ. For the
 canonical-self pseudogene peptides specifically, an independent normal reference (the HLA Ligand
 Atlas [12] benign HLA-I ligandome) directly observes 16 of 43 on normal tissue, a hard,
 finite-sampling-conservative floor on non-specificity. Separately, normal-tissue expression (GTEx v8)
@@ -175,19 +183,22 @@ of the canonical parent gene itself is measured, not assumed, for all 43. Each i
 presentation-level confirmation. Together, the non-novelty floor and this parent-gene expression
 signal flag all 37% (43/116) of the HCC pseudogene "antigen" claims with at least the RNA-level
 concern; 16 of those 43 additionally carry the stronger, presentation-level confirmation of direct
-observation on the benign ligandome itself.
+observation on the benign ligandome itself. A parallel gene-level screen extends to the lncRNA-ORF
+class at GTEx ENSG resolution: broad normal-tissue parent-gene expression (median ≥1 TPM in all 54
+tissues) was observed for 0/93 HCC lncRNA-ORF claims versus 64/157 (40.8%) Raja claims, localizing
+this RNA-level specificity concern to the Raja claim set; as above, this gene-level screen does not
+establish normal-tissue peptide presentation or immunogenicity.
 
 ### No published claim carries a reusable four-axis evidence package
-Turning from sequence to re-verifiability: of 306,844 claims, **none** strict-pass all four axes (95%
-Wilson upper bound ≈ 0.0013%), and only **seven** carry enough reported evidence to be even *decidable*
-on all four at once (Fig 2). This bar measures the *machine-readable reusability of the reported
+Turning from sequence to re-verifiability: of 306,844 claims, **none** strict-pass all four axes, and
+only **seven** carry enough reported evidence to be even *decidable* on all four at once (Fig 2). This bar measures the *machine-readable reusability of the reported
 record*, not whether an antigen is biologically real, and reusability is exactly the property a
 downstream pipeline depends on when it treats a catalogue row as a validated target. The gap holds
 across both strata, for different reasons: the atlas records were never built to carry a per-claim
 T-cell assay or allele call, while the end-to-end cohorts complete the chain in their figures and prose
 but not in reusable, per-claim form. Critically, the bar is not unfairly harsh. A panel of known-real
 canonical cancer-testis antigens (MAGE/SSX), scored through the identical pipeline, **also fails** (0
-strict survivors, N=144; 95% Wilson upper bound ≈2.6%). That a positive control fails is expected, and is the central point: it locates the
+strict survivors, N=144). That a positive control fails is expected, and is the central point: it locates the
 problem in the *form of the reporting* rather than the truth of the biology, and makes the remedy a
 reporting standard rather than a wave of corrections. The published path from "a peptide was observed"
 to "a validated tumor antigen" is rarely available in reusable, per-claim, machine-readable form.
@@ -261,11 +272,11 @@ tracks `ρ_eff`, not `ρ_global`, as the threshold relaxes (Fig 3b, a separate, 
 heterogeneous-population simulation, not the two-spectrum toy example above; Methods). We treat `ρ_eff`
 as a diagnostic, not a measured quantity: the common-null assumption it requires is least secure exactly
 where `ρ_eff` departs from `ρ_global` (non-tryptic cryptics plausibly have `F_N ≠ F_C`), and in the
-stringent-threshold regime where immunopeptidomics operates `ρ_eff → ρ_global`. But the reported record
-does not establish which per-candidate tail probability `t` a given cryptic search actually corresponds
-to, so whether a cohort sits in that stringent regime or the divergent one is itself an empirical
-question, resolved only by the class-labelled decoy counts `D_N(τ), D_C(τ)`, absent from the reported
-record.
+stringent-threshold limit relevant to typical immunopeptidomics operating conditions `ρ_eff → ρ_global`.
+But the reported record does not establish which per-candidate tail probability `t` a given cryptic
+search actually corresponds to, so whether a given cohort is sufficiently far into that limit is itself
+an empirical question, resolved only by the class-labelled decoy counts `D_N(τ), D_C(τ)`, absent from
+the reported record.
 
 ### A single statistic collapses the uncertainty
 Both results point to one missing datum. The class FDR becomes **consistently estimable**, by the ordinary
@@ -292,9 +303,12 @@ though, every claim's *joint* probability still has lower bound 0. This is not b
 because the non-novelty and specificity floors (Results I) each independently reach a lower bound of 0
 for any single claim, and that alone is enough to collapse the Fréchet joint lower bound. So every such
 claim's probability is **not point-identified**. Claims are comparable only by their sharp *upper* bound
-(a partial order). On our data a random Raja altORF claim has `P ≤ 0.998` versus an HCC pseudogene claim
-`P ≤ 0.629` (the 37.1% non-novelty floor), and an exact-canonical-substring claim collapses to `P = 0`
-(Fig 4): an upper-bound ranking, not a calibrated probability. Crucially, our three audit instruments *are* the marginals of this
+(a partial order) over claims not yet individually inspected beyond class membership. On our data a
+random Raja altORF claim has `P ≤ 0.998` versus a random HCC pseudogene claim `P ≤ 0.629` (the 37.1%
+non-novelty floor) (Fig 4): a class-conditioned upper-bound ranking, not a calibrated per-claim
+probability. Once a specific claim's own indicators are observed they supersede the class-average
+marginal directly: an exact-canonical-substring claim collapses to `P = 0` regardless of class, and a
+claim already confirmed non-canonical-self is bounded above its class average, not by it. Crucially, our three audit instruments *are* the marginals of this
 object: the non-novelty floor is `1-g⁺`, the normal-presentation floor is `1-s⁺`, and the class-FDR
 budget bound is the M-marginal. So the empirical audit (Results I) and the identifiability theory are one
 construction, not two.
@@ -321,8 +335,11 @@ than an unfalsifiable interval. The remaining fields close the other axes: the c
 fraction (`T_N, T_C, f`); the FDR convention and unit, stated explicitly; the per-peptide HLA allele;
 machine-readable source-ORF translation evidence (periodicity or protein-level statistics) and the
 peptide's canonical-substring status; and, for tumor specificity, the normal-ligandome search space
-actually queried with its class-specific decoy counts. None of these requires new experiments. They
-are quantities the original analysis already computed and discarded at reporting time.
+actually queried with its class-specific decoy counts. None of these requires new wet-lab experiments.
+The decoy and target counts, FDR convention, and unit already arise from the original search pipeline
+and are discarded at reporting time, not recomputed; the canonical-substring status and normal-ligandome
+query are additional computational checks on already-public sequence and reference data, not new
+assays — and, per Results I, are frequently *not* already performed by the original analysis.
 
 ### A neutral, leakage-controlled benchmark
 A reporting standard fixes new claims but cannot, by itself, adjudicate the existing record or grow
@@ -335,18 +352,28 @@ grown prospectively with time-separated or embargoed ground truth to prevent the
 would otherwise let a method be tuned on its own test set. The audit of Results I is the natural seed.
 It defines the corpus, the axes, and the failure modes the benchmark must measure.
 
-### The empirical check is feasible for one researcher
+### The empirical check has adequate statistical power for one researcher
 The standard asks authors for `D_N`; for the already-published record, the same statistic is
 recoverable independently. The class-labelled decoy count `D_N(τ)` can be obtained by re-searching
 public raw spectra under a class-preserving target-decoy design, and an entrapment search
 [8,9] independently tests whether the target-decoy control is actually
-calibrated for the cryptic class. A power analysis shows this is within reach of a single researcher on
-public data: for an entrapment search at multiplicity `k` over a class of `n` accepted non-canonical
+calibrated for the cryptic class. A power analysis shows the statistical precision is within reach of a
+single researcher on public data — a distinct question from end-to-end operational cost, addressed
+separately: for an entrapment search at multiplicity `k` over a class of `n` accepted non-canonical
 discoveries with true FDR `θ`, the estimate has standard error `√(θ/(kn))`, so for the ovarian cohort's
 headline class (`n ≈ 311`) a single matched entrapment (`k = 1`) already resolves the class FDR to a
 95% half-width of ≈9 percentage points, enough to distinguish, e.g., a 40% from a 70% class FDR. This precision is governed by the absolute number of accepted non-canonical discoveries `n`, not by the class's vanishing fraction of the catalogue, so the rarity of the class is not itself an obstacle to estimating its FDR. The
 decisive comparison is then whether the measured ratio `D_N(τ)/D_C(τ)` tracks `ρ_eff(τ)` or the global
 candidate ratio across thresholds. This is the test that converts the identifiability bound into a number.
+Philosopher's group-specific FDR filtering already implements the class-preserving step this
+re-analysis would need: it separates PSMs by class and computes the per-class accepted-decoy count
+at the point of filtering, then discards it — Philosopher's own report command excludes decoy rows
+from every output file unless a user explicitly passes `--decoys` (default `false`), so `D_N` is
+unrecoverable even from the deposited PSM-level output [26]. A recent immunopeptidomics study
+applies exactly this design to a canonical-vs-non-canonical split (protein-existence groups PE 1 and
+PE 4): its Methods state the resulting group-specific FDR threshold (0.03) repeatedly, but not the
+decoy count behind it [27] — the gap Table 1 is built to close, already latent in the pipeline the
+field runs today.
 This re-analysis is the natural next study; it is not required for the present results, which stand on
 the published record and the identifiability theory.
 
@@ -404,7 +431,10 @@ Several limitations bound the scope. The full four-axis chain is measured on the
 report it end to end; the atlas scale-up tests the generality of the reporting gap but not of the
 immunogenicity axis, whose reusable human ground truth is genuinely thin (≈40 peptides, largely
 figure-locked). The identifiability results are statements about what the published record *supports*;
-they neither assert nor deny that any specific antigen is real. Establishing the realized class FDR for
+they neither assert nor deny that any specific antigen is real, nor do they by themselves determine
+presentation or immunogenicity from reporting completeness alone. Where the sequence and
+benign-ligandome audits directly measure a specific claim, those measurements do support the
+narrower, claim-level conclusions reported in Results I and II. Establishing the realized class FDR for
 a given study, and thereby testing empirically whether `D_N(τ)/D_C(τ)` tracks the effective or the
 global ρ, requires re-analysis of raw spectra, which we show is feasible for one researcher on public
 data but leave to a dedicated study. Finally, the composition-matched null underlying the non-novelty
@@ -443,7 +473,12 @@ specificity (broad normal panel); immunogenicity (autologous/HLA-matched human T
 Underspecified fields are labelled *unverifiable*, not failed. The auditor independently recomputes
 the consensus-bar verdict from raw fields. Robustness is assessed with an escalating-leniency ladder
 (Supplement): strict survivors remain 0 through relaxation of the source-ORF and allele requirements
-and reach 41 only when an entire axis is dropped.
+and reach 41 only when an entire axis is dropped. We do not report a Wilson confidence bound on the
+strict-survivor proportion as a generalization interval: claims share resources, studies, peptides,
+and reporting schemas, so the corpus is not an independent Bernoulli sample and no such bound would
+describe uncertainty over a superpopulation of published claims. As an independence-reference
+calculation only, not a claim of statistical validity, the two-sided 95% Wilson upper endpoint is
+0.0013% for the audited claims and 2.6% for the 144-claim canonical-control panel.
 
 ### Non-novelty floor
 A peptide that is an exact substring of the SwissProt (reviewed) human proteome is canonical-self by
@@ -475,15 +510,16 @@ expected/conditional class FDPs `(θ*,θ_C*)` and global `q`. ∎ When only `q�
 over `q∈[0,α]` is `[0, min(1,α/f)]`; the upper endpoint (the "budget bound") is, by Prop 1, the tightest
 upper bound that is a function of `(α,f)` alone.
 
-**Proposition 2 (reconstructibility).** Given `(q,f)`, `θ_N` is consistently estimable from the record iff
-the record determines the per-class accepted decoy *split*, equivalently the count `D_N`, since (under
-the stated unit, threshold, and FDR convention) `(q,f)` fix the total decoy count. *Proof.* Sufficiency:
-under concatenated target-decoy competition the
-class-restricted estimator `θ̂_N=(D_N+1)/T_N` consistently estimates `θ_N` (conservatively, under the
-standard equal-chance assumption).
-Necessity: if the record fixes only `(q,f)` with `f>0` and `Θ_N` nondegenerate, the laws "all false
-discoveries canonical" (`θ_N=0`) and "all non-canonical" (`θ_N=min(1,q/f)`) share the reported `(q,f)`;
-e.g. `T_N=100, T_C=9900, q=0.01` admits both `θ_N=0` and `θ_N=1`. ∎
+**Proposition 2 (reconstructibility).** The class-restricted target-decoy estimate `θ̂_N=(D_N+1)/T_N` is
+computable from the reported record if and only if the record determines the per-class accepted decoy
+count `D_N` (equivalently, the accepted decoy *split* between classes). A reported global estimate
+together with `(T_N,T_C)` fixes only the *total* decoy count, not its class allocation, so `(q,f)`
+alone — without `D_N` — leaves `θ̂_N` uncomputed and, by Prop 1, `θ_N` only set-identified.
+*Proof.* If `D_N` is known, `θ̂_N=(D_N+1)/T_N` is a direct computation; under the standard target-decoy
+equal-chance assumption it consistently estimates `θ_N`. If only the total decoy count `D=D_N+D_C` is
+known (as recoverable from a reported global estimate under a stated convention), any split
+`(D_N, D-D_N)` with `0≤D_N≤D` is consistent with that total, so `D_N` — and hence `θ̂_N` — is not
+determined. ∎
 
 ### The effective ρ
 Under a common null in which a spectrum's candidate scores are i.i.d. with CDF `F` and per-spectrum
@@ -509,8 +545,11 @@ reaches 0 only when `f≤α` (the headline noncoding-cryptic subset); more gener
 `0.32–0.58` for the broader cryptic class). In the present worked examples the joint lower bound is 0
 regardless of `m⁻`, because `g⁻=s⁻=0` (any single claim could be the non-novel or normal-presented case
 within its own floor) already forces `max(0,·)=0`; claims are then comparable only by upper bound, a
-partial order. Worked example: Raja altORF `g⁺=1-5/2592=0.998 ⇒ P≤0.998`; HCC pseudogene `g⁺=1-43/116=0.629`,
-`s⁺≤1-16/43 ⇒ P≤0.629`; strict upper-bound ordering (not set-dominance; both sets reach 0), gap 0.37; an exact canonical-substring HCC claim has `G=0 ⇒ P=0`.
+partial order. Worked example, for a claim not yet individually inspected beyond class membership: Raja
+altORF `g⁺=1-5/2592=0.998 ⇒ P≤0.998`; HCC pseudogene `g⁺=1-43/116=0.629`, `s⁺≤1-16/43 ⇒ P≤0.629`; strict
+upper-bound ordering (not set-dominance; both sets reach 0), gap 0.37. Once a claim's own
+canonical-substring status is observed this class average is superseded: an exact canonical-substring
+HCC claim has `G=0 ⇒ P=0` directly, not via the class bound.
 
 ### Simulation
 `scripts/verify_effective_rho.py` (numpy, seed 0). At per-candidate tail probability `t=1-F(τ)`, a spectrum's
@@ -548,9 +587,9 @@ R.J. designed and performed all analyses and wrote the manuscript. The author de
 
 **Figure 2. The re-verifiability audit.** Of 306,844 published claims (180,650 unique peptides), none strict-pass all four evidence axes; the known-real canonical positive control (MAGE/SSX) collapses identically. Counts surviving each successive axis are shown on a linear scale so each step's true attrition is visually comparable; the two terminal zero-survivor counts are plotted at their true value (x = 0). The first step's ratio (180,650→82,453) is pooled across the full corpus and is a distinct measurement from the IEAtlas-specific 56.3% canonical-self headline reported in Results I (different denominator and scope, not a discrepancy; Methods). The specificity step here (82,453→75,471, 8.5%) is pooled across all sources; it is a distinct measurement from the IEAtlas-specific 9.1% normal-tissue rate reported in Results I, which uses IEAtlas's own genuinely-non-canonical remainder (76,272) as its denominator.
 
-**Figure 3. The identifiability theory.** (a) The class-specific FDR is only set-identified; the sharp upper bound is `min(1, α/f)`, giving ≤ 42–68% for the broad cryptic class (`f` = 4.4–7.1%) at the reported α = 3%. (b) A diagnostic: the class decoy split follows a threshold-weighted *effective ρ*, not the global candidate ratio: simulated `D_N/D_C` tracks `ρ_eff(τ)` and drifts from `ρ_global` as the threshold relaxes; the shaded band marks this simulation's stringent end, where `ρ_eff ≈ ρ_global`, consistent with, but not a numeric calibration of, the stringent-threshold regime Results II argues immunopeptidomics operates in.
+**Figure 3. The identifiability theory.** (a) The class-specific FDR is only set-identified; the sharp upper bound is `min(1, α/f)`, giving ≤ 42–68% for the broad cryptic class (`f` = 4.4–7.1%) at the reported α = 3%. (b) A diagnostic: the class decoy split follows a threshold-weighted *effective ρ*, not the global candidate ratio: simulated `D_N/D_C` tracks `ρ_eff(τ)` and drifts from `ρ_global` as the threshold relaxes; the shaded band marks this simulation's stringent end, where `ρ_eff ≈ ρ_global` — the limit Results II characterizes as typical for immunopeptidomics operating conditions, without establishing that any given cohort actually sits there.
 
-**Figure 4. Per-claim truth is a partial order.** Claims admit only a sharp upper bound on P(true), not a point value: a Raja altORF claim P ≤ 0.998, an HCC pseudogene claim P ≤ 0.629, and an exact-canonical-substring claim P = 0. Both non-degenerate intervals share the lower bound 0, so this is an upper-bound ranking, not set-dominance. Intervals are drawn open-capped at the upper bound (a bound, not a confirmed value); the filled diamond marks the point-identified P = 0 case.
+**Figure 4. Per-claim truth is a partial order.** For a claim not yet individually inspected beyond class membership, truth admits only a sharp class-conditioned upper bound on P(true), not a point value: a random Raja altORF claim P ≤ 0.998, a random HCC pseudogene claim P ≤ 0.629. Once a claim's own status is observed that value collapses to a point instead: an exact-canonical-substring claim has P = 0, regardless of class. Both non-degenerate intervals share the lower bound 0, so the class-conditioned case is an upper-bound ranking, not set-dominance. Intervals are drawn open-capped at the upper bound (a bound, not a confirmed value); the filled diamond marks the point-identified P = 0 case.
 
 ## References
 *DOIs / PMCIDs verified for this manuscript; author lists abbreviated. In-text citations use numbered
@@ -581,3 +620,6 @@ references keyed to this list.*
 23. Duncan OD, Davis B. An alternative to ecological correlation. *Am Sociol Rev* 1953;18(6):665–666. The classical ecological-inference "method of bounds"; Proposition 1's mixture-bound identity is this construction's instance for target-decoy class-specific FDR.
 24. Ruiz Cuevas MV, Hardy M-P, Hollý J, et al.; Perreault C, Yewdell JW. Most non-canonical proteins uniquely populate the proteome or immunopeptidome. *Cell Rep* 2021;34(10):108815. doi:10.1016/j.celrep.2021.108815. (PMC8040094): resolves ambiguous ORF assignment by priority-mapping (start-codon confidence, Kozak motif, transcript expression), not canonical-sequence overlap; reports no comparable contamination rate.
 25. Rajchert A, Keich U. Controlling the false discovery rate via competition: is the +1 needed? *Stat Probab Lett* 2023;197:109819. doi:10.1016/j.spl.2023.109819: studies the necessity of the "+1" pseudocount in competition-based (target-decoy) FDR estimators, building on Barber & Candès' (2015) knockoff+ result.
+26. da Veiga Leprevost F, Haynes SE, Avtonomov DM, et al.; Nesvizhskii AI. Philosopher: a versatile toolkit for shotgun proteomics data analysis. *Nat Methods* 2020;17:869–870. doi:10.1038/s41592-020-0912-y. (PMID 32669682; PMC7509848): source-verified (`lib/fil/fil.go`, `lib/rep/*.go`, github.com/Nesvilab/philosopher) that group-specific FDR filtering computes but does not persist the per-class decoy count.
+27. Ferreira HJ, Stevenson BJ, Pak H, et al.; Bassani-Sternberg M. Immunopeptidomics-based identification of naturally presented non-canonical circRNA-derived peptides. *Nat Commun* 2024;15:2357. doi:10.1038/s41467-024-46408-3. (PMID 38490980; PMC10943130): applies FragPipe group-specific FDR (PE 1 vs. PE 4) to a canonical-vs-non-canonical split; reports the 0.03 threshold, not the underlying decoy count.
+28. Ruiz Cuevas MV, Hardy M-P, Larouche J-D, et al.; Perreault C, Ehx G. BamQuery: a proteogenomic tool to explore the immunopeptidome and prioritize actionable tumor antigens. *Genome Biol* 2023;24:188. doi:10.1186/s13059-023-03029-1. (PMC10426134): exhaustively attributes RNA expression to MHC-I peptides of any genomic origin from bulk/single-cell RNA-seq; addresses multi-locus origin attribution, not canonical-sequence exclusion.
