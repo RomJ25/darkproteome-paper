@@ -283,7 +283,8 @@ Both results point to one missing datum. The class FDR becomes **consistently es
 target-decoy estimate `θ̂_N = (D_N+1)/T_N` [6,7,25], exactly when the per-class accepted decoy count `D_N` is
 reported on the claim's unit and convention (equivalently, when the per-class decoy *split* is recoverable,
 since the reported global FDR and class fraction fix the total); absent it, the class FDR is **not
-identifiable** from the published record (Methods, Prop. 2). `D_N` is the single number that turns an
+identifiable** from the published record (Methods, Prop. 2); no alternative report identifies it
+without also determining `D_N` (Methods, Cor. 3). `D_N` is the single number that turns an
 unfalsifiable interval into a checkable estimate. We stress the scope of that claim: `D_N` closes the
 *reconstructibility* gap. It makes the class estimate *computable*, but whether the estimate is
 well-*calibrated* is a separate question, since the target-decoy equal-chance assumption can be fragile for the
@@ -521,6 +522,19 @@ known (as recoverable from a reported global estimate under a stated convention)
 `(D_N, D-D_N)` with `0≤D_N≤D` is consistent with that total, so `D_N` — and hence `θ̂_N` — is not
 determined. ∎
 
+Proposition 2's own proof demonstrates non-identifiability for one alternative report (the pooled decoy
+count `D`); the corollary below generalizes this to every possible alternative.
+
+**Corollary 3 (necessity, up to informational equivalence).** Fix the observables of Propositions 1–2 and
+let `S` be any additional reported summary. `θ̂_N` is determined by `(observables, S)` if and only if `D_N`
+is determined by `(observables, S)`.
+*Proof.* (⇐) is Proposition 2. (⇒) Suppose `D_N` is not determined by `(observables, S)`: two admissible
+states then share the same `(observables, S)` while differing in `D_N`. Since `T_N` is fixed by the
+observables and `d↦(d+1)/T_N` is strictly increasing, hence injective, for `T_N>0`, the two states also
+differ in `θ̂_N`, so `θ̂_N` is not determined by `(observables, S)` either. ∎ `D_N` is therefore necessary,
+not merely sufficient: no alternative summary identifies `θ̂_N` unless it determines `D_N` itself, or an
+equivalent one-to-one recoding of it.
+
 ### The effective ρ
 Under a common null in which a spectrum's candidate scores are i.i.d. with CDF `F` and per-spectrum
 top-hit competition, the winning candidate for spectrum `s` lies in class `g` with probability
@@ -546,7 +560,9 @@ reaches 0 only when `f≤α` (the headline noncoding-cryptic subset); more gener
 regardless of `m⁻`, because `g⁻=s⁻=0` (any single claim could be the non-novel or normal-presented case
 within its own floor) already forces `max(0,·)=0`; claims are then comparable only by upper bound, a
 partial order. Worked example, for a claim not yet individually inspected beyond class membership: Raja
-altORF `g⁺=1-5/2592=0.998 ⇒ P≤0.998`; HCC pseudogene `g⁺=1-43/116=0.629`, `s⁺≤1-16/43 ⇒ P≤0.629`; strict
+altORF `g⁺=1-5/2592=0.998 ⇒ P≤0.998`; HCC pseudogene `g⁺=1-43/116=0.629`, class-wide `s⁺≤1-16/116=0.862`
+(16 of all 116 claims directly confirmed non-specific; `16/43`, conditional on canonical-self
+membership, is a distinct within-subgroup statistic), `min(g⁺,s⁺)=0.629 ⇒ P≤0.629`; strict
 upper-bound ordering (not set-dominance; both sets reach 0), gap 0.37. Once a claim's own
 canonical-substring status is observed this class average is superseded: an exact canonical-substring
 HCC claim has `G=0 ⇒ P=0` directly, not via the class bound.
