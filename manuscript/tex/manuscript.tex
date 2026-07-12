@@ -14,6 +14,17 @@
 \usepackage[letterpaper,top=1.2in,bottom=1.25in,left=1.5in,right=1.5in,
             headheight=15pt,headsep=15pt,footskip=26pt]{geometry}
 
+% Float placement. With the defaults, Figure 2's block (figure + its long caption,
+% ~55% of \textheight) clears \floatpagefraction=0.5, so LaTeX preferred a float-only
+% page and centred it with \@fptop/\@fpbot fill glue -- stranding it between two blank
+% bands. Raising \floatpagefraction above that block's share disqualifies the sparse
+% float page; the larger \topfraction then lets it ride at the top of a text page like
+% the other three figures.
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.70}
+\renewcommand{\textfraction}{0.15}
+\renewcommand{\floatpagefraction}{0.75}
+
 \usepackage{xcolor}
 \usepackage{graphicx}
 \graphicspath{{../figures/}{figures/}}
