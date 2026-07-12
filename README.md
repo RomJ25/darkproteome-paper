@@ -169,34 +169,50 @@ UniProt/SwissProt. Full accessions, versions, and licenses in `data/SOURCES.md`.
 
 Of the audited machine-readable claims:
 
-- **Source-translation statistics are reported at the STUDY level, never per claim.** The audited
-  sources *do* report them — IEAtlas: a 5% PSM FDR and, explicitly, **"no protein FDR was set"**;
-  the HCC cohort: a 5% search FDR plus a RibORF score cutoff (≥0.5, ≥5 footprints) and an average
-  read periodicity (>0.5); the ovarian cohort: a 3% PSM-level FDR. What **none** of them publishes
-  is the **per-claim** value — this ORF's own RibORF score, this peptide's own q-value — so no
-  individual claim can be independently re-adjudicated from the reported record. Whether
-  translation is biologically real is **not assessed** and is not assessable from a reported
-  record; that is a different study.
+- **Every audited source STATES ITS FDR HANDLING — at the STUDY level, never per claim.** (It would
+  be false to say every source "reports a protein-level FDR": IEAtlas explicitly states that a
+  protein-level FDR was **not applied**.) IEAtlas: a 5% PSM FDR and *"no protein FDR was set"*. The
+  HCC cohort: a 5% search FDR, plus a RibORF score cutoff (≥0.5, ≥5 footprints) and an average read
+  periodicity (>0.5). The ovarian cohort: a 3% PSM-level FDR. What **none** of them publishes is the
+  **per-claim** value — this ORF's own RibORF score, this peptide's own q-value — so no individual
+  claim can be independently re-adjudicated from the reported record. Whether translation is
+  biologically real is **not assessed** and is not assessable from a reported record; that is a
+  different study.
 - **Presentation is asserted almost everywhere; it is re-evaluable almost nowhere.** The peptide is
   reported as HLA-eluted for essentially the whole corpus, yet the **allele it was restricted to**
   is reported for **0.09%** of claims — and for only **53 of 4,995** in the end-to-end cohorts.
 - **No audited record carries a reusable, machine-readable positive human T-cell result.** This is
   *not* "the claims failed an assay": nearly all of them were **never assayed**. Where an assay was
   run, the per-peptide result is often published only inside a figure.
-- **The per-class accepted-decoy count `D_N` is not published by any audited source**, so a
-  class-specific target-decoy estimate cannot be *reconstructed or verified* from the published
-  tables for any claim — including those that *do* carry a per-PSM q-value. (Note: a class-specific
-  FDR *value* has been reported at least once in this literature. A reported number is not a
-  reconstructible one — a reader given a single figure cannot recompute it, cannot resolve it to a
-  sub-class, and cannot detect an error in it.)
+- **A global FDR does not identify subgroup-specific error rates.** Subgroup rates become assessable
+  only when authors report them *directly*, or release the target–decoy assignments and thresholds
+  needed to reconstruct them. This is a statement about *identifiability*, not an accusation that
+  the field ignores the problem — **it demonstrably does not**. Ouspenskaia et al. applied a 1%
+  global FDR, measured **4.6%** FDR among ncORF peptides (up to **14%** for one ORF class),
+  introduced **group-specific filtering** that brought each class back to ≈1%, and reported the
+  resulting high-confidence set. **That is the predicted inflation, detected and corrected — a
+  positive exemplar for the reporting standard proposed here, not a failure.** What remains missing
+  across the corpus is the *auditability* layer: per-class accepted target/decoy counts, class
+  definitions, the thresholding stage, and claim-linked assignments.
 
-**56.3%** of catalogued cryptic "cancer" epitopes in the largest public atlas (IEAtlas) are exact
-substrings of the canonical human proteome — and **the atlas's own Methods explain why.** It
-searched *"against **both** our integrated benchmarked ncORF library **and the canonical human
-proteome**"*, applied a 5% PSM FDR with *"no protein FDR"*, and then retained *"only epitopes
-derived from non-coding regions"*. The canonical explanation was **available to the search engine
-and discarded by a post-hoc retention rule, not by the evidence.** This is a documented design
-choice with a foreseeable consequence — **not** a claim of error or misconduct.
+**At least 56.3%** of the unique cryptic "cancer" epitope sequences catalogued in the largest public
+atlas (IEAtlas) also occur in reviewed canonical human proteins, under our explicitly defined
+reference *R*. IEAtlas searched *"against **both** our integrated benchmarked ncORF library **and the
+canonical human proteome**"*, applied a 5% PSM FDR with *"no protein FDR"*, and retained *"only
+epitopes derived from non-coding regions"*.
+
+**What this establishes is SOURCE-ATTRIBUTION AMBIGUITY, and no more.** An identical amino-acid
+sequence is **not two competing peptide hypotheses** — it is *one* peptide sequence compatible with
+*multiple* source loci. Tandem MS identifies the sequence; it does not choose between a canonical
+gene and an ncORF that encode the same sequence. So the defensible claim is:
+
+> The locus-based retention rule permits peptide sequences compatible with **both** canonical and
+> ncORF sources to enter the non-canonical catalogue **without resolving their source**.
+
+We do **not** claim the pipeline "manufactures" epitopes, "re-labels" canonical peptides, or
+"discarded" a canonical explanation. Demonstrating that would require the search outputs
+(`peptides.txt` `Proteins` / `Leading razor protein` / `Unique (Proteins)` fields), the exact
+February-2022 reference FASTA, or author confirmation — **none of which we have.**
 
 This is **sequence non-uniqueness**, not a claim that
 the biology is absent: it means the reported record cannot distinguish the nominated ncORF from a
