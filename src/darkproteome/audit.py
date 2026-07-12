@@ -94,13 +94,16 @@ def main(path):
     print(f"""
   Of {n:,} audited machine-readable claims:
 
-  SOURCE TRANSLATION — three levels, and collapsing them is how the old headline went wrong:
+  SOURCE TRANSLATION — collapsing these levels mischaracterises what the authors did:
     - a dedicated translation ANALYSIS (Ribo-seq/RibORF) is named for  {ribo:,}
     - translation is implied by the MS observation itself for          {st['asserted']:,}
-    - a QUANTITATIVE statistic sufficient to apply the criterion
-      independently is present for                                     {st['quantitative']:,}
-    Translation is ASSERTED and never QUANTIFIED. Whether it is biologically real is NOT
-    ASSESSED here and cannot be — that is a different study.
+    - a CLAIM-LINKED quantitative statistic (this ORF's own score,
+      this peptide's own q-value) is present for                       {st['quantitative']:,}
+    NOTE: the sources DO report translation and search statistics — at the STUDY level (a RibORF
+    score cutoff, an average read periodicity, a PSM-level FDR). What none publishes is the
+    PER-CLAIM value, so no individual claim can be independently re-adjudicated. Do NOT write
+    "the field does not report translation statistics"; it does, for the study.
+    Whether translation is biologically real is NOT ASSESSED here — that is a different study.
 
   HLA PRESENTATION — asserted almost everywhere, re-evaluable almost nowhere:
     - reported as HLA-eluted:                                          {m['hla_elution']['asserted']:,}

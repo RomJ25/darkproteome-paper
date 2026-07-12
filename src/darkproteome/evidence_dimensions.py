@@ -114,11 +114,17 @@ def _rung(asserted=False, claim_linked=False, quantitative=False,
 # 1. source_translation
 # ---------------------------------------------------------------------------------------
 # Three levels that must be kept apart:
-#   (a) translation ASSERTED per claim -- e.g. a binary RibORF YES/NO
-#   (b) QUANTITATIVE support sufficient to apply the criterion independently
-#   (c) translation biologically absent -- NOT ASSESSED, and not assessable from a reported record
-# "The field does not report translation evidence" conflates (a) with (b): the literature reports
-# translation as an ASSERTION and withholds the statistic.
+#   (a) translation ASSERTED, and QUANTIFIED AT THE STUDY LEVEL. The audited sources DO report
+#       thresholds -- a RibORF score cutoff, an average read periodicity, a PSM-level FDR. It is
+#       simply WRONG to say "the field does not report translation statistics"; it reports them for
+#       the STUDY.
+#   (b) CLAIM-LINKED quantitative support -- the individual ncORF's own score, the individual
+#       peptide's own q-value. This is what a reader would need to re-adjudicate ONE claim, and it
+#       is what is not published.
+#   (c) translation biologically absent -- NOT ASSESSED, and not assessable from a reported record.
+# Collapsing (a) into (b) mischaracterises what the authors did, and that error is fatal to an audit.
+# The ladder encodes the distinction: `asserted` passes, `claim_linked` fails for the statistic, so
+# `quantitative` and `adjudicable` are 0.
 
 def source_translation(row):
     ev = _txt(row.get("evidence_types"))
