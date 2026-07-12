@@ -10,17 +10,24 @@ committed artifacts and compared against what the manuscript asserts. If they di
 non-zero and the paper does not build.
 
 It also fails if the paper:
-  * asserts any of the phrasings RETRACTED during review ("manufactures", "the rule predicts the
-    rate", "strict survivor", ...) outside an explicit disclaimer; or
-  * drops a REQUIRED PRIOR-ART CITATION, or the explicit concession that the paper contributes no
-    conceptual novelty. The standard applied here is not ours, and a draft that fails to say so is
-    claiming someone else's contribution -- which a referee would end the paper with, in one line.
+  * asserts any of the phrasings RETRACTED during review, outside an explicit withdrawal or
+    disclaimer. Five of these were publication blockers found by external review on 2026-07-13:
+      - "11-40x" -- a fold-change against rates from ANOTHER pipeline. Not a measurement.
+      - "z = 74"  -- a two-proportion z on 174,465 CLUSTERED observations. Never valid.
+      - "lower bound on its library" -- |(A u B) n C| / |A u B| is NOT monotone in adding B.
+      - "internal control" -- the non-overlapping set controls nothing; it is a COMPARATOR.
+      - "the field's standard" / "applies no exclusion rule" -- stronger than the evidence.
+  * drops a REQUIRED PRIOR-ART CITATION, or the explicit statement that the contribution is
+    empirical rather than conceptual. The principles applied here are not ours, and a draft that
+    fails to say so is claiming someone else's contribution -- which a referee would end the paper
+    with, in one line.
 
 The large public inputs (the atlas exports) are not redistributed. On a clean checkout the checks
 that need them are SKIPPED and reported as skipped, while everything derivable from the committed
 artifacts is still verified. A verifier that crashes on a clean checkout is a verifier nobody runs.
 """
 import csv
+import json
 import os
 import re
 import sys
@@ -31,45 +38,56 @@ csv.field_size_limit(10_000_000)
 TIER1 = os.path.join(REPO, "data", "primary_tier1_nonnovelty.csv")
 SCALED = os.path.join(REPO, "data", "claim_catalog_scaled.csv")
 SCORED = os.path.join(REPO, "data", "claim_catalog_scored.csv")
+R3 = os.path.join(REPO, "data", "derived_r3_inference.json")
+BIAS = os.path.join(REPO, "data", "derived_detection_bias.json")
+ERA = os.path.join(REPO, "data", "derived_era_reference.json")
 ATL = os.path.join(REPO, "data", "external", "atlases")
 IE_CANCER = os.path.join(ATL, "IEAtlas_Epitopes_In_Cancer_Tissues.txt")
-IE_NORMAL = os.path.join(ATL, "IEAtlas_Epitopes_In_Normal_Tissues.txt")
 MS = os.path.join(REPO, "manuscript", "manuscript_v2.md")
 
 PSEUDO = re.compile(r"^[A-Z0-9\-]+P\d+$")
 
-# Retracted during external review. Allowed ONLY inside an explicit disclaimer, or a quotation of the
-# retracted wording. "the rule predicts the rate" is banned because PRIOR ART CONTRADICTS IT:
-# catalogues that also lack an exclusion rule sit at 1.4-5%, not 56%, so a permissive rule does not
-# account for the magnitude (Bedran et al. 2023).
-BANNED = ["manufactures", "systematically re-labels", "discarded by the retention",
-          "genuinely non-canonical", "canonical self", "strict survivor",
-          "rule predicts the rate", "predicts the canonical-overlap rate"]
+# Retracted. Allowed ONLY inside an explicit withdrawal/disclaimer, or a quotation of the retracted
+# wording. The paper is permitted -- required, even -- to NAME what it withdrew.
+BANNED = [
+    "manufactures", "systematically re-labels", "discarded by the retention",
+    "genuinely non-canonical", "canonical self", "strict survivor",
+    "rule predicts the rate", "predicts the canonical-overlap rate",
+    # -- the five blockers from the 2026-07-13 external review --
+    "11-40", "11–40",                       # fold-change across pipelines: not measured
+    "z = 74", "z=74",                       # invalid: clustered observations
+    "lower bound on its library",           # union rate is not monotone
+    "internal control",                     # it is a within-resource COMPARATOR
+    "the field's standard",                 # published+recommended, not universal
+    "applies no exclusion rule",            # its METHODS do not describe one
+    "magnitude is explained by the library",
+    # -- STALE VALUES. A presence-check catches a number that was CHANGED; it cannot catch a
+    # contradictory number added ALONGSIDE the right one. These five are the non-partitioning class
+    # counts the review caught (they summed to 175,011 > 174,465, because 546 sequences carry both
+    # labels). If any reappears, the old double-counted split is back.
+    "9,874", "16,323", "88,827", "158,688", "60.5%",
+    "22,003 entries",                       # unit error: they are unique SEQUENCES, not rows
+]
 
 REQUIRED = [
-    ("Bedran", "the metric + the exclusion standard (Cancer Immunol Res 2023)"),
+    ("Bedran", "the criterion + the metric (Cancer Immunol Res 2023)"),
     ("Woo et al. 2014", "class-specific FDR under-control is prior art"),
     ("Kumar et al. 2022", "'most shared peptides should be dropped' is prior art"),
     ("Nesvizhskii", "the shared-peptide / protein-inference problem is textbook"),
-    ("no conceptual novelty", "the paper must concede this explicitly"),
+    ("Our contribution is empirical", "the paper must concede the principles are not new"),
+    ("within-resource comparator", "the non-overlapping set is not a control"),
 ]
 
 
-def epitopes(path):
-    out = set()
-    with open(path, newline="", encoding="utf-8", errors="replace") as fh:
-        rd = csv.reader(fh, delimiter="\t")
-        next(rd, None)
-        for r in rd:
-            if r and r[0] and r[0].strip().upper().isalpha():
-                out.add(r[0].strip().upper())
-    return out
-
-
 def main():
-    for p in (TIER1, SCALED, SCORED, MS):
+    for p in (TIER1, SCALED, SCORED, R3, BIAS, ERA, MS):
         if not os.path.exists(p):
-            sys.exit(f"missing required artifact: {p}")
+            sys.exit(f"missing required artifact: {p}\n(regenerate: see escalations/"
+                     "2026-07-13-class-label-provenance/)")
+
+    r3 = json.load(open(R3))
+    bias = json.load(open(BIAS))
+    era = json.load(open(ERA))
 
     selfmap = {r["peptide"]: int(r["canonical_self"])
                for r in csv.DictReader(open(SCORED, newline="", encoding="utf-8"))}
@@ -88,14 +106,12 @@ def main():
 
     facts, checks, skipped = {}, [], []
 
-    # --- R1: the catalogues (committed artifacts only) ---
+    # --- R1: the same-pipeline catalogues (committed artifacts only) ---
     facts["cryptic"] = rate(src["CrypticProteinDB-immuno"] | src["CrypticProteinDB-epitopes"])
     facts["ieatlas"] = rate(src["IEAtlas"])
     raja = [r for r in t1 if r["cohort"].startswith("Raja")]
     rk = sum(int(r["canonical_self_exact"]) for r in raja)
     facts["raja"] = (rk, len(raja), 100 * rk / len(raja))
-    rp = [r for r in t1 if r["cohort"].startswith("Raja") and r["orf_class"] == "pseudogene-ORF"]
-    facts["raja_pseudo"] = (sum(int(r["canonical_self_exact"]) for r in rp), len(rp), 0.0)
 
     checks += [
         (f"{facts['ieatlas'][0]:,} / {facts['ieatlas'][1]:,}", "IEAtlas overlap n/N"),
@@ -103,19 +119,47 @@ def main():
         (f"{facts['cryptic'][0]:,} / {facts['cryptic'][1]:,}", "CrypticProteinDB n/N"),
         ("0.026%", "CrypticProteinDB rate"),
         (f"{facts['raja'][0]:,} / {facts['raja'][1]:,}", "Raja n/N"),
-        (f"{facts['raja_pseudo'][0]} / {facts['raja_pseudo'][1]}", "Raja pseudogene n/N"),
-        # R2 -- measured TWICE, over different k-mer windows. The paper must report BOTH: presenting
-        # a single-implementation number as novel is how a prior in-house result nearly got
-        # re-presented as a discovery.
+        # R2 -- measured TWICE, over different k-mer windows. The paper must report BOTH.
         ("34.1%", "nuORFdb latent canonical ambiguity (9-mer)"),
         ("34.4%", "nuORFdb, independent 8-11mer corroboration"),
         ("1.0–2.4%", "GENCODE Ribo-seq ORF latent ambiguity"),
         ("8,448,245", "nuORFdb distinct 9-mers"),
     ]
 
-    # --- R1 class-fixed control + R3 consequence: need the non-redistributed atlas exports ---
-    if os.path.exists(IE_CANCER) and os.path.exists(IE_NORMAL):
-        ps, other = set(), set()
+    # --- the era-correct reference (blocker 2) ---
+    checks += [
+        (f"{era['pct_2022_01']}%", "era-correct rate vs Swiss-Prot 2022_01"),
+        (f"{era['overlap_2022_01']:,}", "era-correct overlap count"),
+        (f"{era['proteins_2022_01']:,}", "human proteins in Swiss-Prot 2022_01"),
+        (f"{era['retrospective_only']}", "overlaps a 2022 analyst could not have seen"),
+        (f"{era['retrospective_pct_of_overlap']}%", "retrospective share of the overlap set"),
+    ]
+
+    # --- R3 inference (blocker 5): the z is GONE; RR + clustered CI replace it ---
+    checks += [
+        (f"{r3['overlapping_in_normal']:,}", "canonical-overlapping also in normal export"),
+        (f"{r3['pct_overlapping_in_normal']}%", "overlapping normal-export rate"),
+        (f"{r3['pct_comparator_in_normal']}%", "comparator normal-export rate"),
+        (f"{r3['pct_of_whole_catalogue']}%", "share of the whole catalogue that is both"),
+        (f"{r3['rr_length_standardized']}", "length-standardized risk ratio"),
+        (f"[{r3['ci95'][0]}, {r3['ci95'][1]}]", "gene-clustered bootstrap 95% CI"),
+        (f"{r3['n_clusters']:,}", "source-gene clusters resampled"),
+    ]
+
+    # --- R2 detection-bias test (was an untested hypothesis; now measured) ---
+    checks += [
+        (f"{bias['mean_types_overlapping']}", "mean cancer types, overlapping"),
+        (f"{bias['mean_types_comparator']}", "mean cancer types, comparator"),
+        (f"{bias['length_strata_holding']} of {bias['length_strata_tested']}",
+         "length strata in which detection breadth holds"),
+        (f"{bias['ribo_catalogue_rr']}×", "ribosomal enrichment in the catalogue"),
+        (f"{bias['ribo_library_rr']}×", "ribosomal enrichment in the library (the control)"),
+        (f"{bias['ribo_excess']}×", "excess of catalogue over library"),
+    ]
+
+    # --- R1 class strata (blocker 3): must PARTITION, and the paper must say so ---
+    if os.path.exists(IE_CANCER):
+        genes = {}
         with open(IE_CANCER, newline="", encoding="utf-8", errors="replace") as fh:
             rd = csv.reader(fh, delimiter="\t")
             next(rd, None)
@@ -123,36 +167,42 @@ def main():
                 if len(r) < 3 or not r[0]:
                     continue
                 q = r[0].strip().upper()
-                if not q.isalpha():
-                    continue
-                g = (r[2] or "").split("_")[0].upper()
-                (ps if PSEUDO.match(g) else other).add(q)
-        facts["ieatlas_pseudo"] = rate(ps)
-        facts["ieatlas_other"] = rate(other)
+                if q.isalpha():
+                    genes.setdefault(q, set()).add((r[2] or "").split("_")[0].upper())
+        strata = {"pseudogene-only": [], "non-pseudogene-only": [], "mixed": []}
+        for q, gs in genes.items():
+            if q not in selfmap:
+                continue
+            a = any(PSEUDO.match(g) for g in gs)
+            b = any(not PSEUDO.match(g) for g in gs)
+            strata["pseudogene-only" if a and not b
+                   else "non-pseudogene-only" if b and not a else "mixed"].append(q)
 
-        cancer, normal = epitopes(IE_CANCER), epitopes(IE_NORMAL)
-        sc = [p for p in cancer if p in selfmap]
-        ov = [p for p in sc if selfmap[p]]
-        nov = [p for p in sc if not selfmap[p]]
-        facts["consequence_ov"] = (sum(1 for p in ov if p in normal), len(ov), 0.0)
-        facts["consequence_nov"] = (sum(1 for p in nov if p in normal), len(nov), 0.0)
-
+        tot = sum(len(v) for v in strata.values())
+        if tot != facts["ieatlas"][1]:
+            print(f"PARTITION FAILURE: strata sum to {tot:,}, catalogue is "
+                  f"{facts['ieatlas'][1]:,}. The strata are not mutually exclusive.")
+            return 1
+        for k, v in strata.items():
+            facts[k] = (sum(selfmap[p] for p in v), len(v),
+                        100 * sum(selfmap[p] for p in v) / len(v))
         checks += [
-            (f"{facts['ieatlas_pseudo'][0]:,} / {facts['ieatlas_pseudo'][1]:,}",
-             "IEAtlas pseudogene n/N"),
-            ("60.5%", "IEAtlas pseudogene rate"),
-            (f"{facts['consequence_ov'][0]:,} = 22.4%",
-             "canonical-overlapping also on normal tissue"),
-            ("9.1%", "non-overlapping control rate"),
-            ("12.6%", "share of the whole catalogue that is both"),
+            (f"{facts['pseudogene-only'][1]:,}", "pseudogene-only n"),
+            (f"{facts['non-pseudogene-only'][1]:,}", "non-pseudogene-only n"),
+            (f"{facts['mixed'][1]}", "sequences carrying BOTH labels"),
+            (f"{facts['pseudogene-only'][2]:.1f}%", "pseudogene-only overlap rate"),
+            (f"{facts['non-pseudogene-only'][2]:.1f}%", "non-pseudogene-only rate (= the "
+                                                        "no-pseudogene counterfactual)"),
         ]
     else:
-        skipped.append("R1 class-fixed control + R3 consequence — need data/external/atlases/ "
-                       "(large public files, not redistributed; see data/SOURCES.md)")
+        skipped.append("R1 class strata — need data/external/atlases/ (large public files, not "
+                       "redistributed; see data/SOURCES.md)")
 
     if "--print" in sys.argv:
         for k, (a, b, p) in facts.items():
-            print(f"  {k:<18} {a:>7,}/{b:<8,} = {p:6.3f}%")
+            print(f"  {k:<22} {a:>7,}/{b:<8,} = {p:6.3f}%")
+        for k, v in (("r3", r3), ("detection-bias", bias), ("era", era)):
+            print(f"  {k}: {json.dumps(v)}")
         for s in skipped:
             print(f"  ! skipped: {s}")
         return 0
@@ -163,21 +213,26 @@ def main():
 
     # A disclaimer SECTION is a block, not a line -- its bullets do not each repeat "we do not
     # claim". Excise it, then check what remains. Anything asserted OUTSIDE it is a regression.
+    # A retracted phrase may also appear in the BODY when the paper names what it withdrew -- that
+    # is required honesty, not a regression, so a withdrawal on the line exempts it too.
     body = re.sub(r"^##+\s*What this paper does not claim.*?(?=^##\s|\Z)", "", text,
                   flags=re.S | re.M | re.I)
-    disclaim = re.compile(r"do(es)? not claim|we do not|never write|retracted|banned|~~|❌", re.I)
+    ok_line = re.compile(
+        r"do(es)? not claim|we do not|never write|retracted|banned|~~|❌"
+        r"|withdraw|invalid|was wrong|earlier draft|no fold-change|not a lower bound|not monotone",
+        re.I)
     for b in BANNED:
         for m in re.finditer(re.escape(b), body, re.I):
             a = body.rfind("\n", 0, m.start()) + 1
             z = body.find("\n", m.end())
             line = body[a: z if z > 0 else len(body)]
-            if disclaim.search(line):
+            if ok_line.search(line):
                 continue
-            bad.append(f"BANNED PHRASE ASSERTED: {b!r} -> …{line.strip()[:70]}…")
+            bad.append(f"RETRACTED PHRASE ASSERTED: {b!r} -> …{line.strip()[:70]}…")
 
     for cite, why in REQUIRED:
         if cite not in text:
-            bad.append(f"MISSING REQUIRED PRIOR-ART CITATION: {cite!r} -- {why}")
+            bad.append(f"MISSING REQUIRED: {cite!r} -- {why}")
 
     if bad:
         print("MANUSCRIPT VERIFICATION: FAIL\n")
@@ -188,8 +243,9 @@ def main():
 
     print("MANUSCRIPT VERIFICATION: PASS")
     print(f"  - all {len(checks)} headline numbers match the artifacts")
-    print(f"  - no banned phrasing ({len(BANNED)} retracted overclaims checked)")
-    print(f"  - required prior-art citations present ({len(REQUIRED)} checked)")
+    print(f"  - no retracted phrasing ({len(BANNED)} checked, incl. the 5 review blockers)")
+    print(f"  - required prior-art + hedging language present ({len(REQUIRED)} checked)")
+    print("  - ORF-class strata partition exactly")
     for s in skipped:
         print(f"  ! SKIPPED: {s}")
     return 0

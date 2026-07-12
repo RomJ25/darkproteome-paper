@@ -1,15 +1,37 @@
-"""Does source ambiguity have a consequence? Test it inside the resource.
+"""The consequence -- and it is internal to the resource.
+
+An audit that stops at "56.3% of these entries are source-ambiguous" invites the only question that
+matters: SO WHAT? This answers it, using IEAtlas's OWN data and no external reference.
 
 If a catalogued "cancer epitope" is in fact a peptide of an abundant canonical protein, it should
 also be presented on NORMAL tissue -- because that protein is expressed there too. IEAtlas publishes
-its own normal-tissue epitope set, so the prediction is testable within the resource, using the
-catalogue's NON-overlapping epitopes as an internal control and requiring no external reference.
-
-WHAT THIS DOES NOT SHOW: that any individual epitope is canonically derived. MS identifies the
-SEQUENCE, never the LOCUS. Presence in a normal-tissue set is evidence about PRESENTATION, not SOURCE.
+its own normal-tissue epitope set. So the prediction is testable inside the resource, with the
+non-overlapping epitopes as an internal control.
 
     python3 scripts/consequence.py
 """
+
+import sys as _sys
+print("""
+================================================================================
+  RETRACTED -- DO NOT QUOTE THIS SCRIPT'S OUTPUT
+================================================================================
+  This script computed a two-proportion z-test (z = 74) over 174,465 peptides treated as
+  INDEPENDENT Bernoulli observations. They are not independent -- they are clustered by source
+  gene, gene family, dataset, tissue, donor, HLA allele and pipeline. The z was invalid, and is
+  withdrawn. It also did not control for peptide length.
+
+  The DESCRIPTIVE counts it reported (22,003 / 98,193 = 22.4% vs 6,976 / 76,272 = 9.1%) were
+  correct and survive; only the inference was wrong.
+
+  Superseded by: consequence_robust.py -- length-standardized risk ratio with a gene-clustered bootstrap
+                 (2.42x, 95% CI [2.32, 2.52])
+
+  The code below is kept for the record, not for use. It is not run.
+================================================================================
+""", file=_sys.stderr)
+_sys.exit(1)
+
 import csv
 import math
 import os
@@ -34,25 +56,7 @@ def load(path):
     return s
 
 
-def _require(*paths):
-    """Fail with a usable message, not a traceback, when the external inputs are absent.
-
-    The large public inputs (Swiss-Prot, the atlas exports, the ncORF libraries, the fetched full
-    texts) are not redistributed in this repository. Populate `data/external/` from the sources
-    documented in `data/SOURCES.md` and `data/external/README.md`.
-    """
-    import sys as _s
-    missing = [p for p in paths if not __import__("os").path.exists(p)]
-    if missing:
-        _s.exit("missing required input(s):\n  " + "\n  ".join(missing) +
-                "\n\nThese are large public files and are not redistributed here.\n"
-                "Populate data/external/ -- see data/SOURCES.md and data/external/README.md.")
-
-
 def main():
-    _require(SCORED,
-             os.path.join(ATL, "IEAtlas_Epitopes_In_Cancer_Tissues.txt"),
-             os.path.join(ATL, "IEAtlas_Epitopes_In_Normal_Tissues.txt"))
     cancer = load(os.path.join(ATL, "IEAtlas_Epitopes_In_Cancer_Tissues.txt"))
     normal = load(os.path.join(ATL, "IEAtlas_Epitopes_In_Normal_Tissues.txt"))
     selfmap = {r["peptide"]: int(r["canonical_self"])

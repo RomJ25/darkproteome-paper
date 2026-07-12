@@ -1,20 +1,30 @@
-"""Figures for manuscript_v2. Every value computed from the artifacts -- nothing typed.
+"""Figures for manuscript_v2. Every value is read from an artifact -- nothing is typed.
 
     python3 manuscript/make_figures_v2.py  ->  manuscript/figures_v2/*.pdf,*.png
 
 Three figures, one per result:
-  F1  the outlier      -- canonical-sequence overlap across catalogues (log scale; the spread is
-                          3 orders of magnitude and a linear axis would erase everything but IEAtlas)
-  F2  the library      -- latent canonical ambiguity of the ncORF libraries themselves
+  F1  the measurement  -- canonical-sequence overlap, SAME-PIPELINE catalogues only, plus the
+                          robustness panel (era-correct reference / length standardization / class)
+  F2  the library      -- latent canonical ambiguity of the ncORF libraries, plus the detection
+                          effect that the library alone does NOT account for
   F3  the consequence  -- normal-tissue presentation, with the catalogue's own non-overlapping
-                          epitopes as the internal control
+                          sequences as a WITHIN-RESOURCE COMPARATOR (not a control), reported with
+                          the length-standardized risk ratio and its gene-clustered CI
+
+WHAT IS DELIBERATELY NOT DRAWN (external review, 2026-07-13):
+  * Bedran et al.'s four published rates (1.4-5%) are NOT plotted beside ours. They come from a
+    different pipeline, reference, dedup and peptide unit. Putting them on one axis invites exactly
+    the fold-change reading ("11-40x") that we withdrew -- and a figure argues that comparison more
+    forcefully than a sentence ever could. They belong in the text, as context, with no arithmetic.
+  * "z = 74" is gone. It was an invalid statistic (174,465 clustered observations treated as
+    independent). F3 reports the length-standardized RR with a gene-clustered bootstrap CI.
+  * "internal control" is gone. The non-overlapping set controls nothing; it is a comparator.
 """
 import csv
+import json
 import os
-import re
 import sys
 
-import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -29,6 +39,9 @@ ATL = os.path.join(REPO, "data", "external", "atlases")
 SCORED = os.path.join(REPO, "data", "claim_catalog_scored.csv")
 SCALED = os.path.join(REPO, "data", "claim_catalog_scaled.csv")
 TIER1 = os.path.join(REPO, "data", "primary_tier1_nonnovelty.csv")
+R3 = json.load(open(os.path.join(REPO, "data", "derived_r3_inference.json")))
+BIAS = json.load(open(os.path.join(REPO, "data", "derived_detection_bias.json")))
+ERA = json.load(open(os.path.join(REPO, "data", "derived_era_reference.json")))
 
 plt.rcParams.update({"savefig.dpi": 300, "font.size": 9, "axes.spines.top": False,
                      "axes.spines.right": False, "font.family": "serif",
@@ -59,7 +72,6 @@ def epitopes(p):
 selfmap = {r["peptide"]: int(r["canonical_self"])
            for r in csv.DictReader(open(SCORED, newline="", encoding="utf-8"))}
 
-# ---------------------------------------------------------------- F1: the outlier
 src = {}
 for r in csv.DictReader(open(SCALED, newline="", encoding="utf-8")):
     s = (r.get("_source") or "").strip()
@@ -71,113 +83,144 @@ for r in csv.DictReader(open(SCALED, newline="", encoding="utf-8")):
 def rate(peps):
     n = sum(1 for p in peps if p in selfmap)
     k = sum(1 for p in peps if selfmap.get(p))
-    return 100 * k / n if n else 0.0
+    return (100 * k / n if n else 0.0), k, n
 
 
-cpdb = rate(src["CrypticProteinDB-immuno"] | src["CrypticProteinDB-epitopes"])
-ie = rate(src["IEAtlas"])
+cpdb, cpk, cpn = rate(src["CrypticProteinDB-immuno"] | src["CrypticProteinDB-epitopes"])
+ie, iek, ien = rate(src["IEAtlas"])
 t1 = list(csv.DictReader(open(TIER1, newline="", encoding="utf-8")))
 raja = [r for r in t1 if r["cohort"].startswith("Raja")]
-rj = 100 * sum(int(r["canonical_self_exact"]) for r in raja) / len(raja)
+rjk = sum(int(r["canonical_self_exact"]) for r in raja)
+rj = 100 * rjk / len(raja)
 
-# the four from Bedran et al. 2023 -- CITED, not re-measured. Marked as such in the figure.
-BEDRAN = [("Erhard 2020", 1.4), ("Ouspenskaia 2021", 3.0), ("Chong 2020", 4.0),
-          ("Laumont 2016", 5.0)]
+# ------------------------------------------------- F1: the measurement + its robustness
+fig, (a, b) = plt.subplots(1, 2, figsize=(8.2, 3.5),
+                           gridspec_kw={"width_ratios": [1.15, 1]})
 
-labels = ["Cryptic-\nProteinDB", "Raja et al.\n(ovarian)"] + [b[0].replace(" ", "\n") for b in BEDRAN] + ["IEAtlas"]
-vals = [cpdb, rj] + [b[1] for b in BEDRAN] + [ie]
-kind = ["ours", "ours"] + ["cited"] * 4 + ["ours"]
-excl = [True, True, False, False, False, False, False]
+vals = [cpdb, rj, ie]
+labs = ["Cryptic-\nProteinDB", "Raja et al.\n(ovarian)", "IEAtlas"]
+cnt = [(cpk, cpn), (rjk, len(raja)), (iek, ien)]
+a.bar(range(3), vals, color=[GREEN, GREEN, RED], alpha=.9)
+a.set_yscale("log")
+a.set_ylim(0.015, 400)
+a.set_ylabel("canonical-sequence overlap (%), log scale")
+a.set_xticks(range(3))
+a.set_xticklabels(labs, fontsize=7.5)
+for i, (v, (k, n)) in enumerate(zip(vals, cnt)):
+    a.text(i, v * 1.35, f"{v:.3g}%\n{k:,}/{n:,}", ha="center", fontsize=6.8)
+# Label sits in white space ABOVE the two green bars -- inside them it renders green-on-green.
+a.text(0.5, 1.6, "explicit exclusion rule\nin their Methods", fontsize=7, color=GREEN,
+       ha="center", fontweight="bold")
+a.annotate("", xy=(0.0, 0.05), xytext=(0.30, 1.1),
+           arrowprops=dict(arrowstyle="-", color=GREEN, lw=.7, alpha=.7))
+a.annotate("", xy=(1.0, 0.28), xytext=(0.72, 1.1),
+           arrowprops=dict(arrowstyle="-", color=GREEN, lw=.7, alpha=.7))
+a.set_title("(a) One pipeline, one reference, one peptide unit", loc="left", fontsize=9)
+a.text(0.0, -0.28, "Published rates for four other catalogues (1.4–5%, Bedran et al. 2023) are NOT\n"
+                   "plotted: different pipeline, so a ratio against them is not a measurement.",
+       transform=a.transAxes, ha="left", fontsize=6.2, color="#666")
 
-fig, ax = plt.subplots(figsize=(7.2, 3.4))
-cols = [GREEN if e else (RED if v > 20 else GREY) for v, e in zip(vals, excl)]
-bars = ax.bar(range(len(vals)), vals, color=cols, alpha=.9,
-              hatch=["" if k == "ours" else "///" for k in kind], edgecolor="white", linewidth=.6)
-ax.set_yscale("log")
-ax.set_ylim(0.015, 200)
-ax.set_ylabel("canonical-sequence overlap (%), log scale")
-ax.set_xticks(range(len(vals)))
-ax.set_xticklabels(labels, fontsize=6.8)
-for i, v in enumerate(vals):
-    ax.text(i, v * 1.25, f"{v:.3g}%", ha="center", fontsize=7)
-ax.axhspan(1.4, 5.0, color=GREY, alpha=.10, zorder=0)
-# Annotations sit in EMPTY regions of the axes, checked against the rendered figure. An earlier
-# version collided the band caption with the 5% bar label and the exclusion-rule note with the
-# 0.026% value -- both invisible in the source and obvious the moment the PNG is opened.
-ax.text(2.4, 14, "range of every ncORF catalogue\npreviously audited (1.4–5%)",
-        fontsize=6.4, color="#555", ha="center")
-ax.annotate("", xy=(3.4, 5.2), xytext=(2.9, 11.5),
-            arrowprops=dict(arrowstyle="-", color="#999", lw=.7))
-# The label goes in the WHITE SPACE above the two green bars, not on top of them: placed inside
-# the bar it rendered dark-green-on-green and was unreadable. Found by opening the PNG.
-ax.text(0.5, 0.55, "explicit exclusion rule", fontsize=7, color=GREEN, ha="center",
-        fontweight="bold")
-ax.annotate("", xy=(0.0, 0.045), xytext=(0.35, 0.42),
-            arrowprops=dict(arrowstyle="-", color=GREEN, lw=.7, alpha=.7))
-ax.annotate("", xy=(1.0, 0.25), xytext=(0.68, 0.42),
-            arrowprops=dict(arrowstyle="-", color=GREEN, lw=.7, alpha=.7))
-ax.set_title("IEAtlas is an order-of-magnitude outlier on the field's own metric",
-             loc="left", fontsize=9)
-ax.text(1.0, -0.30, "hatched = as reported by Bedran et al. 2023 (not re-measured here)",
-        transform=ax.transAxes, ha="right", fontsize=6.2, color="#666")
-save(fig, "f1_outlier")
+# robustness panel -- every bar is a different way of trying to make 56.3% go away
+rob = [("as reported\n(reference R)", 56.3, RED),
+       (f"era-correct\n(Swiss-Prot 2022_01)", ERA["pct_2022_01"], BLUE),
+       ("length-\nstandardized", 56.3, BLUE),
+       ("if NO pseudogene\nORFs at all", 55.8, BLUE)]
+b.bar(range(4), [x[1] for x in rob], color=[x[2] for x in rob], alpha=.9)
+for i, (_l, v, _c) in enumerate(rob):
+    b.text(i, v + 1.2, f"{v}%", ha="center", fontsize=7.5)
+b.set_xticks(range(4))
+b.set_xticklabels([x[0] for x in rob], fontsize=6.6)
+b.set_ylim(0, 68)
+b.set_ylabel("canonical-sequence overlap (%)")
+b.set_title("(b) It does not go away", loc="left", fontsize=9)
+b.text(0.5, -0.30, f"only {ERA['retrospective_only']} sequences ({ERA['retrospective_pct_of_overlap']}%"
+                   " of the overlap set) are matches\na February-2022 analyst could not have made",
+       transform=b.transAxes, ha="center", fontsize=6.2, color="#666")
+save(fig, "f1_measurement")
 
-# ---------------------------------------------------------------- F2: the library
+# ------------------------------------------------- F2: the library, and what it does NOT explain
+fig, (a, b) = plt.subplots(1, 2, figsize=(8.2, 3.4),
+                           gridspec_kw={"width_ratios": [1.1, 1]})
 LIB = [("nuORFdb v1.2\n(integrated by IEAtlas)", 34.1),
        ("GENCODE Ribo-seq\nORFs (phase 1)", 2.4),
        ("GENCODE Ribo-seq\nORFs (phase 2)", 1.0)]
-fig, ax = plt.subplots(figsize=(5.6, 3.2))
-ax.bar([x[0] for x in LIB], [x[1] for x in LIB],
-       color=[RED, GREEN, GREEN], alpha=.9)
+a.bar([x[0] for x in LIB], [x[1] for x in LIB], color=[RED, GREEN, GREEN], alpha=.9)
 for i, (_l, v) in enumerate(LIB):
-    ax.text(i, v + 1.0, f"{v}%", ha="center", fontsize=8)
-ax.set_ylabel("latent canonical ambiguity (% of distinct 9-mers)")
-ax.set_ylim(0, 42)
-ax.tick_params(axis="x", labelsize=7)
-ax.axhspan(1.0, 2.4, color=GREY, alpha=.12, zorder=0)
-ax.set_title("The ambiguity is created in the library, before any filter is applied",
-             loc="left", fontsize=9)
-ax.text(1.55, 26, "IEAtlas inherits this,\nand applies no exclusion rule.\n"
-                  "Ouspenskaia searched the SAME\nlibrary and published at 3%.",
-        fontsize=6.6, color="#444", va="center")
+    a.text(i, v + 1.0, f"{v}%", ha="center", fontsize=8)
+a.set_ylabel("latent canonical ambiguity\n(% of distinct 9-mers)")
+a.set_ylim(0, 44)
+a.tick_params(axis="x", labelsize=7)
+a.axhspan(1.0, 2.4, color=GREY, alpha=.12, zorder=0)
+a.set_title("(a) The search space is already ambiguous", loc="left", fontsize=9)
+a.text(1.5, 27, "IEAtlas integrates nuORFdb. Its Methods\n"
+                "do not describe a peptide-level exclusion\n"
+                "rule. Ouspenskaia et al. searched the SAME\n"
+                "library and published a catalogue at 3%.",
+       fontsize=6.4, color="#444", va="center", ha="center")
+
+# the detection effect: ribosomal-ORF enrichment, catalogue vs the search space it was drawn from
+rr_cat, rr_lib = BIAS["ribo_catalogue_rr"], BIAS["ribo_library_rr"]
+b.bar([0, 1], [rr_lib, rr_cat], color=[GREY, RED], alpha=.9, width=.55)
+b.axhline(1.0, color="#333", lw=.8, ls="--")
+b.text(1.52, 1.0, "no\nenrichment", fontsize=6.2, color="#333", va="center")
+# The library bar tops out at ~0.91, and the "no enrichment" rule sits at 1.0. A label placed just
+# ABOVE that bar lands on the dashed line and the digits are occluded -- invisible in the source,
+# obvious on opening the PNG. Put it INSIDE the bar; keep the catalogue label above.
+b.text(0, rr_lib - .12, f"{rr_lib}×", ha="center", va="top", fontsize=8,
+       color="white", fontweight="bold")
+b.text(1, rr_cat + .07, f"{rr_cat}×", ha="center", fontsize=8)
+b.set_xticks([0, 1])
+b.set_xticklabels(["in the LIBRARY\n(nothing detected yet)", "in the CATALOGUE\n(after detection)"],
+                  fontsize=7)
+b.set_ylabel("ribosomal-ORF enrichment among\ncanonical-overlapping sequences")
+b.set_ylim(0, 3.2)
+b.set_xlim(-.6, 1.9)
+b.set_title("(b) …but the library does not account for it", loc="left", fontsize=9)
+b.annotate("", xy=(1, rr_cat - .05), xytext=(0, rr_lib + .05),
+           arrowprops=dict(arrowstyle="->", color="#444", lw=.9,
+                           connectionstyle="arc3,rad=-.25"))
+b.text(0.5, 2.42, f"{BIAS['ribo_excess']}× excess\narises during detection", fontsize=6.6,
+       color="#444", ha="center")
 save(fig, "f2_library")
 
-# ---------------------------------------------------------------- F3: the consequence
+# ------------------------------------------------- F3: the consequence, correctly inferred
 cancer = epitopes(os.path.join(ATL, "IEAtlas_Epitopes_In_Cancer_Tissues.txt"))
-normal = epitopes(os.path.join(ATL, "IEAtlas_Epitopes_In_Normal_Tissues.txt"))
-scored = [p for p in cancer if p in selfmap]
-ov = [p for p in scored if selfmap[p]]
-nov = [p for p in scored if not selfmap[p]]
-kov = sum(1 for p in ov if p in normal)
-knov = sum(1 for p in nov if p in normal)
-p1, p2 = 100 * kov / len(ov), 100 * knov / len(nov)
+p1 = R3["pct_overlapping_in_normal"]
+p2 = R3["pct_comparator_in_normal"]
+kov, knov = R3["overlapping_in_normal"], R3["comparator_in_normal"]
+nov_n, nnov_n = R3["n_overlapping"], R3["n_comparator"]
 
-fig, (a, b) = plt.subplots(1, 2, figsize=(8.0, 3.3),
+fig, (a, b) = plt.subplots(1, 2, figsize=(8.2, 3.5),
                            gridspec_kw={"width_ratios": [1, 1.15]})
-a.bar(["canonical-\noverlapping", "NOT overlapping\n(internal control)"], [p1, p2],
+a.bar(["canonical-\noverlapping", "NOT overlapping\n(within-resource\ncomparator)"], [p1, p2],
       color=[RED, GREEN], alpha=.9)
-for i, (v, k, n) in enumerate(((p1, kov, len(ov)), (p2, knov, len(nov)))):
+for i, (v, k, n) in enumerate(((p1, kov, nov_n), (p2, knov, nnov_n))):
     a.text(i, v + 0.8, f"{v:.1f}%\n{k:,}/{n:,}", ha="center", fontsize=7)
-a.set_ylabel("also in IEAtlas's OWN normal-tissue set (%)")
-a.set_ylim(0, 28)
-a.tick_params(axis="x", labelsize=7.5)
-a.set_title(f"(a) Risk ratio {p1/p2:.1f}×  (z = 74)", loc="left", fontsize=9)
+a.set_ylabel("also in IEAtlas's OWN\nnormal-tissue export (%)")  # one line overruns the canvas
+a.set_ylim(0, 29)
+a.tick_params(axis="x", labelsize=7)
+a.set_title(f"(a) Risk ratio {R3['rr_length_standardized']}× "
+            f"[{R3['ci95'][0]}, {R3['ci95'][1]}]", loc="left", fontsize=9)
+a.text(0.5, -0.34, "length-standardized; 95% CI from a bootstrap resampling\n"
+                   f"{R3['n_clusters']:,} source-gene clusters (the observations are clustered,\n"
+                   "so a two-proportion z-test would not be valid)",
+       transform=a.transAxes, ha="center", fontsize=6.2, color="#666")
 
 both = kov
 rest = len(cancer) - both
 b.barh([0], [both], height=0.42, color=RED, alpha=.9,
-       label=f"canonical-compatible AND already\nseen on normal tissue  ({both:,})")
+       label=f"canonical-compatible AND already in the atlas's\nown normal-tissue export  ({both:,})")
 b.barh([0], [rest], left=[both], height=0.42, color="#DDDDDD",
        label=f"remainder of the catalogue  ({rest:,})")
 b.set_yticks([])
 b.set_ylim(-0.6, 0.6)
 b.set_xlim(0, len(cancer))
-b.set_xlabel("IEAtlas cancer epitopes")
+b.set_xlabel("IEAtlas cancer-catalogued sequences (unique)")
 b.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _p: f"{int(v):,}"))
 b.tick_params(axis="x", labelsize=7)
 b.spines["left"].set_visible(False)
-b.legend(fontsize=6.6, loc="upper center", bbox_to_anchor=(0.5, -0.22), frameon=False)
-b.set_title(f"(b) {100*both/len(cancer):.1f}% of the catalogue needs no external reference",
+b.legend(fontsize=6.6, loc="upper center", bbox_to_anchor=(0.5, -0.26), frameon=False)
+b.set_title(f"(b) {R3['pct_of_whole_catalogue']}% of the catalogue, no external reference needed",
             loc="left", fontsize=9)
 save(fig, "f3_consequence")
 

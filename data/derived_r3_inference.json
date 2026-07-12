@@ -1,0 +1,19 @@
+{
+  "n_total": 174465,
+  "n_overlapping": 98193,
+  "n_comparator": 76272,
+  "n_clusters": 22765,
+  "overlapping_in_normal": 22003,
+  "comparator_in_normal": 6976,
+  "pct_overlapping_in_normal": 22.4,
+  "pct_comparator_in_normal": 9.1,
+  "pct_of_whole_catalogue": 12.6,
+  "rr_crude": 2.45,
+  "rr_length_standardized": 2.42,
+  "ci95": [
+    2.32,
+    2.52
+  ],
+  "bootstrap_B": 2000,
+  "seed": 20260713
+}

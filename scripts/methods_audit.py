@@ -1,16 +1,17 @@
-"""What the primary Methods sections actually report.
+"""What the METHODS actually say -- and the claim of ours they falsify.
 
-An audit of the reporting record is only as good as its reading of that record. Supplementary tables
-do not carry a study's search parameters; Methods sections do. This script extracts and verifies,
-from the fetched full texts, what each audited source reports about its FDR handling, its translation
-statistics, and its search database.
+We audited supplementary tables and never read the papers, because we did not hold them. The
+external reviewer warned: "you should still inspect the full Methods sections. Otherwise, you may
+mischaracterize what the authors did."
 
-The distinction that matters throughout: a STUDY-LEVEL threshold (a global FDR, a score cutoff, an
-average periodicity) is not a CLAIM-LINKED statistic (this ORF's own score, this peptide's own
-q-value). Sources report the former. None publishes the latter, so no individual claim can be
-independently re-adjudicated from the reported record.
+They were right. Both papers are open access; both were fetchable in one call; and reading them
+falsifies a claim we were about to publish.
 
     python3 scripts/methods_audit.py
+
+Sources (EuropePMC full-text XML, fetched 2026-07-13):
+    HCC     10.1126/sciadv.adn3628  -> PMC11235171
+    ovarian 10.1126/sciadv.ads7405  -> PMC11837991
 """
 import hashlib
 import html
@@ -39,23 +40,7 @@ def show(t, kw, before=180, after=220, limit=3):
     return out
 
 
-def _require(*paths):
-    """Fail with a usable message, not a traceback, when the external inputs are absent.
-
-    The large public inputs (Swiss-Prot, the atlas exports, the ncORF libraries, the fetched full
-    texts) are not redistributed in this repository. Populate `data/external/` from the sources
-    documented in `data/SOURCES.md` and `data/external/README.md`.
-    """
-    import sys as _s
-    missing = [p for p in paths if not __import__("os").path.exists(p)]
-    if missing:
-        _s.exit("missing required input(s):\n  " + "\n  ".join(missing) +
-                "\n\nThese are large public files and are not redistributed here.\n"
-                "Populate data/external/ -- see data/SOURCES.md and data/external/README.md.")
-
-
 def main():
-    _require(FT)
     if not os.path.isdir(FT):
         sys.exit(f"missing {FT} -- fetch the open-access full texts first")
 

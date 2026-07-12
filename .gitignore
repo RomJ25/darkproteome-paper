@@ -20,3 +20,7 @@ data/external/*
 # after editing manuscript.md). The raw tex/ build output itself stays gitignored -- it's an
 # intermediate, not the copy readers see.
 manuscript/tex/manuscript.pdf
+
+__pycache__/
+.pytest_cache/
+.DS_Store

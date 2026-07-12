@@ -37,3 +37,16 @@ canonical source by sequence alone — and never a claim that the biology is abs
 `src/` — and in particular the reporting-and-adjudicability matrix produced by
 `src/darkproteome/audit.py`. Run `src/darkproteome/scoring_conformance.py` before quoting any
 number from this repository.
+
+---
+
+## The typeset PDF of the superseded paper has been removed from this repository (2026-07-13)
+
+`manuscript/manuscript.pdf` and `manuscript/tex/manuscript.pdf` rendered the **withdrawn** paper and
+**carried no supersession notice inside them**. `manuscript.md` and `manuscript.html` do carry one; a
+PDF cannot, and a PDF is the artifact that actually gets downloaded, shared and cited. Leaving an
+unmarked render of a withdrawn result in a public repository is how a retracted number outlives its
+retraction.
+
+The Markdown and LaTeX sources remain, under their supersession notices, so the record is intact and
+the PDF is regenerable by anyone who wants it. **The current paper is `manuscript_v2.md`.**

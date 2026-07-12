@@ -1,19 +1,44 @@
-"""Latent canonical ambiguity of an ncORF library.
+"""Measure the latent canonical ambiguity of the ncORF LIBRARY, not the filter.
 
-A catalogue of "non-canonical" peptides inherits the properties of the library it was searched
-against. If a library's peptide space overlaps the canonical proteome, then peptides drawn from it
-are compatible with BOTH a canonical protein and an ncORF -- and no downstream step other than a
-peptide-level exclusion can undo that.
+IEAtlas sits at 56.3% canonical-sequence overlap (98,193 / 174,465 unique cancer-catalogued
+sequences). ORF-class composition does not account for it: with no pseudogene ORFs at all the rate
+would be 55.8%, a shift of 0.5 pp.
 
-This measures, for each ncORF library, what fraction of its HLA-I-length peptide space (distinct
-9-mers) also occurs in the reviewed canonical human proteome. It is the catalogue metric applied to
-the SEARCH SPACE instead of the OUTPUT.
+So: how much of the ambiguity is already present in the LIBRARY that was searched, before any filter?
 
-  NO SAMPLING. A sampled estimate is biased UPWARD here and the bias is large: 4,000 of nuORFdb's
-  229,251 ORFs gives 43.6%, 20,000 gives 40.7%, and the full library gives 34.1%. Small samples hold
-  fewer distinct ncORF-specific k-mers, so canonical-shared ones are over-weighted. Whole-ORF
-  containment IS sampled -- that statistic is an O(n*m) substring scan and is unbiased under random
-  sampling, unlike a k-mer union.
+NOTE -- THREE CLAIMS THIS SCRIPT'S HEADER USED TO MAKE, ALL RETRACTED IN REVIEW:
+  * "IEAtlas is an 11-40x outlier" vs the catalogues Bedran et al. audited. Their 1.4-5% came from a
+    DIFFERENT pipeline, reference, dedup and peptide unit; a ratio across pipelines is arithmetic,
+    not measurement. Cited as context only, with no fold arithmetic. (See cross_catalogue.py.)
+  * "the FDR is ruled out, because chance canonical overlap is ~0.1% under a shuffle." Wrong null
+    object: a false target PSM is not a shuffled string, it is an incorrect candidate drawn from the
+    ACTUAL SEARCH DATABASE. (See the retraction notice in rule_predicts_rate.py.)
+  * "IEAtlas's non-pseudogene ORFs are themselves at 56.0%" -- computed over a denominator that did
+    not partition (546 peptides carry both a pseudogene and a non-pseudogene ORF label and were
+    double-counted). The correct mutually-exclusive figure is 55.8%.
+
+AND WHAT THIS SCRIPT'S RESULT DOES *NOT* LICENSE: nuORFdb's 34.1% is NOT a lower bound on IEAtlas's
+combined library (nuORFdb + RPFdb + Translnc). |(A u B) n C| / |A u B| is not monotone in adding B --
+if B contributes mostly non-canonical k-mers the combined rate FALLS. The combined proportion is
+UNKNOWN.
+
+THE HYPOTHESIS. An ncORF library whose entries are themselves substrings of canonical proteins has a
+peptide space that is canonical-ambiguous BY CONSTRUCTION. Any peptide drawn from such an ORF is
+compatible with both sources, and no filter downstream can undo that -- only an exclusion rule at the
+peptide level can.
+
+THE TEST. For each library we hold, what fraction of its HLA-I-length peptide space (9-mers) also
+occurs in the reviewed canonical human proteome? This is the same measurement applied to the
+catalogues, but applied to the SEARCH SPACE instead of the OUTPUT.
+
+  nuORFdb                 -- one of the three sources IEAtlas integrates (RPFdb + nuORFdb + Translnc)
+  GENCODE Ribo-seq ORFs   -- the community phase-1 / phase-2 ncORF sets
+
+A CRITICAL CONTROL ON OUR OWN HYPOTHESIS: Ouspenskaia et al. ALSO searched nuORFdb, and their
+published catalogue is at 3%. So if nuORFdb's peptide space is heavily canonical-ambiguous, the
+library CANNOT by itself explain IEAtlas -- and the difference must lie in what each pipeline did with
+the ambiguity. That is a real finding either way, and it is the honest way to run this test: the
+result is informative whichever direction it goes.
 
     python3 scripts/library_ambiguity.py
 """
@@ -58,23 +83,7 @@ def read_fasta(path):
     return seqs
 
 
-def _require(*paths):
-    """Fail with a usable message, not a traceback, when the external inputs are absent.
-
-    The large public inputs (Swiss-Prot, the atlas exports, the ncORF libraries, the fetched full
-    texts) are not redistributed in this repository. Populate `data/external/` from the sources
-    documented in `data/SOURCES.md` and `data/external/README.md`.
-    """
-    import sys as _s
-    missing = [p for p in paths if not __import__("os").path.exists(p)]
-    if missing:
-        _s.exit("missing required input(s):\n  " + "\n  ".join(missing) +
-                "\n\nThese are large public files and are not redistributed here.\n"
-                "Populate data/external/ -- see data/SOURCES.md and data/external/README.md.")
-
-
 def main():
-    _require(SPROT)
     if not os.path.exists(SPROT):
         sys.exit(f"missing {SPROT}")
     canon = read_fasta(SPROT)

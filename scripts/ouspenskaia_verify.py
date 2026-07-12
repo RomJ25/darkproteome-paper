@@ -1,15 +1,23 @@
-"""Class-specific FDR control: the problem, and the published remedy, verified at source.
+"""Verify the positive control AT SOURCE, and establish the contrast with IEAtlas.
 
-Ouspenskaia et al. (Nat Biotechnol) applied a 1% GLOBAL FDR to a combined annotated-ORF/nuORF search
-and measured the resulting nuORF-class FDR at 4.6% overall -- 14% for one ORF class. They then
-introduced group-based filtering that brought each class back to ~1%, at a cost of 24% of nuORF
-peptides overall and up to 76% of one class.
+Ouspenskaia et al. 2022 (Nat Biotechnol) is the paper that makes this project's theoretical claim
+EMPIRICAL. It is a PMC author manuscript: the web page serves a JavaScript shell to `curl`, which is
+why a naive fetch returns 23 words. E-utilities serves the full text.
 
-The 4.6% is therefore a PRE-CORRECTION DIAGNOSTIC, not the error rate of their published catalogue.
-Citing it as the latter would misrepresent a paper that detected the problem and fixed it. They are a
-positive exemplar for the reporting standard proposed here.
+    curl "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=PMC10198624&rettype=xml"
 
-This script verifies every quoted figure against the fetched full text.
+WHAT IT ESTABLISHES -- and the load-bearing number is one that no summary quotes:
+
+    "While global FDR was set to 1%, FDR for nuORF peptides was 4.6% overall, and as high as 14%
+     for 3' dORFs. We devised a group-based filtering approach to reduce the nuORF FDR rate to 1%
+     across different types of nuORFs. This approach REMOVED 24% of nuORF peptides overall, and up
+     to 76% of peptides assigned to 3' overlap dORFs, retaining 6,501 high confidence (FDR<1%)
+     peptides from 3,261 nuORFs."
+
+Class-specific FDR control DELETES a quarter of the nuORF peptides, and three quarters of one class.
+That is the predicted inflation, measured in the literature, by authors who then CORRECTED it.
+Ouspenskaia is a POSITIVE EXEMPLAR, not a failure case, and the 4.6% is a PRE-correction diagnostic.
+Citing it as the FDR of their final catalogue would misrepresent a paper that did the right thing.
 
     python3 scripts/ouspenskaia_verify.py
 """
@@ -31,23 +39,7 @@ def text_of(p):
                   open(p, encoding="utf-8", errors="replace").read())))
 
 
-def _require(*paths):
-    """Fail with a usable message, not a traceback, when the external inputs are absent.
-
-    The large public inputs (Swiss-Prot, the atlas exports, the ncORF libraries, the fetched full
-    texts) are not redistributed in this repository. Populate `data/external/` from the sources
-    documented in `data/SOURCES.md` and `data/external/README.md`.
-    """
-    import sys as _s
-    missing = [p for p in paths if not __import__("os").path.exists(p)]
-    if missing:
-        _s.exit("missing required input(s):\n  " + "\n  ".join(missing) +
-                "\n\nThese are large public files and are not redistributed here.\n"
-                "Populate data/external/ -- see data/SOURCES.md and data/external/README.md.")
-
-
 def main():
-    _require(FT, OUSP, IEATLAS)
     for p in (OUSP, IEATLAS):
         if not os.path.exists(p):
             sys.exit(f"missing {p} -- fetch the full texts first (see docstring)")

@@ -1,0 +1,14 @@
+{
+  "n_cancer_types": 15,
+  "mean_types_overlapping": 1.62,
+  "mean_types_comparator": 1.33,
+  "pct_ge2_overlapping": 28.3,
+  "pct_ge2_comparator": 16.8,
+  "length_strata_tested": 18,
+  "length_strata_holding": 18,
+  "ribo_catalogue_rr": 2.51,
+  "ribo_library_rr": 0.91,
+  "ribo_excess": 2.77,
+  "ribo_pct_overlapping": 2.89,
+  "ribo_pct_comparator": 1.15
+}

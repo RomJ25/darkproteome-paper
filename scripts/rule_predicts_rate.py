@@ -1,19 +1,63 @@
-"""Canonical-sequence overlap across ncORF catalogues, measured identically.
+"""THE NATURAL EXPERIMENT: the retention rule predicts the canonical-overlap rate.
 
-Catalogues differ in how they decide what counts as non-canonical. An EXCLUSION rule discards a
-peptide that also maps to canonical coding sequence; a RETENTION rule keeps peptides derived from
-non-coding loci. A sequence compatible with both is dropped by the first and kept by the second.
+Three public non-canonical immunopeptidome resources. Same domain, same measurement (exact
+substring of a reviewed canonical human protein, unique peptide sequences). They differ in ONE
+design decision -- how they decide what counts as "non-canonical" -- and the canonical-overlap rate
+tracks that decision across ~2,000x.
 
-This measures all three on the same footing (exact substring of a reviewed canonical human protein;
-unique peptide sequences), and controls for the two obvious confounds: ORF-class composition (hold
-the class fixed) and the false-discovery rate.
+  EXCLUSION rule ("drop it if it ALSO maps to canonical")
+    CrypticProteinDB  "BLASTP was used to eliminate all proteins with alignment to canonical
+                       proteins from GENCODE (v.39) with an E value less than 0.01."
+                       + PSM FDR <0.01, PeptideProphet 1%
+    Raja ovarian      "peptides mapping to 'protein_coding,' 'IG_C_gene,' and 'IG_V_gene' or HLA
+                       transcript biotypes were EXCLUDED to derive the cryptic peptides."
+                       + 3% PSM FDR (Percolator)
 
-NOTE: a permissive rule does not by itself account for the magnitude of the largest overlap observed.
-Catalogues that also lack an exclusion rule have been measured at 1.4-5% (Bedran et al. 2023). See
-library_ambiguity.py.
+  RETENTION rule ("keep it if it DERIVES from a non-coding locus")
+    IEAtlas           "Files were searched against both our integrated benchmarked ncORF library
+                       and the canonical human proteome ... A peptide spectrum match FDR of 0.05
+                       was used, and NO PROTEIN FDR WAS SET ... Only epitopes derived from
+                       non-coding regions were RETAINED."
+
+A peptide sequence compatible with BOTH a canonical protein and an ncORF is DROPPED by an exclusion
+rule and KEPT by a retention rule. The rules are not equivalent, and the difference is measurable.
+
+WHAT THIS DOES AND DOES NOT SHOW
+  DOES: the design decision has a large, measurable consequence, and two of the three resources
+        already make the safer choice. This is a constructive finding, not an accusation: the field
+        demonstrably knows how to do this.
+  DOES NOT: establish that any individual IEAtlas peptide is canonically derived. An identical
+        amino-acid sequence is ONE sequence compatible with MULTIPLE source loci -- MS identifies
+        the sequence, never the locus. What a retention rule does is admit that ambiguity into the
+        catalogue WITHOUT RESOLVING IT.
 
     python3 scripts/rule_predicts_rate.py
 """
+
+import sys as _sys
+print("""
+================================================================================
+  RETRACTED -- DO NOT QUOTE THIS SCRIPT'S OUTPUT
+================================================================================
+  This script argued that the false-discovery rate could not EXPLAIN the 56.3% canonical overlap,
+  on the grounds that a composition-matched SHUFFLE places chance canonical overlap near 0.1%.
+
+  That is the wrong null object. A false target PSM is not an arbitrary shuffled amino-acid string;
+  it is an accepted, incorrect candidate drawn from the ACTUAL SEARCH DATABASE. Its class
+  composition is not described by a shuffle. The argument is withdrawn.
+
+  The paper needs no such argument. Source ambiguity is present even when the sequence is CORRECTLY
+  identified: FDR concerns whether the spectrum was assigned to the right sequence; canonical
+  overlap concerns whether that correctly-identified sequence determines a source. Different
+  objects. See manuscript_v2.md R5.
+
+  Superseded by: no replacement -- the claim is retracted, not re-derived
+
+  The code below is kept for the record, not for use. It is not run.
+================================================================================
+""", file=_sys.stderr)
+_sys.exit(1)
+
 import csv
 import os
 import sys
@@ -37,23 +81,7 @@ RULES = {
 }
 
 
-def _require(*paths):
-    """Fail with a usable message, not a traceback, when the external inputs are absent.
-
-    The large public inputs (Swiss-Prot, the atlas exports, the ncORF libraries, the fetched full
-    texts) are not redistributed in this repository. Populate `data/external/` from the sources
-    documented in `data/SOURCES.md` and `data/external/README.md`.
-    """
-    import sys as _s
-    missing = [p for p in paths if not __import__("os").path.exists(p)]
-    if missing:
-        _s.exit("missing required input(s):\n  " + "\n  ".join(missing) +
-                "\n\nThese are large public files and are not redistributed here.\n"
-                "Populate data/external/ -- see data/SOURCES.md and data/external/README.md.")
-
-
 def main():
-    _require(TIER1, SCALED, SCORED)
     for p in (TIER1, SCALED, SCORED):
         if not os.path.exists(p):
             sys.exit(f"missing {p}")
@@ -137,7 +165,6 @@ def confounds():
 
     ie = os.path.join(REPO, "data", "external", "atlases",
                       "IEAtlas_Epitopes_In_Cancer_Tissues.txt")
-    _require(ie)
     pseudo, other = set(), set()
     with open(ie, newline="", encoding="utf-8", errors="replace") as fh:
         rd = csv.reader(fh, delimiter="\t")

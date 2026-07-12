@@ -1,71 +1,80 @@
-# The field's standard for non-canonical peptides, applied to the resources that feed it: one atlas fails it by an order of magnitude
+# Extensive canonical-sequence overlap and unresolved source attribution in a public non-canonical HLA-peptide atlas and its search library
 
 *Working draft. Supersedes `manuscript.md`, whose headline was withdrawn (`REVISION_NOTICE.md`).
 Every number is regenerated from the analysis artifacts by `verify_manuscript.py`, which fails the
 build on drift. Every quotation from a primary Methods section has been verified in the fetched full
 text.*
 
-> ## Framing note — load-bearing, and it should be read first
+> ## Prior art, stated once
 >
-> **We claim no conceptual novelty. Every idea in this paper is already in the literature.**
+> The underlying principles here are established, and we claim none of them.
 >
-> - That a peptide matching a canonical protein does not identify a non-canonical source, and must be
->   **excluded**: **Bedran et al. 2023** (*Cancer Immunol Res*) — *"Sequences perfectly matching any
->   protein sequence were considered exonic… required to have at least three mismatches with any known
->   protein sequence before being considered noncanonical."* They also measured the residual canonical
->   overlap of four published catalogues (1.4–5%).
-> - That shared peptides create source ambiguity and should be dropped: **Kumar et al. 2022**
->   (*Brief. Bioinform.*) — *"Most shared peptides should be dropped if defining… novel-coding
->   regions."*
+> - That a peptide matching a canonical protein does not identify a non-canonical source, and should
+>   be **excluded** before a peptide is called non-canonical: **Bedran et al. 2023** (*Cancer Immunol
+>   Res*) — *"Sequences perfectly matching any protein sequence were considered exonic… required to
+>   have at least three mismatches with any known protein sequence before being considered
+>   noncanonical."* They also measured the residual canonical overlap of four published catalogues
+>   (1.4–5%).
+> - That shared peptides create source ambiguity and should be dropped when defining novel coding
+>   regions: **Kumar et al. 2022** (*Brief. Bioinform.*) — *"Most shared peptides should be dropped
+>   if defining… novel-coding regions."*
 > - The underlying protein-inference / shared-peptide problem: **Nesvizhskii & Aebersold**, textbook.
-> - That a pooled FDR under-controls the minority class, and class-specific FDR is required:
->   **Woo et al. 2014**; Zhang et al.; **pXg** (Choi & Paek 2024).
+> - That a pooled FDR under-controls a minority class, so class-specific FDR is required: **Woo et al.
+>   2014**; Zhang et al.; **pXg** (Choi & Paek 2024).
 >
-> **What has not been done is to test whether the public resources meet the standard.** Kumar et al.
-> state plainly that the problem is *not quantified* and that *no specific databases are criticised by
-> name*; Bedran et al., who did quantify, did not include IEAtlas. **This paper is that test.** Its
-> contribution is measurements, not ideas.
+> **Our contribution is empirical:** an audit of whether a major public resource satisfies these
+> principles, a measurement of the sequence ambiguity latent in its peptide catalogue and in one of
+> its source libraries, a within-resource test of the consequence, and a concrete reporting field
+> that would fix it. Kumar et al. state that the problem is *not quantified* and that *no specific
+> databases are criticised by name*; Bedran et al., who did quantify, did not include IEAtlas.
 
 ---
 
 ## Abstract
 
 Catalogues of non-canonical (ncORF-derived) HLA-presented peptides are used to nominate
-cancer-vaccine targets. A peptide sequence also encoded by a canonical human protein does not
-uniquely identify a non-canonical source: tandem MS identifies a *sequence*, and when the same
+cancer-vaccine targets. A peptide sequence that is also encoded by a canonical human protein does not
+uniquely identify a non-canonical source: tandem MS identifies a *sequence*, and where the same
 sequence is encoded by both a canonical protein and an ncORF, the spectrum does not choose between
-them. The field's standard is therefore to **exclude** such sequences before calling a peptide
-non-canonical (Bedran et al. 2023; Kumar et al. 2022), and the residual overlap of four published
-catalogues has been measured at 1.4–5%.
+them. A published and recommended criterion is therefore to **exclude** such sequences before calling
+a peptide non-canonical (Bedran et al. 2023; Kumar et al. 2022).
 
-We apply that standard to **IEAtlas**, a public atlas of 245,870 non-canonical HLA epitopes that has
-not previously been audited. **At least 56.3%** of its unique cancer-catalogued peptide sequences
-(98,193 / 174,465) also occur in reviewed canonical human proteins under an explicitly defined
-reference *R* — **11–40× higher than any ncORF catalogue previously audited**, and 300–2,000× higher
-than two resources that apply an explicit exclusion rule (CrypticProteinDB, 0.026%; Raja et al.,
-0.17%). Neither ORF-class composition nor the false-discovery rate accounts for it.
+We audit **IEAtlas**, a public atlas of non-canonical HLA epitopes that has not previously been
+examined against this criterion. **98,193 of 174,465 unique cancer-catalogued peptide sequences
+(56.3%)** exactly match at least one protein in a frozen reviewed human reference *R*. The result is
+not an artifact of our reference era: scored against Swiss-Prot **2022_01** — the release IEAtlas
+actually searched — the rate is **56.2%**, and only 231 sequences (0.24%) are overlaps that a 2022
+analyst could not have seen. It is not an artifact of peptide length: direct standardization to a
+common length distribution leaves it at **56.3%**. It is not ORF-class composition: excluding
+pseudogene ORFs entirely would move it to **55.8%**. Under one pipeline, one reference and one
+peptide unit, two catalogues that apply an explicit exclusion rule sit at **1 / 3,810 (0.026%)** and
+**5 / 2,979 (0.17%)**.
 
-**The library does.** Measuring the HLA-I-length peptide space of the ncORF libraries themselves,
-**34.1%** of nuORFdb v1.2's distinct 9-mers also occur in canonical human proteins, against **1.0–2.4%**
-for the GENCODE Ribo-seq ORF sets — a 14–34× difference in *latent* ambiguity. IEAtlas integrates
-nuORFdb and applies no exclusion rule. Ouspenskaia et al. searched the *same* nuORFdb and published a
-catalogue at 3%, so the library is necessary but not sufficient: the exclusion step does the work.
+Such matches do not establish canonical production. They do prevent unique attribution to the
+nominated non-canonical source from peptide sequence and ordinary tandem-MS evidence alone.
 
-**The consequence is internal to the resource.** If a catalogued "cancer epitope" is a peptide of an
-abundant canonical protein, it should also be presented on normal tissue. It is: canonical-overlapping
-cancer epitopes appear in IEAtlas's **own** normal-tissue set at **22.4%**, versus **9.1%** for the
-non-overlapping epitopes of the same catalogue (risk ratio 2.4, *z* = 74). **22,003 entries — 12.6% of
-every cancer epitope the atlas catalogues — are both canonical-compatible and already observed on
-normal tissue by the atlas's own measurement.** No external reference is required to see this.
+**The search library carries much of this ambiguity already.** Enumerating the HLA-I-length peptide
+space of the libraries themselves, **34.1%** of nuORFdb v1.2's distinct 9-mers also occur in
+canonical human proteins, against **1.0–2.4%** for the GENCODE Ribo-seq ORF sets — a 14–34×
+difference in *latent* ambiguity, measured under our own pipeline for both. IEAtlas integrates
+nuORFdb; because RPFdb and Translnc were unavailable to us, the corresponding proportion for its
+complete integrated library is **unknown**. Ouspenskaia et al. searched the same nuORFdb and
+published a catalogue at 3%, so a high-ambiguity library is not sufficient to produce a high-ambiguity
+catalogue: the exclusion step does the work.
 
-Applying the field's own exclusion standard would remove 56.3% of the atlas. For scale, class-specific
-FDR control cost Ouspenskaia et al. 24% of their nuORF peptides and up to 76% of one ORF class.
-Applying an established standard to an ncORF catalogue is expected to be expensive; that is not an
-argument against applying it.
+**The consequence is observable inside the resource.** Canonical-overlapping cancer-catalogued
+sequences appear in IEAtlas's **own** normal-tissue export at **22.4%**, versus **9.1%** for the
+non-overlapping sequences of the same catalogue. The association is not a length artifact
+(length-standardized risk ratio **2.42×**) and survives inference that respects the catalogue's
+clustering (gene-clustered bootstrap, **95% CI [2.32, 2.52]**). **22,003 unique sequences — 12.6% of
+the cancer catalogue — are both canonical-compatible and already present in the atlas's own normal
+export.** This is consistent with, but not specific to, greater detectability or expression of
+canonical-compatible sequences; it warrants normal-presentation review before such a sequence is
+treated as a tumour-restricted target.
 
-**Nothing here shows that any individual entry is canonically derived, or that non-canonical
-translation is not real.** It shows that a widely-used catalogue cannot, from what it publishes, tell a
-reader which of its entries are source-ambiguous — and that more than half are.
+Separately and additively, the atlas does not publish the class-resolved target–decoy information
+needed to reconstruct a class-specific FDR estimate. We propose retaining shared sequences with an
+explicit source-compatibility annotation rather than treating them as uniquely non-canonical.
 
 ---
 
@@ -74,10 +83,10 @@ reader which of its entries are source-ambiguous — and that more than half are
 Non-canonical open reading frames (ncORFs) — in long non-coding RNAs, pseudogenes, untranslated
 regions, and alternative frames of coding genes — yield peptides that are presented on HLA molecules
 and recognised by T cells. Because their products are absent from the annotated proteome, they have
-been proposed as an unusually attractive class of tumour antigen: potentially tumour-restricted, shared
-across patients, and not subject to central tolerance. Several public catalogues now aggregate tens or
-hundreds of thousands of such epitopes, and these catalogues are the practical input to target
-selection.
+been proposed as an unusually attractive class of tumour antigen: potentially tumour-restricted,
+shared across patients, and not subject to central tolerance. Several public catalogues now aggregate
+tens or hundreds of thousands of such epitopes, and these catalogues are the practical input to
+target selection.
 
 Building such a catalogue requires answering one question for every identified peptide: **is this
 peptide non-canonical?** The question is harder than it appears, and the field has known why for two
@@ -90,76 +99,94 @@ protein-inference problem (Nesvizhskii & Aebersold), and in proteogenomics it is
 mapping complexity where many identified peptides map to several loci, both novel and known"*
 (Kumar et al. 2022).
 
-**The remedy is established and unambiguous.** Kumar et al. (2022) state that *"most shared peptides
+**A criterion is published and recommended.** Kumar et al. (2022) state that *"most shared peptides
 should be dropped if defining… novel-coding regions."* Bedran et al. (2023) implement the rule
 directly: sequences perfectly matching any known protein are treated as *exonic* and excluded, with a
-stringent requirement of *"at least three mismatches with any known protein sequence"* before a peptide
-is called non-canonical. A parallel and additive standard governs statistical confidence: a pooled
-target–decoy threshold under-controls a minority class, so class-specific FDR estimation is required
-(Woo et al. 2014, who measured 36% novel-class FDR at a 1% combined threshold; Zhang et al.; Choi &
-Paek 2024).
+stringent requirement of *"at least three mismatches with any known protein sequence"* before a
+peptide is called non-canonical. We call this a **sequence-exclusivity criterion**. It is published
+and recommended; we do not assert it is a universal rule binding every atlas. An atlas may
+legitimately retain shared observations — provided it labels them as source-ambiguous rather than as
+sequence-unique ncORF products. That distinction is the subject of this paper.
 
-**What has not been done is to check whether the public resources meet these standards.** Kumar et al.
-review the problem without quantifying it, and note that no specific databases are criticised by name.
-Bedran et al. did quantify — reporting residual canonical overlap of 1.4% (Erhard et al. 2020), 3%
-(Ouspenskaia et al. 2021), 4% (Chong et al. 2020) and 5% (Laumont et al. 2016) — but their comparison
-did not include IEAtlas, the largest such atlas and the one most readily used as an off-the-shelf
-source of candidate antigens.
+A parallel and additive standard governs statistical confidence: a pooled target–decoy threshold
+under-controls a minority class, so class-specific FDR estimation is required (Woo et al. 2014, who
+measured 36% novel-class FDR at a 1% combined threshold; Zhang et al.; Choi & Paek 2024).
 
-This paper is that check. We apply the field's own metric, against an explicitly stated reference, to
-IEAtlas and to two catalogues that apply an explicit exclusion rule; we apply the same measurement to
-the ncORF *libraries* those catalogues were searched against; and we ask what the resulting ambiguity
-implies for a user selecting tumour-specific targets. **We contribute no new concept, method or
-standard. We contribute measurements that had not been made.**
+**What has not been done is to check whether the public resources satisfy these criteria.** Kumar et
+al. review the problem without quantifying it, and note that no specific databases are criticised by
+name. Bedran et al. did quantify — reporting residual canonical overlap of 1.4% (Erhard et al. 2020),
+3% (Ouspenskaia et al. 2021), 4% (Chong et al. 2020) and 5% (Laumont et al. 2016) — but their
+comparison did not include IEAtlas, the largest such atlas and the one most readily used as an
+off-the-shelf source of candidate antigens.
+
+This paper is that check.
 
 ---
 
 ## Results
 
-### R1. IEAtlas is an order-of-magnitude outlier on the established metric
+### R1. Most of IEAtlas's cancer-catalogued sequences also occur in canonical proteins
 
-**The measurement** (exact substring of a reviewed canonical human protein; unique peptide sequences;
-reference *R* pinned by release and hash in Methods):
+**The measurement.** A catalogued peptide counts as canonical-overlapping if it is an **exact
+substring** of at least one protein in a frozen reviewed human reference *R* (release and hash in
+Methods). Peptides are deduplicated to **unique sequences**; the unit is a sequence, not an atlas row.
 
-| catalogue | exclusion rule applied? | canonical-sequence overlap |
+**98,193 of 174,465 unique cancer-catalogued sequences (56.3%)** are canonical-overlapping.
+
+Three checks establish that this is not an artifact of how we measured it.
+
+| robustness check | result |
+|---|---:|
+| headline, reference *R* (current reviewed human proteome) | **56.3%** (98,193 / 174,465) |
+| **era-correct**: Swiss-Prot **2022_01**, the release IEAtlas searched | **56.2%** (97,999 / 174,465) |
+| **length-standardized** to the catalogue's own length distribution | **56.3%** |
+| **class composition**: if the atlas contained no pseudogene ORFs at all | **55.8%** |
+
+**The era check settles the anachronism question empirically.** Sequence novelty is
+reference-relative, so an overlap we score today might reflect a canonical protein that entered the
+reference *after* IEAtlas was built — in which case faulting the atlas would be anachronistic. It does
+not. Rebuilding the reference at Swiss-Prot 2022_01 (20,376 human proteins) moves the rate by
+**0.1 percentage points**; only **231 sequences (0.24% of the overlap set)** are matches that a 2022
+analyst could not have made. The overlap was almost entirely visible at build time.
+
+**Under one pipeline**, applied identically to every catalogue we could reprocess — same reference,
+same exact-substring criterion, same unique-sequence unit:
+
+| catalogue | exclusion rule in its Methods? | canonical-sequence overlap |
 |---|---|---:|
-| Erhard et al. 2020 † | no | 1.4% |
-| Ouspenskaia et al. 2021 † | no | 3% |
-| Chong et al. 2020 † | no | 4% |
-| Laumont et al. 2016 † | no | 5% |
 | CrypticProteinDB | **yes** — *"BLASTP… eliminate all proteins with alignment to canonical proteins"* | **1 / 3,810 = 0.026%** |
 | Raja et al. (ovarian) | **yes** — *"peptides mapping to 'protein_coding'… were excluded"* | **5 / 2,979 = 0.17%** |
-| **IEAtlas** | **no** — *"only epitopes derived from non-coding regions were retained"* | **98,193 / 174,465 = 56.3%** |
+| **IEAtlas** | **not described** — *"only epitopes derived from non-coding regions were retained"* | **98,193 / 174,465 = 56.3%** |
 
-† as reported by Bedran et al. 2023; not re-measured here.
-
-**IEAtlas is 11–40× higher than any ncORF catalogue previously audited**, and 300–2,000× higher than
-the two resources that apply an explicit exclusion rule.
+For context, Bedran et al. 2023 report residual canonical overlap of 1.4% (Erhard), 3% (Ouspenskaia),
+4% (Chong) and 5% (Laumont). **We do not compute a fold-change against those values.** They were
+produced with a different reference, normalization, deduplication and peptide unit, and a ratio across
+pipelines is arithmetic rather than measurement. They are cited as published context. The controlled
+comparison is the table above.
 
 #### It is not the ORF-class composition
 
 IEAtlas's ncORF library explicitly includes pseudogenes, the class with the highest canonical
-compatibility. Holding the class fixed:
+compatibility. **A peptide may carry more than one ORF label** — 1,801 sequences (1.0%) map to more
+than one gene, and 546 carry both a pseudogene and a non-pseudogene ORF — so pseudogene and
+non-pseudogene sets are *not* complements. Reported as mutually exclusive strata, which do partition:
 
-| pseudogene-derived peptides | rule | canonical overlap |
-|---|---|---:|
-| IEAtlas | retention | **9,874 / 16,323 = 60.5%** |
-| Raja et al. | exclusion | **0 / 98 = 0.0%** |
+| stratum (mutually exclusive) | *n* | canonical overlap |
+|---|---:|---:|
+| pseudogene-only | 15,777 | **59.4%** |
+| non-pseudogene-only | 158,142 | **55.8%** |
+| both labels (source-ambiguous within the atlas) | 546 | **93.0%** |
+| **total** | **174,465** | **56.3%** |
 
-Raja et al. *do* report 98 pseudogene-ORF peptides; none overlaps a canonical protein, because their
-exclusion rule removed those that did. Same ORF class, opposite rule, 60.5% versus 0.0%. Moreover the
-overlap is **not** a pseudogene artifact: within IEAtlas, **non**-pseudogene ORF types show **56.0%**
-overlap (88,827 / 158,688), within a few points of its pseudogenes. Class composition explains almost
-none of the 56.3%.
+If the atlas contained no pseudogene ORFs whatever, the rate would be **55.8%**. Class composition
+moves the headline by half a percentage point. Separately, Raja et al. report 98 pseudogene-ORF
+peptides and **none** overlaps a canonical protein, because their exclusion rule removed those that
+did — same ORF class, different rule.
 
-#### It is not the false-discovery rate
+That 1.0% of sequences map to several genes *within the atlas's own annotations* is itself a small,
+direct instance of the ambiguity this paper is about.
 
-A looser FDR admits more *false* identifications, and a false identification is not preferentially a
-canonical substring: a composition-matched shuffle places chance canonical overlap near 0.1%. No FDR
-can produce a 56% canonical-substring rate. IEAtlas does apply a permissive threshold — a 5% PSM FDR
-and, explicitly, *"no protein FDR was set"* — but this cannot be the explanation.
-
-### R2. The magnitude is explained by the library
+### R2. nuORFdb contains extensive latent canonical-sequence overlap
 
 Applying the same measurement to the **search space** rather than the output — the distinct 9-mers of
 each ncORF library, and how many also occur in reviewed canonical human proteins (**full libraries, no
@@ -171,115 +198,141 @@ sampling**):
 | GENCODE Ribo-seq ORFs (phase 1) | 7,264 | 245,094 | **2.4%** |
 | GENCODE Ribo-seq ORFs (phase 2) | 28,359 | 502,528 | **1.0%** |
 
-**ncORF libraries differ by 14–34× in latent canonical ambiguity** — and the GENCODE range (1.0–2.4%)
-is precisely where the catalogues Bedran et al. audited sit (1.4–5%). Whole-ORF containment is low
+Both libraries were measured by us, under one pipeline, so the contrast *is* a controlled one:
+**ncORF libraries differ by 14–34× in latent canonical ambiguity.** Whole-ORF containment is low
 throughout (0.2–0.8%), so this is **extensive partial sharing**, not whole ncORFs nested inside
 canonical proteins.
 
 **Independent corroboration.** These figures were obtained twice, by separate implementations over
 different k-mer windows: an 8–11mer candidate-universe enumeration gives nuORFdb **34.4%** and GENCODE
-Ribo-seq (phase 1) **2.5%**; the 9-mer enumeration reported above gives **34.1%** and **2.4%**. The
-agreement is close, and the measurement is not sensitive to the window.
+Ribo-seq (phase 1) **2.5%**; the 9-mer enumeration above gives **34.1%** and **2.4%**.
 
-**Two factors are jointly necessary.** The **library creates** the ambiguity: a third of nuORFdb's
-peptide space is canonical, and nothing downstream of the search except a peptide-level exclusion can
-undo it. The **pipeline decides whether it survives**: Ouspenskaia et al. searched the *same* nuORFdb
-and published a catalogue at 3%. IEAtlas is the only resource examined that combines a high-ambiguity
-library with no exclusion rule.
+**What this does not establish.** IEAtlas integrates nuORFdb together with RPFdb and Translnc, which
+were unavailable to us. The proportion for the **complete integrated library is unknown** — and it is
+*not* bounded below by 34.1%. Adding a library *B* to nuORFdb *A* changes the rate to
+|(*A* ∪ *B*) ∩ *C*| / |*A* ∪ *B*|, which can fall as easily as rise: if *B* contributes mostly
+non-canonical k-mers, the combined proportion drops below 34.1%. We therefore report nuORFdb's
+ambiguity as a property of nuORFdb, and a plausible major contributor to what IEAtlas catalogues —
+not as a quantitative explanation of 56.3%.
 
-*(Why the catalogued 56.3% exceeds the library's 34.1% is a hypothesis we do not test: canonically
-encoded peptides derive from abundant proteins and are plausibly over-detected in an immunopeptidome
-relative to their share of the search space.)*
+**The library is not sufficient on its own.** Ouspenskaia et al. searched the *same* nuORFdb and
+published a catalogue at 3%. A high-ambiguity library plus a peptide-level exclusion step yields a
+low-ambiguity catalogue. The exclusion step does the work.
 
-### R3. The consequence is internal to the resource
+#### Why the catalogue's rate exceeds the library's: a detection effect, tested
 
-An audit that stops at *"56.3% of these entries are source-ambiguous"* invites the only question that
-matters: **so what?**
+The catalogued rate (56.3%) is higher than nuORFdb's latent ambiguity (34.1%). A natural explanation
+is detection bias: canonically-encoded peptides derive from abundant, ubiquitously-expressed proteins
+and are over-detected in an immunopeptidome relative to their share of the search space. Earlier
+drafts asserted this without testing it. It is testable inside the resource, and we tested it.
+
+**Prediction 1 — breadth of detection.** A peptide of an abundant, ubiquitous protein should be
+detected across more of IEAtlas's 15 cancer types. Canonical-overlapping sequences are seen in a mean
+of **1.62** cancer types versus **1.33** for non-overlapping ones, and **28.3%** appear in ≥2 types
+versus **16.8%**. Because short peptides both match canonical proteins more readily and recur more
+often, we stratified by length: the effect holds in **18 of 18** length strata (8–25 aa). It is not a
+length artifact.
+
+**Prediction 2 — enrichment for the abundant housekeeping class.** Ribosomal proteins are the textbook
+abundant, ubiquitous class. In the catalogue, canonical-overlapping sequences are **2.51×** enriched
+for ribosomal-gene ORFs (2.89% vs 1.15%). This could be pure library composition, so we measured the
+same enrichment **in the library**, over (ORF, 9-mer) candidate pairs, where nothing has been detected
+yet: there, ribosomal ORFs are slightly **depleted** among canonical-overlapping candidates (**0.91×**).
+The catalogue's enrichment is therefore a **2.77× excess over its own search space** — it was not
+inherited from the library, and arose during detection.
+
+This is corroboration, not proof: breadth of detection is a proxy for abundance, not a measurement of
+it, and a direct test would use protein-abundance data. What is licensed is that the excess of the
+catalogued rate over the library rate is *consistent with detection bias, and explained by neither
+peptide length nor library composition.*
+
+### R3. The consequence is observable inside the resource
+
+An audit that stops at *"56.3% of these sequences are source-ambiguous"* invites the only question
+that matters: **so what?**
 
 If a catalogued "cancer epitope" is in fact a peptide of an abundant canonical protein, it should also
 be presented on **normal tissue**, because that protein is expressed there too. IEAtlas publishes its
-own normal-tissue epitope set (94,375 unique peptides), so the prediction is testable **inside the
-resource**, with the non-overlapping epitopes of the same catalogue as an internal control.
+own normal-tissue epitope export (94,375 unique peptides), so the prediction is testable **inside the
+resource**, using the non-overlapping sequences of the same catalogue as a **within-resource
+comparator**.
 
-| IEAtlas cancer epitopes | also in IEAtlas's **own** normal-tissue set |
+| IEAtlas cancer-catalogued sequences | also in IEAtlas's **own** normal-tissue export |
 |---|---:|
 | **canonical-overlapping** (98,193) | **22,003 = 22.4%** |
-| non-overlapping — internal control (76,272) | 6,976 = **9.1%** |
+| non-overlapping — within-resource comparator (76,272) | 6,976 = **9.1%** |
 
-**Risk ratio 2.4** (two-proportion *z* = 74; *n* = 174,465). A source-ambiguous "cancer" epitope is more
-than twice as likely to appear in the atlas's own normal-tissue set — exactly what is expected if it is
-a peptide of a canonical protein that is also expressed in normal tissue.
+**The inference, done correctly.** These 174,465 sequences are *not* independent Bernoulli
+observations — they are clustered by source gene, gene family, dataset, tissue, donor, HLA allele and
+pipeline — and peptide length confounds both arms. Accordingly:
 
-**And a subset requires no inference at all.** **22,003 entries — 12.6% of every cancer epitope the
-atlas catalogues — are both canonical-compatible and already observed on normal tissue by the atlas's
-own measurement.** No external reference is needed to see this; it is internal to the resource. A
-target-selection pipeline drawing from this catalogue without an exclusion step will encounter them.
+- **Per length, unpooled**, the risk ratio ranges **1.55–3.08** and the effect holds at **all 18**
+  peptide lengths (8–25 aa).
+- **Length-standardized** (direct standardization to the catalogue's own length distribution) the risk
+  ratio is **2.42×** — essentially the crude 2.45×, so length is not driving it.
+- **Gene-clustered bootstrap** (resampling 22,765 source-gene clusters with replacement, *B* = 2,000):
+  **95% CI [2.32, 2.52]**.
+- **Within every ORF-class stratum**: 2.39× (pseudogene-only), 2.40× (non-pseudogene-only).
 
-This does **not** show that any individual epitope is canonically derived. Presence in the normal set is
-evidence about **presentation**, not about **source**. What it shows is that the source-ambiguous
-fraction *behaves* as canonically derived peptides would.
+Earlier drafts attached a two-proportion *z* = 74 to this contrast. **That statistic was invalid** — it
+treated a heavily structured catalogue as 174,465 independent experiments — and it is withdrawn. Being
+directionally right does not rescue it. The clustered interval above replaces it.
 
-### R4. Where it can be interrogated, the ambiguity is structured by homology
+**A subset requires no inference at all.** **22,003 unique sequences — 12.6% of the cancer catalogue —
+are both canonical-compatible and already present in the atlas's own normal-tissue export.** No
+external reference is needed to see this; it is internal to the resource.
 
-**This quantifies a known phenomenon.** That a processed pseudogene shares sequence with its parent
-gene, and that the resulting peptides are not attributable to one locus, is the classical shared-peptide
-/ protein-inference problem (Nesvizhskii & Aebersold). We measure it; we do not discover it.
+**What this means, bounded.** This is **consistent with, but not specific to**, greater detectability
+or expression of canonical-compatible sequences. It does not show that any individual sequence is
+canonically derived: presence in a normal-tissue export is evidence about **presentation**, not about
+**source**. Its practical consequence is that such a sequence **warrants normal-presentation review
+before it is treated as a tumour-restricted target** — clinical risk depends additionally on allele
+matching, tissue context, abundance and TCR avidity, none of which we assess.
 
-A processed pseudogene is a retro-copy of a parent gene, so a peptide encoded by a pseudogene ORF can be
-an exact substring of the **parent protein**. Of 213 pseudogene-labelled peptides that are canonical
-substrings, 132 are testable (78 carry clone-style symbols with no derivable parent; 3 have no parent in
-the reference). Of those, **79 (59.8%)** land in the pseudogene's **own parent gene** (73 by exact
-symbol; 6 under a documented rename, e.g. `FAM8A6P → FAM8A1`). At gene level, **33 of 34 pseudogenes
-(97.1%)** have at least one peptide in their own parent.
+### R4. The additive statistical problem, and the remedy the field already demonstrated
 
-**Null.** A uniform "one gene in ~20,400" null is invalid: pseudogene parent annotations are themselves
-homology-derived, and we select peptides already known to match *something* canonical. We instead hold
-each peptide's canonical hit set **fixed** — preserving the selection, protein lengths, paralogy and
-k-mer structure — and permute only the pseudogene→parent pairing. Observed 79; null mean 4.9 (max 14 in
-10,000 permutations); **p < 10⁻⁴**.
+**Not novel** (Woo et al. 2014; Choi & Paek 2024). Stated because it is *additive* to R1–R3, and
+because IEAtlas reports nothing that would allow it to be assessed.
 
-**This does not resolve provenance.** `DEVAFRKF` is encoded by both *RPS3AP12* and *RPS3A*; MS
-identifies the sequence, not the locus. Even a parent hit is rarely a unique assignment: of the 79, only
-52 (65.8%) match the parent *alone*, while 27 (34.2%) match the parent **and further canonical genes** —
-more ambiguity, not less. The remaining **53 / 132 (40.2%)** land in a canonical gene that is not the
-derived parent; out-of-frame retro-copy ORFs and incidental short-peptide matches are both plausible,
-and parent-hits and non-parent hits share a median length of 9 aa, so length does not separate them.
-**We report this as an unresolved residual and do not explain it.**
-
-Across classes we report only descriptive heterogeneity in canonical overlap. The retro-copy mechanism
-is claimed for **processed pseudogenes only** — the one class where the label is corroborated by
-sequence. Low overlap in lncRNA-ORF (0.5%) and altORF (0.2%) classes argues against one specific failure
-mode — wholesale pseudogene-like contamination of those classes — and nothing more; it does not validate
-those annotations.
-
-### R5. The additive statistical problem, and the remedy the field already demonstrated
-
-**Not novel** (Woo et al. 2014; Choi & Paek 2024). Stated because it is *additive* to R1–R3, and because
-IEAtlas reports nothing that would allow it to be assessed.
-
-From a reported pooled FDR *q* and class fraction *f*, the class-specific FDR is only **set-identified**:
+From a reported pooled FDR *q* and class fraction *f*, the class-specific FDR is only
+**set-identified**:
 
     Θ_N(q, f) = [ max(0, (q − (1 − f)) / f),  min(1, q / f) ]
 
-The interval is sharp and cannot be tightened without the per-class accepted decoy count *D_N*. IEAtlas
-reports *q* = 0.05 and 245,870 non-canonical epitopes, but **no canonical count**. *f* is therefore
-unknown and the interval is **unconstrained**.
+**From *q* and *f* alone, this identified set is sharp.** IEAtlas reports *q* = 0.05 and 245,870
+non-canonical epitopes, but **no canonical count**. *f* is therefore unknown and the interval is
+**unconstrained**.
 
-**The field has already demonstrated the remedy, and its cost.** Ouspenskaia et al. searched a combined
+Reporting the per-class accepted target and decoy counts (*T_N*, *D_N*), the threshold, the unit and
+the convention would make the selected class-specific target–decoy estimate **reconstructible**. This
+is not the only information that could tighten the interval — calibrated class-specific posterior error
+probabilities or entrapment measurements could also do so — and *D_N* does not identify the true
+class-specific false-discovery proportion. It is simply the cheapest sufficient object, and one the
+pipeline already computes.
+
+**The field has demonstrated the remedy, and its cost.** Ouspenskaia et al. searched a combined
 annotated-ORF/nuORF database and reported that a 1% global FDR gave *"4.6% overall, and as high as 14%
 for 3′ dORFs"* among nuORF peptides; group-based filtering *"removed 24% of nuORF peptides overall, and
-up to 76% of peptides assigned to 3′ overlap dORFs."* This is the predicted inflation, measured in the
-literature by authors who then corrected it. **The 4.6% is a pre-correction diagnostic, not the error
-rate of their published catalogue.** They are a positive exemplar.
+up to 76% of peptides assigned to 3′ overlap dORFs."* **The 4.6% is a pre-correction diagnostic, not
+the error rate of their published catalogue.** They are a positive exemplar.
 
-### R6. Two distinct problems; one reporting remedy; and what it costs
+### R5. Two distinct problems; one reporting remedy; and what it costs
 
 The two defects are **complementary, not the same**, and merging them is a category error:
 
-- **Source ambiguity (R1–R4).** The peptide is *correctly identified as a sequence*; its **source
-  locus** is unresolved. Not an FDR problem — no identification is wrong.
-- **Class-specific FDR under-control (R5).** A pooled threshold under-controls the minority class, so
+- **Source ambiguity (R1–R3).** The peptide is *correctly identified as a sequence*; its **source
+  locus** is unresolved. This is not an FDR problem — no identification is wrong.
+- **Class-specific FDR under-control (R4).** A pooled threshold under-controls the minority class, so
   some ncORF **identifications are wrong** — the spectrum was not that peptide.
+
+An earlier draft argued that FDR could not *explain* the 56.3%, on the grounds that a
+composition-matched shuffle places chance canonical overlap near 0.1%. **That argument was wrong and is
+withdrawn.** A false target PSM is not an arbitrary shuffled string; it is an accepted, incorrect
+candidate drawn from the actual search database, and its class composition is not described by a
+shuffle null. The correct statement needs no such argument: source ambiguity is present *even when the
+sequence is correctly identified*. FDR concerns whether the spectrum was assigned to the right
+sequence; canonical overlap concerns whether that correctly-identified sequence determines a source.
+They are different objects.
 
 **A minimal standard addresses both.**
 
@@ -288,19 +341,22 @@ unique to the nominated ncORF within the searched space, and if not, list every 
 preserves the peptide *and* the ambiguity, rather than discarding either, and it is strictly more
 informative than the exclusion rule it generalises.
 
-**(b) Per class — a class-decoy ledger.** Accepted target and decoy counts for each class, the class
-definitions, the thresholding stage, and the formula used. This is exactly what collapses Θ_N to a
-point, and Ouspenskaia et al. demonstrate it is achievable.
+**(b) Per class — a class-decoy ledger.** Accepted target and decoy counts per class, the class
+definitions, the thresholding stage, and the formula used — enough to reconstruct the class-specific
+estimate. Ouspenskaia et al. demonstrate it is achievable.
 
 **(c) Per library — publish the latent canonical ambiguity.** One number (R2), cheap to compute, and it
-tells every downstream user how much an exclusion rule matters for the library they are about to search.
-**No ncORF library currently publishes it.**
+tells every downstream user how much an exclusion rule matters for the library they are about to
+search. **No ncORF library currently publishes it.**
 
-**The cost, stated plainly.** Applying the exclusion standard to IEAtlas removes **98,193 of 174,465
-entries (56.3%)**. For scale, class-specific FDR control cost Ouspenskaia et al. 24% of their nuORF
-peptides and up to 76% of one ORF class. **Applying an established standard to an ncORF catalogue is
-expected to be expensive. That is not an argument against applying it** — it is an argument for applying
-it before, rather than after, a candidate enters a clinical pipeline.
+**The cost, stated plainly.** Under a sequence-exclusive definition, **98,193 of 174,465 unique
+cancer-catalogued sequences (56.3%)** would be ineligible for designation as uniquely non-canonical.
+That does **not** require deleting them from the atlas — the remedy in (a) is to retain them and label
+them source-ambiguous with their compatible loci. For scale, class-specific FDR control cost
+Ouspenskaia et al. 24% of their nuORF peptides and up to 76% of one ORF class. **Applying an
+established criterion to an ncORF catalogue is expected to be expensive. That is not an argument
+against applying it** — it is an argument for applying it before, rather than after, a candidate enters
+a clinical pipeline.
 
 ---
 
@@ -313,41 +369,46 @@ statistical half and published the cost of doing so. **The field knows how to do
 happened is a check that the resources in use actually do it — and the reason is prosaic: nobody had
 looked.
 
-**The unexplained becomes explained, and then becomes actionable.** The 56.3% is not a property of
-IEAtlas's filtering alone; it is inherited from a library whose peptide space is a third canonical by
-sequence. That reframing matters, because it moves the remedy upstream. A downstream exclusion rule
-works — CrypticProteinDB and Raja et al. demonstrate it, and Ouspenskaia et al. demonstrate it on the
-*same* library — but a library that publishes its own latent ambiguity lets every downstream group know
-in advance how much that rule will cost them. **That number does not currently exist for any ncORF
-library, and it takes minutes to compute.**
+**Where the ambiguity comes from, and where the remedy belongs.** A third of nuORFdb's peptide space is
+canonical by sequence. We cannot say what the corresponding figure is for IEAtlas's full integrated
+library, and we do not claim the library *quantitatively explains* 56.3%. But a library that publishes
+its own latent ambiguity lets every downstream group know in advance how much an exclusion rule will
+cost them, and the detection effect measured in R2 shows that what a catalogue reports is not simply a
+readout of what its library contains. **That number does not currently exist for any ncORF library, and
+it takes minutes to compute.**
 
-**The stakes are not abstract.** A peptide catalogued as a cancer epitope, which is compatible with an
+**The stakes are not abstract.** A sequence catalogued as a cancer epitope, which is compatible with an
 abundant canonical protein, and which the same atlas has already observed on normal tissue, is not a
-promising tumour-restricted target: it is an on-target/off-tumour risk. **22,003 entries in IEAtlas meet
+promising tumour-restricted target without further review. **22,003 unique sequences in IEAtlas meet
 all three conditions.** We are not claiming that any of them *is* canonically derived — MS cannot say —
 but a target-selection pipeline that cannot distinguish them is selecting under an ambiguity it has not
 been told about.
 
 **Limits, stated plainly.**
 
-- The overlap is **reference-relative**. It is *N*(*R*) for the reference stated in Methods. A broader
-  reference can only *raise* it, so 56.3% is a **lower bound**; it cannot be lowered by a different
-  reference choice.
-- **No individual peptide's provenance is resolved.** Sequence identity is symmetric. Presence in a
-  normal-tissue set is evidence about presentation, not source.
-- We hold nuORFdb but **not** RPFdb or Translnc, the other two libraries IEAtlas integrates. **34.1% is
-  therefore a lower bound** on its library's latent ambiguity.
-- The abundance-bias explanation for why the catalogued rate (56.3%) exceeds the library rate (34.1%) is
-  a **hypothesis we do not test**.
-- The 40.2% of pseudogene peptides landing in a non-parent canonical gene is an **unresolved residual**.
+- The overlap is **reference-relative** — it is *N*(*R*). For a fixed query set, overlap is monotone
+  under **nested expansion of the same *R***; 56.3% is a lower bound with respect to supersets of *this*
+  reference, **not** with respect to every possible reference definition. A narrower or differently
+  defined reference can lower it. The era-correct check (56.2% against Swiss-Prot 2022_01) is the one
+  that matters for judging the resource at build time.
+- **No individual peptide's provenance is resolved.** Sequence identity is symmetric.
+- We hold nuORFdb but **not** RPFdb or Translnc. The latent ambiguity of IEAtlas's complete integrated
+  library is **unknown**, and 34.1% is **not** a lower bound on it.
+- The 1.4–5% values for four other catalogues are **published figures from a different pipeline**, cited
+  as context. We report **no fold-change** against them.
 - Class labels for non-pseudogene classes are **source-supplied and uncorroborated**.
+- The pseudogene→parent homology analysis (Supplement) rests on **symbol-derived parentage**, which is
+  not reliable enough to carry a headline; it requires an authoritative pseudogene–parent annotation
+  before it can be promoted.
+- The detection-bias result (R2) uses **breadth of detection as a proxy for abundance**, not a
+  measurement of it.
 
 **What we would like to be wrong about.** If IEAtlas's pipeline resolves source attribution in a way its
 Methods do not describe — for instance through a protein-inference step that assigns shared sequences to
-the canonical protein and excludes them — then the 56.3% has an innocent explanation, and this paper is a
-correction to a misreading of the Methods rather than a finding about the resource. The search outputs
-(`peptides.txt`: `Proteins`, `Leading razor protein`, `Unique (Proteins)`) would settle it in an
-afternoon. **We invite the authors to publish them.**
+the canonical protein — then the 56.3% has an innocent explanation, and this paper is a correction to a
+misreading of the Methods rather than a finding about the resource. The search outputs (`peptides.txt`:
+`Proteins`, `Leading razor protein`, `Unique (Proteins)`) would settle it in an afternoon. **We invite
+the authors to publish them.**
 
 ---
 
@@ -357,79 +418,103 @@ afternoon. **We invite the authors to publish them.**
 
 Canonical human proteome: UniProt/Swiss-Prot reviewed human sequences (*R*), release and SHA-256 hash
 recorded in `data/SOURCES.md` and printed by `reference_provenance.py`. **All overlap statistics are
-`N(R)` and are reference-relative.** IEAtlas searched a February-2022 Swiss-Prot release; our reference
-is later, so we make no claim about which canonical proteins were present in *their* search space. A
-broader reference can only add matches, so every figure reported here is a **lower bound**.
+`N(R)` and are reference-relative.** Because IEAtlas searched a February-2022 Swiss-Prot release, every
+headline is additionally re-derived against **Swiss-Prot 2022_01** (566,996 entries; human subset by
+`OX=9606`, 20,376 proteins), which is the estimand relevant to whether the overlap was detectable when
+the resource was built. Both are reported.
 
 ### The overlap measurement
 
-A catalogued peptide sequence counts as canonical-overlapping if it is an **exact substring** of at least
-one protein in *R*. Sequences are compared as unmodified amino-acid strings, uppercased, with inline PTM
-annotations stripped. Peptides are **deduplicated to unique sequences** before rates are computed; a rate
-is `unique canonical-overlapping / unique scored`. The identical procedure is applied to every catalogue,
-so the comparison is internally consistent even where the source studies used different references
-themselves.
+A catalogued peptide sequence counts as canonical-overlapping if it is an **exact substring** of at
+least one protein in *R*. Sequences are compared as unmodified amino-acid strings, uppercased, with
+inline PTM annotations stripped. Peptides are **deduplicated to unique sequences** before rates are
+computed; a rate is `unique canonical-overlapping / unique scored`. The unit is a peptide **sequence**,
+never an atlas row. The identical procedure is applied to every catalogue we reprocess, so that
+comparison is internally consistent. Rates published by other groups under other pipelines are cited as
+context and **never** combined into a ratio with ours.
+
+**Length standardization.** Because exact-substring probability is strongly length-dependent, rates are
+also reported after **direct standardization** to a common length distribution (IEAtlas's own), with
+per-length rates given unpooled. A standardized rate is not reported for a catalogue with fewer than 20
+overlap events, where it would be falsely precise.
 
 ### The library measurement
 
 For each ncORF library, all distinct **9-mers** (a representative HLA-I ligand length) are enumerated
 across the **full library — no sampling** — and intersected with the set of all distinct 9-mers in *R*.
-Sampling is invalid here and the bias is large and upward: sampling 4,000 of nuORFdb's 229,251 ORFs gives
-43.6%, 20,000 gives 40.7%, and the full library gives 34.1%, because a small sample contains fewer
-distinct ncORF-specific k-mers and so over-weights the canonical-shared ones. Whole-ORF containment *is*
-sampled (4,000 ORFs, seed 0); that statistic is an O(*n·m*) substring scan and is unbiased under random
-sampling, unlike a k-mer union.
+Sampling is invalid here and the bias is large and upward: sampling 4,000 of nuORFdb's 229,251 ORFs
+gives 43.6%, 20,000 gives 40.7%, and the full library gives 34.1%, because a small sample contains
+fewer distinct ncORF-specific k-mers and so over-weights the canonical-shared ones. Whole-ORF
+containment *is* sampled (4,000 ORFs, seed 0); that statistic is an O(*n·m*) substring scan and is
+unbiased under random sampling, unlike a k-mer union.
+
+**Union caveat.** For libraries *A*, *B* and canonical set *C*, the combined rate is
+|(*A* ∪ *B*) ∩ *C*| / |*A* ∪ *B*|, which is **not** monotone in the addition of *B*. No bound on the
+combined library's ambiguity is claimed from nuORFdb alone.
+
+### The detection-bias test
+
+IEAtlas records the cancer type of each observation (15 types). Breadth of detection (number of distinct
+cancer types per unique sequence) is compared between canonical-overlapping and non-overlapping
+sequences, **stratified by peptide length**. The ribosomal-enrichment test compares the share of
+ribosomal-gene ORFs (`RPL*`/`RPS*`/`MRPL*`/`MRPS*`) between the two groups *in the catalogue*, against
+the same share computed over **(ORF, 9-mer) candidate pairs in nuORFdb**, which is the composition of
+the search space prior to any detection. The reported effect is the **excess** of the former over the
+latter.
 
 ### The normal-tissue consequence
 
-IEAtlas's cancer and normal epitope exports are compared as unique sequences. The two-proportion *z* is
-computed on the pooled proportion. The **non-overlapping epitopes of the same catalogue** serve as the
-internal control, so the comparison is within-resource and requires no external normal-tissue reference.
+IEAtlas's cancer and normal exports are compared as unique sequences. The non-overlapping sequences of
+the same catalogue are a **within-resource comparator**, not a control: they do not control abundance,
+detectability, HLA coverage or study composition. Inference uses a **gene-clustered bootstrap** —
+source-gene clusters resampled with replacement, *B* = 2,000, seed 20260713 — of the
+**length-standardized** risk ratio, reported as a percentile interval. A two-proportion *z*-test is
+**not** valid here (the observations are clustered) and is not used.
 
-### The pseudogene→parent test
+### Class strata
 
-The putative parent is derived from the **gene symbol** (strip a trailing `P` + digits), never from the
-ORF-class label. A hit counts as the parent if the matched gene equals the derived parent, or if the two
-share a root of ≥3 characters with a purely numeric remainder (accommodating documented renames:
-`PHB → PHB1`, `FAM8A6 → FAM8A1`, `MKRN4 → MKRN1`). Peptides whose symbol yields no parent, or whose
-derived parent is absent from *R*, are **untestable and excluded from the denominator** — scoring them as
-misses would invent evidence against the class.
-
-**Null model.** Each peptide's canonical hit set is held **fixed** (preserving the selection, protein
-lengths, paralogy and k-mer structure) and only the pseudogene→parent pairing is permuted, 10,000 times,
-seed 0.
+ORF-class strata are **mutually exclusive** (`pseudogene-only`, `non-pseudogene-only`, `both`), because
+a peptide may carry several ORF labels; a pseudogene / non-pseudogene split is *not* a partition and
+double-counts the 546 sequences carrying both.
 
 ### Class-specific FDR identifiability
 
-Derivation of Θ_N(*q*, *f*) and its sharpness in the Supplement. The result is not new (Woo et al. 2014);
-it is stated here because IEAtlas reports *q* but not *f*, so the interval is unconstrained for that
-resource.
+Derivation of Θ_N(*q*, *f*) and its sharpness **given *q* and *f*** in the Supplement. The result is not
+new (Woo et al. 2014); it is stated here because IEAtlas reports *q* but not *f*.
 
 ### Reproducibility
 
 Every headline number in this manuscript is regenerated from the committed artifacts by
-`manuscript/verify_manuscript.py`, **which fails the build on drift** and additionally fails if the paper
-drops its required prior-art citations or asserts any of the phrasings retracted during review. The
-analysis code is guarded by `src/darkproteome/scoring_conformance.py`. All primary Methods quotations
-were verified in the fetched full text (EuropePMC / NCBI E-utilities); the fetch scripts and document
-hashes are in the repository.
+`manuscript/verify_manuscript.py`, **which fails the build on drift** and additionally fails if the
+paper drops its required prior-art citations or asserts any of the phrasings retracted during review.
+The analysis code is guarded by `src/darkproteome/scoring_conformance.py`. All primary Methods
+quotations were verified in the fetched full text (EuropePMC / NCBI E-utilities); the fetch scripts and
+document hashes are in the repository.
 
 ---
 
 ## What this paper does not claim
 
-- **Any conceptual novelty whatsoever.** The exclusion standard is Bedran et al. 2023; the shared-peptide
-  remedy is Kumar et al. 2022; the inference problem is Nesvizhskii & Aebersold; the class-FDR problem is
-  Woo et al. 2014. **This paper contributes measurements, not ideas.**
+- That the underlying principles are ours. The exclusion criterion is Bedran et al. 2023; the
+  shared-peptide remedy is Kumar et al. 2022; the inference problem is Nesvizhskii & Aebersold; the
+  class-FDR problem is Woo et al. 2014. **Our contribution is empirical.**
 - That the biology is fake, or that any specific ncORF antigen is not real.
 - That any resource "manufactures", "re-labels", or "discards" anything.
 - That the canonical source is the correct one for any peptide. **Sequence identity is symmetric; MS
   identifies the sequence, never the locus.**
-- That any resource acted improperly. All describe their own procedures accurately.
-- That presence in a normal-tissue set establishes a peptide's *source*. It is evidence about
-  **presentation**.
-- That the 56.3% is reference-independent. It is `N(R)`; a broader reference can only raise it.
-- That source ambiguity and class-FDR under-control are the same phenomenon.
-- That the abundance-bias explanation for 56.3% > 34.1% is tested. **It is a hypothesis.**
-- That we have measured IEAtlas's whole library. We hold nuORFdb but not RPFdb or Translnc, so **34.1%
-  is a lower bound.**
+- That any resource acted improperly. All describe their own procedures accurately. We say that
+  IEAtlas's **published Methods do not describe** a peptide-level canonical-exclusion rule — not that
+  its pipeline applies none.
+- That the sequence-exclusivity criterion is a universal field-wide rule. It is published and
+  recommended. An atlas may retain shared sequences if it **labels** them source-ambiguous.
+- That presence in a normal-tissue export establishes a peptide's *source*, or that the 22,003
+  sequences are established on-target/off-tumour risks. They **warrant normal-presentation review**.
+- That the 56.3% is reference-independent, or a lower bound against *any* reference. It is `N(R)`,
+  monotone only under nested expansion of *R*.
+- That IEAtlas is "11–40×" any other catalogue. **We report no fold-change against externally
+  published rates.**
+- That we have measured IEAtlas's whole library. We hold nuORFdb but not RPFdb or Translnc, and the
+  combined proportion is **unknown** — not bounded below by 34.1%.
+- That detection bias is *proven*. Breadth of detection is a **proxy** for abundance.
+- That the pseudogene→parent analysis is headline-grade. It uses **symbol-derived parentage** and sits
+  in the Supplement pending an authoritative annotation.

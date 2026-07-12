@@ -1,0 +1,12 @@
+{
+  "n_peptides": 174465,
+  "proteins_2022_01": 20376,
+  "proteins_modern": 20431,
+  "overlap_2022_01": 97999,
+  "overlap_modern": 98193,
+  "pct_2022_01": 56.2,
+  "pct_modern": 56.3,
+  "retrospective_only": 231,
+  "retrospective_pct_of_overlap": 0.24,
+  "shift_pp": 0.1
+}

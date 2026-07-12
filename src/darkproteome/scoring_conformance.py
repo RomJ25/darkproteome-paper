@@ -1,38 +1,23 @@
-"""Conformance guard: one scorer, one meaning per field, and a bar that can actually be cleared.
+"""Guard: ONE scorer, and no field may mean two things.
+
+The 2026-07-12 external review found three defects that were all the same defect -- a value was
+derived in one place and consumed in another that meant something different by it:
+
+  * `reference_model.py` scored `present(reported_fdr)` -- the field is POPULATED -- and its
+    survivorship curve called that stage "source-translation substantiated". An FDR of 1.0
+    counted exactly like an FDR of 0.001.
+  * `min_peptide_len` was filled by every ingester with the HLA LIGAND length, and read by
+    `axes.score_source_orf` as the TRYPTIC peptide length supporting the source protein.
+  * `tumor_specificity_basis="broad-normal-panel"` was assigned to a normal-ligandome search, a
+    GTEx RNA threshold, and a cohort inclusion criterion alike, and all three strict-passed.
+
+Fixing three instances does not stop the fourth. These checks do. Run them in CI, and before
+quoting any number:
 
     python3 src/darkproteome/scoring_conformance.py
 
-Exit 0 = conformant. Exit 1 = something is scoring that should not be, a threshold has drifted, a
-double-meaning column has returned, the evidence bar has become unsatisfiable, an unassayed claim
-is being scored as a failure, or the reporting ladder is no longer nested.
-
-Every defect this guards against is the same defect: A VALUE PRODUCED IN ONE PLACE AND CONSUMED
-SOMEWHERE THAT MEANS SOMETHING DIFFERENT BY IT. Fixing instances does not stop the next one; these
-checks do, so run them before quoting any number.
-
-  ONE SCORER. `evidence_dimensions.py` alone compares an evidence field to a threshold. Anything
-  else that does so is a second scorer, and second scorers drift. Enforced at the AST level.
-
-  NO DOUBLE-MEANING COLUMNS. An HLA ligand length and the tryptic peptide length supporting a
-  source protein are different measurements; a per-PSM q-value and a protein-level FDR are
-  different units. Fields that once carried two meanings must not return.
-
-  REPORTING-COMPLETENESS IS NOT EVIDENCE-STRENGTH. "The FDR field is populated" is not "the FDR
-  clears the bar" -- an FDR of 1.0 populates the field exactly as well as an FDR of 0.001.
-
-  THE BAR MUST BE SATISFIABLE. If a criterion cannot be cleared by anything, a zero measures the
-  scorer rather than the literature. `data/sample_claims.csv` carries hand-built claims that
-  report everything the criteria ask for; they must come out adjudicable and supporting on EVERY
-  dimension. One witness per independent ROUTE to a pass -- a control that clears a dimension by
-  one route never tests the other. And no dimension is exempt: exempting one because "no real
-  source reports that field anyway" is exactly the reasoning that hides a structural zero.
-
-  ABSENCE OF EVIDENCE IS NEVER EVIDENCE OF ABSENCE. An MS-presented peptide with no T-cell assay
-  must come out NOT ADJUDICABLE -- never as an empirical negative. "Nobody ran the assay" is not
-  "the assay was negative".
-
-  THE LADDER MUST BE NESTED. Rung k counts claims clearing rungs 1..k. A ladder that is not
-  cumulative can rise where the evidence is absent, and a figure drawn from it will say so.
+Exit 0 = conformant. Exit 1 = something is scoring that should not be, or a threshold has
+drifted, or a retired column has come back.
 """
 import ast
 import os
@@ -44,20 +29,21 @@ import evidence_dimensions as ed  # noqa: E402
 import consensus_bar  # noqa: E402
 import schema  # noqa: E402
 
-# Fields that carry EVIDENCE. Comparing one of these against a threshold is SCORING, and scoring
-# belongs to evidence_dimensions.py alone.
+# Fields that carry EVIDENCE. Comparing one of these against a threshold is scoring, and scoring
+# is axes.py's job alone.
 EVIDENCE_FIELDS = {
     "reported_fdr", "psm_qvalue", "periodicity_pct", "n_unique_peptides",
     "ligand_len", "source_pep_len", "tumor_specificity_modality",
     "tumor_specificity_scope", "validation_level",
 }
 
-# Columns retired because each carried two different measurements. They must not come back.
+# Columns retired on 2026-07-12 because each meant two things. They must not come back.
 RETIRED_COLUMNS = {"min_peptide_len", "tumor_specificity_basis"}
 
 # May read evidence fields for a legitimate reason that is NOT scoring.
 ALLOWED = {
     "evidence_dimensions.py":  "THE scorer",
+    "axes.py":                 "retired stub; raises on import",
     "consensus_bar.py":        "the protein-existence bar; thresholds asserted equal below",
     "schema.py":               "declares the columns",
     "ingest_cohorts.py":       "WRITES the fields from source tables",
@@ -117,7 +103,7 @@ def find_retired_columns():
 
 
 def check_thresholds():
-    """evidence_dimensions.py and consensus_bar.py must not drift apart on the protein-existence bar."""
+    """axes.py and consensus_bar.py must not drift apart on the protein-existence bar."""
     t = consensus_bar.THRESHOLDS
     pairs = [
         ("max_protein_fdr", t["max_protein_fdr"], ed.MAX_SOURCE_FDR),
@@ -125,7 +111,7 @@ def check_thresholds():
         ("min_source_pep_len", t["min_source_pep_len"], ed.MIN_SOURCE_PEP_LEN),
         ("min_periodicity_pct", t["min_periodicity_pct"], ed.MIN_PERIODICITY),
     ]
-    return [f"threshold {k!r} drifted: consensus_bar={a} vs evidence_dimensions={b}"
+    return [f"threshold {k!r} drifted: consensus_bar={a} vs axes={b}"
             for k, a, b in pairs if a != b]
 
 
@@ -141,14 +127,16 @@ def check_schema():
     return problems
 
 
-# THE POSITIVE CONTROLS. One per independent ROUTE to a pass -- not one per dimension.
+# THE POSITIVE CONTROLS. One per independent route to a strict-pass -- not one per axis.
 #
-# Source translation can be satisfied two ways: Ribo-seq periodicity (Path A), or protein-level
-# FDR + unique peptides + tryptic length (Path B). A single control carrying periodicity clears
-# the dimension via Path A and never exercises Path B at all -- so Path B could be made impossible
-# and the guard would still pass. Path B is the route that is un-adjudicable on the real corpus,
-# i.e. the one that carries the finding. An untested control on that route is no control.
-# Every route gets its own witness.
+# `source_orf` can strict-pass two ways: Ribo-seq periodicity (Path A) or protein-level FDR +
+# unique peptides + tryptic length (Path B). The first version of this check used only
+# SYNTHETIC_STRONG, which carries periodicity -- so it passed via Path A and never touched Path B.
+# We then set MIN_SOURCE_PEP_LEN to 999, making Path B impossible, and the guard still said PASS.
+#
+# That matters more than it looks: Path B is exactly the route that is vacuous on the real corpus
+# (0/307,318 claims report an FDR). An untested control on the route that carries the finding is
+# no control at all. So every route gets its own witness.
 POSITIVE_CONTROLS = {
     "SYNTHETIC_STRONG": "source_orf via Path A (Ribo-seq periodicity >= 70%)",
     "SYNTHETIC_STRONG_PROTEOMICS": "source_orf via Path B (protein FDR + n_peptides + tryptic len)",
@@ -158,13 +146,14 @@ POSITIVE_CONTROLS = {
 def check_bar_is_satisfiable():
     """Every dimension, by every route, must be adjudicable-and-supported by SOMETHING.
 
-    Source translation is un-adjudicable on the audited corpus: no claim reports the statistic the
-    criterion needs. The obvious objection is that the bar was rigged to be impossible. These
-    controls answer it -- hand-built claims that report everything the criteria ask for MUST come
-    out adjudicable and supporting on every dimension.
+    Source translation is un-adjudicable on the live corpus -- not one of 307,318 claims reports
+    the statistic it needs. The obvious objection is that we rigged an impossible bar. These
+    controls answer it: hand-built claims that report everything the criterion asks for MUST come
+    out adjudicable and supporting on every dimension. If one ever stops, the bar has become
+    unsatisfiable and no zero we report means anything.
 
-    That is the difference between "no claim clears the bar" (a finding about the literature) and
-    "no claim CAN clear the bar" (an artifact of the scorer).
+    That is the difference between "no claim clears the bar" (a finding) and "no claim CAN clear
+    the bar" (an artifact). This check is what keeps us on the right side of it.
     """
     import csv
     sample = os.path.join(os.path.dirname(os.path.dirname(HERE)), "data", "sample_claims.csv")
@@ -204,15 +193,16 @@ def check_bar_is_satisfiable():
 
 
 def check_unassayed_is_never_failure():
-    """Absence of evidence must never be recorded as evidence of absence.
+    """THE 2026-07-13 INVARIANT. Absence of evidence must never be recorded as evidence of absence.
 
-    Scoring `MS-presented` as a FAILURE on the immunogenicity dimension treats a claim that was
-    never assayed as an empirical negative. Nearly the whole corpus is MS-presented, so that would
-    report adjudicability for essentially every claim while the number carrying an actual human
-    T-cell result is two.
+    The old scorer returned `fail` for `MS-presented` on the immunogenicity axis -- scoring a claim
+    that NOBODY EVER ASSAYED as an empirical immunogenicity failure. 307,274 of 307,318 rows are
+    MS-presented, so it reported adjudicability as 307,278 when the number of claims actually
+    carrying a human T-cell result is 2. The external reviewer caught it; we had shipped it.
 
-    A claim with an MS observation and no assay must come out NOT ADJUDICABLE -- never
-    `contradicts`, never a failure. Likewise a claim with no normal-tissue evidence at all.
+    This asserts the fix directly: a claim with an MS observation and no assay must come out
+    NOT ADJUDICABLE on the T-cell dimension -- never `contradicts`, never a failure. Same for a
+    claim with no normal-tissue evidence at all.
     """
     problems = []
     unassayed = {
@@ -227,7 +217,7 @@ def check_unassayed_is_never_failure():
                         "assay must not be adjudicable on human_tcell_assay.")
     if d["outcome"] == ed.CONTRADICTS:
         problems.append("UNASSAYED SCORED AS AN EMPIRICAL NEGATIVE: 'nobody ran the assay' is not "
-                        "'the assay was negative'.")
+                        "'the assay was negative'. This is the exact defect the reviewer caught.")
     if ed.human_tcell_state(unassayed) != "not-assayed":
         problems.append(f"human_tcell_state should be 'not-assayed', got "
                         f"{ed.human_tcell_state(unassayed)!r}")
@@ -245,10 +235,11 @@ def check_ladder_is_monotone():
     """The reporting ladder must be NESTED: rung k counts claims clearing rungs 1..k.
 
     A ladder that is not nested is not a ladder, and drawing one as a figure actively misleads.
-    If the rungs are counted independently, `modality_appropriate` on the T-cell dimension RISES
-    above the `claim_linked` rung below it -- because "not a mouse assay" is trivially true of
-    every claim never assayed at all. Rendered as a heatmap that puts a reassuring dark column
-    exactly where the evidence is absent.
+    Before the rungs were made cumulative, `human_tcell_assay` read
+        asserted 44 -> claim_linked 4 -> quantitative 4 -> modality_appropriate 307,316
+    JUMPING BACK UP, because "not a mouse assay" is trivially true of every claim never assayed at
+    all. Rendered as a heatmap, that put a reassuring dark column exactly where the evidence is
+    absent. Caught by LOOKING AT THE FIGURE, not by reading the code that made it.
     """
     import csv
     sample = os.path.join(os.path.dirname(os.path.dirname(HERE)), "data", "sample_claims.csv")
@@ -286,7 +277,7 @@ def main():
     print("    SUPPORTS on every testable dimension -- the bar is satisfiable, so a zero on the")
     print("    real corpus is a finding about the claims, not an artifact of the scorer")
     print("  - UNASSAYED IS NEVER FAILURE: an MS-presented peptide with no T-cell assay comes out")
-    print("    NOT ADJUDICABLE, never as an empirical negative")
+    print("    NOT ADJUDICABLE, never as an empirical negative (the 2026-07-13 reviewer catch)")
     print("  - LADDER IS MONOTONE: rungs are cumulative, so a figure drawn from them cannot show")
     print("    a rise where the evidence is absent")
     return 0

@@ -1,11 +1,17 @@
-"""The reference is part of the estimand.
+"""What reference are we actually measuring against, and what would the ladder cost?
 
-Sequence novelty is reference-relative: the quantity is N(R), never a bare N. This pins the reference
-(release, size, SHA-256) and states precisely which layers of a sensitivity ladder are and are not
-available.
+The 56.3% headline is a claim about SEQUENCE NOVELTY, and sequence novelty is REFERENCE-RELATIVE:
+the estimand is N_i(R), never a bare N_i. The reviewer wants a nested sensitivity ladder --
 
-A broader reference can only ADD matches, never remove one. Every overlap rate reported against R is
-therefore a LOWER BOUND, and the direction of any unmeasured reference effect is known.
+    reviewed Swiss-Prot -> +reviewed isoforms -> +GENCODE coding translations
+                        -> +common variants  -> +unreviewed UniProt
+
+-- each layer with its exact release and hash, the exact and I/L-collapsed rates, and the
+INCREMENTAL newly-matched count. The headline should sit on the NARROW, high-confidence layer and
+be phrased "at least X%", because broader references can only ADD matches.
+
+This script establishes exactly what is on disk, pins it, and states precisely what is missing.
+It does not guess.
 
     python3 scripts/reference_provenance.py
 """
@@ -60,21 +66,6 @@ def fasta_stats(path):
             else:
                 res += len(line.strip())
     return n, res
-
-
-def _require(*paths):
-    """Fail with a usable message, not a traceback, when the external inputs are absent.
-
-    The large public inputs (Swiss-Prot, the atlas exports, the ncORF libraries, the fetched full
-    texts) are not redistributed in this repository. Populate `data/external/` from the sources
-    documented in `data/SOURCES.md` and `data/external/README.md`.
-    """
-    import sys as _s
-    missing = [p for p in paths if not __import__("os").path.exists(p)]
-    if missing:
-        _s.exit("missing required input(s):\n  " + "\n  ".join(missing) +
-                "\n\nThese are large public files and are not redistributed here.\n"
-                "Populate data/external/ -- see data/SOURCES.md and data/external/README.md.")
 
 
 def main():

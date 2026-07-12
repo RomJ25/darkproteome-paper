@@ -1,19 +1,13 @@
 # darkproteome
 
-**An audit-first assessment of the dark-proteome tumor-antigen literature.**
+**An audit of a public non-canonical HLA-peptide atlas, and of the search library that feeds it.**
 
-Code, derived data tables, and manuscript source accompanying the preprint *"Canonical self in
-cryptic cancer-epitope catalogues and the class-decoy ledger needed to verify non-canonical
-antigen claims"* (Rom Jan).
+Code, derived data tables, and manuscript source accompanying *"Extensive canonical-sequence overlap
+and unresolved source attribution in a public non-canonical HLA-peptide atlas and its search library"*
+(Rom Jan).
 
-Most "dark proteome" cancer-antigen claims, non-canonical ORFs (ncORFs) / microproteins
-presented on HLA, are nominated on evidence that isn't independently re-verifiable from what
-gets published. This project audits the published record against the field's own evidence bar,
-characterizes the resulting gap as a statistical identifiability problem, and proposes the
-minimal reporting fix.
-
-The thesis, in one line: **before you trust a catalogue of candidate antigens, audit whether the
-claims in it can even be re-verified from what was reported.**
+The thesis, in one line: **before you trust a catalogue of candidate antigens, check whether its
+entries can even be attributed to the source it names them for.**
 
 ---
 
@@ -25,177 +19,125 @@ claims in it can even be re-verified from what was reported.**
 > Both are the same error — absence of evidence recorded as evidence of absence — and both are
 > precisely what this project exists to criticise. See `manuscript/REVISION_NOTICE.md`.
 >
-> ### The current paper is `manuscript/manuscript_v2.md`.
+> ### The current paper is `manuscript/manuscript_v2.md` (+ `supplement_v2.md`).
 >
-> **It claims no conceptual novelty, and says so in its first paragraph.**
+> **The principles it applies are not ours, and it says so in its first paragraph.** That a peptide
+> matching a canonical protein does not identify a non-canonical source, and should be **excluded**, is
+> **Bedran et al. 2023** (*Cancer Immunol Res*), who also measured four catalogues at 1.4–5%. That
+> *"most shared peptides should be dropped"* is **Kumar et al. 2022** (*Brief. Bioinform.*). The
+> underlying protein-inference problem is **Nesvizhskii & Aebersold**. That a pooled FDR under-controls
+> a minority class is **Woo et al. 2014**.
 >
-> The standard it applies is **not ours**. That a peptide matching a canonical protein does not
-> identify a non-canonical source, and must be **excluded**, is **Bedran et al. 2023**
-> (*Cancer Immunol Res*), who also measured four catalogues at 1.4–5%. That *"most shared peptides
-> should be dropped"* is **Kumar et al. 2022** (*Brief. Bioinform.*). The underlying
-> protein-inference problem is **Nesvizhskii & Aebersold**. That a pooled FDR under-controls a
-> minority class is **Woo et al. 2014**.
->
-> **What had not been done was to test whether the public resources meet the standard.** This
-> repository is that test. Its contribution is **three measurements, and no new ideas.**
+> **What had not been done was to test whether the public resources satisfy them.** This repository is
+> that test. **The contribution is empirical.**
 
-## Headline result
+## The result
 
-**1 — IEAtlas is an order-of-magnitude outlier.** At least **56.3%** of its unique cancer-catalogued
-peptide sequences (98,193 / 174,465) are exact substrings of reviewed canonical human proteins under
-an explicitly defined reference *R* — against **1.4–5%** for every ncORF catalogue previously audited,
-and **0.026%** / **0.17%** for two resources that apply an explicit exclusion rule (CrypticProteinDB;
-Raja et al.). Neither ORF-class composition nor the false-discovery rate accounts for it.
+Tandem MS identifies a **sequence**, never a **locus**. Where the same sequence is encoded by both a
+canonical protein and a non-canonical ORF, the spectrum does not choose between them.
 
-**2 — The library explains it.** **34.1%** of nuORFdb v1.2's distinct 9-mers already occur in the
-canonical proteome, against **1.0–2.4%** for the GENCODE Ribo-seq ORF sets. IEAtlas integrates
-nuORFdb and applies no exclusion rule. *Ouspenskaia et al. searched the same nuORFdb and published a
-catalogue at 3%* — so the library is necessary but not sufficient; the exclusion step does the work.
-(Corroborated by an independent 8–11mer enumeration: 34.4% / 2.5%.)
+**1 — Most of IEAtlas's cancer-catalogued sequences also occur in canonical proteins.**
+**98,193 of 174,465 unique sequences (56.3%)** exactly match at least one protein in a frozen reviewed
+human reference. Three ways of trying to make that go away all fail:
 
-**3 — The consequence is internal to the resource.** Canonical-overlapping "cancer" epitopes appear
-in IEAtlas's **own normal-tissue set** at **22.4%**, versus **9.1%** for the non-overlapping epitopes
-of the same catalogue (risk ratio 2.4; *z* = 74). **22,003 entries — 12.6% of every cancer epitope the
-atlas catalogues — are both canonical-compatible and already observed on normal tissue by the atlas's
-own measurement.** No external reference is needed to see this.
+| robustness check | result |
+|---|---:|
+| headline (current reviewed reference) | **56.3%** |
+| **era-correct** — Swiss-Prot **2022_01**, the release IEAtlas actually searched | **56.2%** |
+| **length-standardized** | **56.3%** |
+| if the atlas contained **no pseudogene ORFs at all** | **55.8%** |
 
-**What this does not claim.** That the biology is fake; that any resource manufactures, re-labels or
-discards anything; that any individual peptide is canonically derived (**MS identifies the sequence,
-never the locus**); or that any resource acted improperly — all describe their own procedures
-accurately, which is the only reason this audit was possible.
+Only **231 sequences (0.24%)** are overlaps a February-2022 analyst could not have seen, so the audit is
+not anachronistic. Under one pipeline — same reference, same criterion, same peptide unit — two
+catalogues that apply an explicit exclusion rule sit at **1 / 3,810** (CrypticProteinDB) and
+**5 / 2,979** (Raja et al.).
 
-**Reproduce:**
-```bash
-python3 scripts/rule_predicts_rate.py     # 1 — the outlier, with both confounds controlled
-python3 scripts/library_ambiguity.py      # 2 — latent canonical ambiguity of the ncORF libraries
-python3 scripts/consequence.py            # 3 — normal-tissue presentation, internal control
-python3 scripts/ouspenskaia_verify.py     # the published remedy, verified at source
-python3 manuscript/verify_manuscript.py   # regenerates every headline number; fails on drift
-```
+**A canonical match does not establish canonical production.** It means the sequence cannot be *uniquely
+attributed* to its nominated non-canonical source from sequence and ordinary tandem-MS evidence alone.
+Sequence identity is symmetric.
 
-## What's here
+**2 — The search library already carries extensive canonical overlap.** **34.1%** of nuORFdb v1.2's
+distinct 9-mers are already canonical, against **1.0–2.4%** for the GENCODE Ribo-seq ORF sets (both
+measured here, under one pipeline). But the library is **not sufficient** — Ouspenskaia et al. searched
+the *same* nuORFdb and published a catalogue at 3%, so the exclusion step does the work — and it is not
+the whole story: the catalogued rate *exceeds* the library's, and that excess arises **during
+detection**. Canonical-overlapping sequences are detected across more cancer types (holding in 18 of 18
+peptide-length strata), and ribosomal-gene ORFs are **2.51×** enriched among them in the catalogue while
+being slightly **depleted** (0.91×) in the library they were drawn from.
 
-- **`manuscript/`** — the paper itself. `manuscript.md` is the canonical source; `tex/` builds
-  the typeset PDF (`tectonic manuscript/tex/manuscript.tex --outdir manuscript/tex`);
-  `manuscript.html` is a browser-viewable render (`python3 manuscript/md_to_html.py` to
-  regenerate); `figures/` holds all 4 figures as PDF + PNG, built by `make_figures.py`.
-- **`src/darkproteome/`** — the analysis code, stdlib-first. Each entry point prints the
-  headline numbers it's responsible for (see "Run the audit" below).
-- **`tests/`** — regression tests for the class-decoy ledger and the ecological-inference
-  diagnostic.
-- **`examples/`** — a worked example of the class-decoy ledger tool run against the real
-  PXD055609 deposit (Raja et al., ovarian immunopeptidome).
-- **`data/`** — the derived/scored claim tables the audit runs on, plus every data source's
-  license and provenance (`data/SOURCES.md`, `data/external/README.md`). Large public inputs
-  (SwissProt, IEAtlas, CrypticProteinDB, the HLA Ligand Atlas, raw PRIDE deposits) are not
-  included here for size reasons; `data/external/README.md` documents exactly how to
-  re-download each one.
-- **`scripts/verify_effective_rho.py`** — reproduces the Methods "Simulation" subsection cited
-  throughout the manuscript.
+**3 — The consequence is observable inside the resource.** Canonical-overlapping sequences appear in
+IEAtlas's **own normal-tissue export** at **22.4%**, versus **9.1%** for the non-overlapping sequences of
+the same catalogue — **length-standardized risk ratio 2.42×**, gene-clustered bootstrap **95% CI
+[2.32, 2.52]**. **22,003 unique sequences — 12.6% of the cancer catalogue — are both canonical-compatible
+and already present in the atlas's own normal export.** No external reference is needed to see this.
 
-## Six evidence dimensions (encoded in `src/darkproteome/evidence_dimensions.py`)
+This is *consistent with, but not specific to*, greater detectability or expression of
+canonical-compatible sequences. It does not show any sequence is canonically derived; it means such a
+sequence **warrants normal-presentation review** before being treated as a tumour-restricted target.
 
-A claim is scored on **six evidence dimensions**, and **never as a single pass/fail survivor
-count**. A joint pass/fail across dimensions the reported record cannot even decide measures the
-scorer, not the claims.
+## The proposed fix: label, don't delete
 
-Each dimension is scored on a **cumulative reporting ladder** — rung *k* counts claims that clear
-rungs 1..*k*:
+For each peptide, state whether the sequence is unique to the nominated ncORF within the searched space,
+and if not, **list every compatible source locus**. That preserves the peptide *and* the ambiguity, and
+is strictly more informative than the exclusion rule it generalises. Separately, publishing the per-class
+accepted target/decoy counts makes a class-specific FDR estimate reconstructible — and every ncORF
+library could publish its own latent canonical ambiguity: one number, minutes to compute, and **no
+library currently does**.
 
-| Rung | Question |
-|---|---|
-| `asserted` | Is the experiment or analysis named for this claim? |
-| `claim_linked` | Does an individual result travel *with* the claim (not just a study-level method)? |
-| `quantitative` | Is that result a value a prespecified criterion can be applied to? |
-| `modality_appropriate` | Does the measurement answer the endpoint actually being claimed? |
-| **`adjudicable`** | **All of the above → the criterion can be applied independently.** |
-
-| Dimension | Question |
-|---|---|
-| `source_translation` | Is the nominated ORF translated? |
-| `hla_elution` | Was the peptide observed on HLA by MS? |
-| `allele_restriction` | *Which allele* presented it? |
-| `normal_presentation` | Is it absent from **normal HLA presentation**? |
-| `human_tcell_assay` | Do human T cells respond? |
-| `class_fdr_reconstructible` | Can the class-specific identification error be recomputed? |
-
-Two rules govern every dimension, and violating either manufactures results:
-
-- **A zero is not a finding until the record could have said otherwise.** A *structural* zero (no
-  claim reports the field the criterion needs) and an *empirical* zero (claims report it, none
-  clear it) look identical in a survivor count and mean opposite things. `adjudicable` separates
-  them.
-- **Absence of evidence is never evidence of absence.** An MS-observed peptide with no T-cell
-  assay is not a negative immunogenicity result — it is *unassayed*. A ligand outside the HLA-I
-  length window is not a contradiction — no source here states the MHC class, and 13–25mers are
-  ordinary HLA-II ligands.
-
-`adjudicable` is deliberately **not** source-attribution resolution (whether the record leaves
-only the nominated source compatible). A record can carry excellent claim-linked translation
-evidence while a canonical source remains perfectly compatible.
-
-The auditor never recomputes FDR from raw spectra; it scores **as reported**, and always reports
-**stratified** (atlas records / end-to-end cohorts / T-cell-tested), because a pooled denominator
-dominated by atlas records hides the cohorts.
-
-**Is the bar rigged to fail?** No, and this is enforced: `data/sample_claims.csv` carries
-hand-built claims that report everything the criteria ask for, and `scoring_conformance.py`
-asserts they come out adjudicable-and-supporting on *every* dimension — one witness per
-independent route to a pass. If a criterion ever becomes unsatisfiable, the guard fails the build.
-
-## Run the audit
-
-Core auditor uses only the Python standard library. Three of the four commands below need no
-external data; `tier1_nonnovelty.py` is the exception -- it reads the SwissProt FASTA (and the
-IEAtlas normal-tissue table) from `data/external/`, so populate that first (see "Reproducing the
-derived data tables" below) or it will exit with a `FileNotFoundError`.
+## Reproduce
 
 ```bash
-python3 src/darkproteome/audit.py data/sample_claims.csv          # smoke test on synthetic rows
-python3 src/darkproteome/probe_report.py data/claim_catalog_real.csv   # cohort headline + MAGE/SSX control
-python3 src/darkproteome/tier1_nonnovelty.py                       # class-resolved non-novelty floor (needs data/external/)
-python3 src/darkproteome/robustness.py data/claim_catalog_real.csv # leniency ladder + reusable-positive ceiling
+python3 manuscript/verify_manuscript.py         # every headline number, regenerated from artifacts
+python3 src/darkproteome/scoring_conformance.py
+
+python3 scripts/era_correct_reference.py        # 56.2% vs the reference IEAtlas actually searched
+python3 scripts/consequence_robust.py           # RR 2.42x, gene-clustered 95% CI [2.32, 2.52]
+python3 scripts/abundance_bias.py               # the detection effect, with the control that could kill it
+python3 scripts/cross_catalogue.py              # same-pipeline comparison, length-standardized
+python3 scripts/library_ambiguity.py            # nuORFdb 34.1% vs GENCODE 1.0-2.4%
+python3 scripts/ouspenskaia_verify.py           # the published remedy, verified at source
 ```
 
-Self-check that the environment is intact (with `data/external/` populated): `tier1_nonnovelty.py`
-must print `5/2979`, `213/369 = 57.7%`, `0 mismatches`, `54.4%`.
+`verify_manuscript.py` **fails the build on drift**. It also fails if the paper asserts any of **23
+retracted phrasings or stale values**, drops its required prior-art citations, or if the ORF-class strata
+fail to partition. The large public inputs (atlas exports, proteome FASTAs) are **not redistributed**; on
+a clean checkout the checks that need them are reported as *skipped* rather than crashing. See
+`data/SOURCES.md` and `data/external/README.md` to fetch them.
 
-The class-decoy ledger tool (`src/darkproteome/class_decoy_ledger.py`) is demonstrated end to
-end on a real deposited run in `examples/`; see `examples/README.md`.
+**Two scripts deliberately refuse to run** — `scripts/consequence.py` and `scripts/rule_predicts_rate.py`.
+They produced results that were **retracted during review**: an invalid significance test that treated
+clustered observations as independent, and an FDR argument built on the wrong null object (a false PSM is
+drawn from the search database, not from a shuffle). They are kept for the record and print a retraction
+notice instead of output, so their numbers cannot be quoted.
 
-## Run the tests
+## Layout
 
-Stdlib only, no test framework needed; each file is also its own runner:
-
-```bash
-python3 tests/test_class_decoy_ledger.py
-python3 tests/test_eco_diagnostic.py
+```
+manuscript/manuscript_v2.md      the paper      (manuscript.md is SUPERSEDED — see REVISION_NOTICE.md)
+manuscript/supplement_v2.md      S1 pseudogene homology · S2 the class-FDR derivation
+manuscript/verify_manuscript.py  regenerates every headline number; fails on drift
+manuscript/figures_v2/           Figures 1–3
+scripts/                         one script per result — each reproduces its own numbers
+data/                            derived tables + the JSON artifacts the paper is verified against
+src/darkproteome/                the analysis package (stdlib-only core)
 ```
 
-### Reproducing the derived data tables (needs the external inputs; see below)
+## What this work does not claim
 
-All of these read from `data/external/`; set `$DARKPROTEOME_DATA` if you keep that data
-elsewhere (see `data/external/README.md`).
-
-```bash
-python3 src/darkproteome/ingest_cohorts.py       # -> data/claim_catalog_real.csv (needs openpyxl)
-python3 src/darkproteome/ingest_atlases.py       # -> data/claim_catalog_scaled.csv (307,318 claims; gitignored, large)
-python3 src/darkproteome/reference_model.py      # -> data/claim_catalog_scored.csv + Fig. 1 survivorship funnel
-python3 src/darkproteome/ieatlas_frame_audit.py  # the 56.3% canonical-self headline (Results I, Fig. 2)
-python3 src/darkproteome/deepen_specificity.py           # falsification-tested normal-tissue overlap (Results I)
-python3 src/darkproteome/pseudogene_specificity.py       # -> data/pseudogene_specificity.csv, the 16/43 HLA Ligand Atlas floor
-python3 src/darkproteome/gtex_specificity.py             # -> data/gtex_pseudogene_specificity.csv, measured GTEx floor (43/43 parents expressed)
-python3 src/darkproteome/gtex_class_specificity.py       # -> data/gtex_class_specificity.csv, class-resolved (altORF/lncRNA-ORF) GTEx floor
-python3 src/darkproteome/lncrna_ensg_specificity.py      # -> data/lncrna_ensg_specificity.csv, lncRNA-ORF floor at ENSG resolution
-```
-
-## Data sources (all public)
-
-PRIDE PXD055609 (raw immunopeptidomics) · two flagship cohort supplements (ovarian, HCC) ·
-IEAtlas · CrypticProteinDB · GENCODE Ribo-seq ORFs · nuORFdb · HLA Ligand Atlas · GTEx v8 ·
-UniProt/SwissProt. Full accessions, versions, and licenses in `data/SOURCES.md`.
+- Not that the biology is fake, or that any ncORF antigen is not real.
+- Not that the canonical source is the correct one for any peptide. **MS identifies the sequence, never
+  the locus.**
+- Not that any resource acted improperly. All describe their own procedures accurately, which is the
+  only reason this audit was possible. IEAtlas's published **Methods do not describe** a peptide-level
+  canonical-exclusion rule — which is different from saying its pipeline applies none.
+- Not that the exclusion criterion is a universal, field-wide rule. It is *published and recommended*. An
+  atlas may legitimately retain shared sequences **if it labels them source-ambiguous**.
+- **No fold-change** against the 1.4–5% rates published for four other catalogues. Those came from a
+  different pipeline, reference and peptide unit; a ratio across pipelines is arithmetic, not
+  measurement.
+- Not that IEAtlas's *combined* library (nuORFdb + RPFdb + Translnc) has been measured. It has not — and
+  34.1% is **not** a lower bound on it, because union rates are not monotone.
 
 ## License
 
-MIT (see `LICENSE`). All inputs are public data; see `data/SOURCES.md` for source-specific
-licensing terms.
+MIT (`LICENSE`). Public data only; sources and versions in `data/SOURCES.md`.

@@ -1,18 +1,41 @@
-"""Is canonical-sequence compatibility structured by homology?
+"""Are the ncORF CLASS LABELS trustworthy enough to build a class-structured claim on?
 
-A processed pseudogene is a retro-copy of a parent gene, so a peptide encoded by a pseudogene ORF can
-be an exact substring of the PARENT protein. If canonical compatibility is structured by that
-homology, a pseudogene-labelled peptide matching the canonical proteome should match THAT pseudogene's
-own parent -- not an unrelated protein.
+The reviewer's objection, and it is serious: the class-structured result (pseudogene-derived
+claims carry a 57.7% canonical-substring rate; altORF/lncRNA claims carry ~0%) is now a PRINCIPAL
+CONCLUSION -- and the class labels come from source-supplied biotype strings. That is the same
+kind of annotation-derived field that produced the cancer-testis-control fiasco, where a
+`gene_type == protein_coding` test was described in prose as "a curated panel of known-real
+antigens" and was nothing of the sort.
 
-WHAT THIS SHOWS: the ambiguity sits exactly where sequence homology predicts.
-WHAT IT DOES NOT SHOW: provenance. The same sequence is encoded by both loci; MS identifies the
-sequence, never the locus. Even a parent hit is often not a unique assignment.
+So: can the class label be corroborated INDEPENDENTLY of the annotation that supplied it?
 
-THE NULL MUST RESPECT THE CONDITIONING. A uniform "one gene in ~20,400" null is invalid: pseudogene
-parent annotations are themselves homology-derived, and we select peptides already known to match
-something canonical. Instead, hold each peptide's canonical hit set FIXED and permute only the
-pseudogene->parent pairing.
+For pseudogene-derived claims there is a test that does not rely on the biotype label at all. A
+processed pseudogene is a retro-copy of a parent gene, so a peptide encoded by a pseudogene ORF can
+be an exact substring of the PARENT PROTEIN. If canonical-sequence compatibility is structured by
+that homology, then for a pseudogene-labelled claim whose peptide matches the canonical proteome,
+the matched canonical protein should be the pseudogene's OWN PARENT -- not an unrelated protein.
+
+  RPS3AP12  (pseudogene)  ->  parent RPS3A  ->  peptide should match RPS3A, specifically.
+
+WHAT THIS DOES AND DOES NOT SHOW -- read before quoting any number below.
+
+  IT DOES show that canonical-sequence compatibility is CONCENTRATED IN THE ANNOTATED PARENT: the
+  ambiguity sits exactly where sequence homology predicts it.
+
+  IT DOES NOT resolve provenance. `DEVAFRKF` is encoded by BOTH RPS3AP12 and RPS3A. MS identifies
+  the peptide SEQUENCE; it never chose a locus. A "parent hit" is therefore not evidence that the
+  canonical parent produced the peptide, nor that the pseudogene did not. It is evidence that the
+  two cannot be told apart by sequence.
+
+  THE NULL MUST RESPECT THE CONDITIONING. A uniform "1 gene in ~20,400" null is INVALID and is not
+  used here: it ignores the selection (we look only at peptides already known to match SOMETHING
+  canonical), protein lengths, paralogy, shared k-mers, and -- decisively -- the fact that the
+  pseudogene's parent annotation is ITSELF derived from homology. Instead we permute only the
+  pseudogene->parent PAIRING while holding every peptide's canonical hit set FIXED. That breaks the
+  pseudogene-parent link and changes nothing else.
+
+Nothing here reads `orf_class`; the parent is derived from the gene SYMBOL by stripping the
+pseudogene suffix, and the match is computed against SwissProt directly.
 
     python3 scripts/parent_gene_test.py
 """
@@ -71,23 +94,7 @@ def putative_parent(symbol):
     return p if len(p) >= 2 else None
 
 
-def _require(*paths):
-    """Fail with a usable message, not a traceback, when the external inputs are absent.
-
-    The large public inputs (Swiss-Prot, the atlas exports, the ncORF libraries, the fetched full
-    texts) are not redistributed in this repository. Populate `data/external/` from the sources
-    documented in `data/SOURCES.md` and `data/external/README.md`.
-    """
-    import sys as _s
-    missing = [p for p in paths if not __import__("os").path.exists(p)]
-    if missing:
-        _s.exit("missing required input(s):\n  " + "\n  ".join(missing) +
-                "\n\nThese are large public files and are not redistributed here.\n"
-                "Populate data/external/ -- see data/SOURCES.md and data/external/README.md.")
-
-
 def main():
-    _require(SPROT, TIER1, REAL)
     for p in (SPROT, TIER1, REAL):
         if not os.path.exists(p):
             sys.exit(f"missing {p}")
