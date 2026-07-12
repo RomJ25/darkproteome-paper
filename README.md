@@ -17,29 +17,61 @@ claims in it can even be re-verified from what was reported.**
 
 ---
 
-> ### ⚠️ The manuscript in this repository is under major revision — do not cite its headline
+> ### ⚠️ The paper in `manuscript/manuscript.md` is SUPERSEDED. Do not cite it.
 >
-> External review found that the paper's central number — *"0 of 306,844 claims pass all four
-> evidence axes"* — **was true by construction and has been withdrawn.** The scorer could only
-> record a source-ORF pass via a Ribo-seq periodicity percentage or a protein-level FDR, and
-> **neither field is populated on a single claim in the corpus**, so no claim *could* pass and
-> the zero followed from the scoring code rather than from the literature.
+> Its headline — *"0 of 306,844 claims pass all four evidence axes"* — **was true by construction**
+> and has been withdrawn: the scorer could only record a pass via statistics that no source publishes,
+> so no claim *could* pass. A second defect scored *unassayed* claims as immunogenicity **failures**.
+> Both are the same error — absence of evidence recorded as evidence of absence — and both are
+> precisely what this project exists to criticise. See `manuscript/REVISION_NOTICE.md`.
 >
-> A second defect ran the other way: a peptide observed by MS with no T-cell assay was scored as
-> an immunogenicity **failure**. It was never assayed. Both errors are the same mistake —
-> **absence of evidence recorded as evidence of absence** — which is precisely what this project
-> exists to criticise.
+> ### The current paper is `manuscript/manuscript_v2.md`.
 >
-> **The code in `src/` is corrected and is authoritative; `manuscript/` is not yet.** The audit
-> now reports a *reporting-and-adjudicability matrix* (below), never a survivor fraction. The
-> sequence-overlap results (56.3% atlas canonical-substring rate; the class-resolved floors) are
-> unaffected and reproduce, though the pseudogene rate is corrected from 37.1% to **57.7%** —
-> the old figure was computed from a claim table that kept only the first peptide of each
-> multi-peptide gene row.
+> **It claims no conceptual novelty, and says so in its first paragraph.**
 >
-> Run `python3 src/darkproteome/scoring_conformance.py` before quoting any number from this repo.
+> The standard it applies is **not ours**. That a peptide matching a canonical protein does not
+> identify a non-canonical source, and must be **excluded**, is **Bedran et al. 2023**
+> (*Cancer Immunol Res*), who also measured four catalogues at 1.4–5%. That *"most shared peptides
+> should be dropped"* is **Kumar et al. 2022** (*Brief. Bioinform.*). The underlying
+> protein-inference problem is **Nesvizhskii & Aebersold**. That a pooled FDR under-controls a
+> minority class is **Woo et al. 2014**.
+>
+> **What had not been done was to test whether the public resources meet the standard.** This
+> repository is that test. Its contribution is **three measurements, and no new ideas.**
 
----
+## Headline result
+
+**1 — IEAtlas is an order-of-magnitude outlier.** At least **56.3%** of its unique cancer-catalogued
+peptide sequences (98,193 / 174,465) are exact substrings of reviewed canonical human proteins under
+an explicitly defined reference *R* — against **1.4–5%** for every ncORF catalogue previously audited,
+and **0.026%** / **0.17%** for two resources that apply an explicit exclusion rule (CrypticProteinDB;
+Raja et al.). Neither ORF-class composition nor the false-discovery rate accounts for it.
+
+**2 — The library explains it.** **34.1%** of nuORFdb v1.2's distinct 9-mers already occur in the
+canonical proteome, against **1.0–2.4%** for the GENCODE Ribo-seq ORF sets. IEAtlas integrates
+nuORFdb and applies no exclusion rule. *Ouspenskaia et al. searched the same nuORFdb and published a
+catalogue at 3%* — so the library is necessary but not sufficient; the exclusion step does the work.
+(Corroborated by an independent 8–11mer enumeration: 34.4% / 2.5%.)
+
+**3 — The consequence is internal to the resource.** Canonical-overlapping "cancer" epitopes appear
+in IEAtlas's **own normal-tissue set** at **22.4%**, versus **9.1%** for the non-overlapping epitopes
+of the same catalogue (risk ratio 2.4; *z* = 74). **22,003 entries — 12.6% of every cancer epitope the
+atlas catalogues — are both canonical-compatible and already observed on normal tissue by the atlas's
+own measurement.** No external reference is needed to see this.
+
+**What this does not claim.** That the biology is fake; that any resource manufactures, re-labels or
+discards anything; that any individual peptide is canonically derived (**MS identifies the sequence,
+never the locus**); or that any resource acted improperly — all describe their own procedures
+accurately, which is the only reason this audit was possible.
+
+**Reproduce:**
+```bash
+python3 scripts/rule_predicts_rate.py     # 1 — the outlier, with both confounds controlled
+python3 scripts/library_ambiguity.py      # 2 — latent canonical ambiguity of the ncORF libraries
+python3 scripts/consequence.py            # 3 — normal-tissue presentation, internal control
+python3 scripts/ouspenskaia_verify.py     # the published remedy, verified at source
+python3 manuscript/verify_manuscript.py   # regenerates every headline number; fails on drift
+```
 
 ## What's here
 
@@ -162,66 +194,6 @@ python3 src/darkproteome/lncrna_ensg_specificity.py      # -> data/lncrna_ensg_s
 PRIDE PXD055609 (raw immunopeptidomics) · two flagship cohort supplements (ovarian, HCC) ·
 IEAtlas · CrypticProteinDB · GENCODE Ribo-seq ORFs · nuORFdb · HLA Ligand Atlas · GTEx v8 ·
 UniProt/SwissProt. Full accessions, versions, and licenses in `data/SOURCES.md`.
-
-## Headline result
-
-**Withdrawn and replaced** — see the notice at the top of this file.
-
-Of the audited machine-readable claims:
-
-- **Every audited source STATES ITS FDR HANDLING — at the STUDY level, never per claim.** (It would
-  be false to say every source "reports a protein-level FDR": IEAtlas explicitly states that a
-  protein-level FDR was **not applied**.) IEAtlas: a 5% PSM FDR and *"no protein FDR was set"*. The
-  HCC cohort: a 5% search FDR, plus a RibORF score cutoff (≥0.5, ≥5 footprints) and an average read
-  periodicity (>0.5). The ovarian cohort: a 3% PSM-level FDR. What **none** of them publishes is the
-  **per-claim** value — this ORF's own RibORF score, this peptide's own q-value — so no individual
-  claim can be independently re-adjudicated from the reported record. Whether translation is
-  biologically real is **not assessed** and is not assessable from a reported record; that is a
-  different study.
-- **Presentation is asserted almost everywhere; it is re-evaluable almost nowhere.** The peptide is
-  reported as HLA-eluted for essentially the whole corpus, yet the **allele it was restricted to**
-  is reported for **0.09%** of claims — and for only **53 of 4,995** in the end-to-end cohorts.
-- **No audited record carries a reusable, machine-readable positive human T-cell result.** This is
-  *not* "the claims failed an assay": nearly all of them were **never assayed**. Where an assay was
-  run, the per-peptide result is often published only inside a figure.
-- **A global FDR does not identify subgroup-specific error rates.** Subgroup rates become assessable
-  only when authors report them *directly*, or release the target–decoy assignments and thresholds
-  needed to reconstruct them. This is a statement about *identifiability*, not an accusation that
-  the field ignores the problem — **it demonstrably does not**. Ouspenskaia et al. applied a 1%
-  global FDR, measured **4.6%** FDR among ncORF peptides (up to **14%** for one ORF class),
-  introduced **group-specific filtering** that brought each class back to ≈1%, and reported the
-  resulting high-confidence set. **That is the predicted inflation, detected and corrected — a
-  positive exemplar for the reporting standard proposed here, not a failure.** What remains missing
-  across the corpus is the *auditability* layer: per-class accepted target/decoy counts, class
-  definitions, the thresholding stage, and claim-linked assignments.
-
-**At least 56.3%** of the unique cryptic "cancer" epitope sequences catalogued in the largest public
-atlas (IEAtlas) also occur in reviewed canonical human proteins, under our explicitly defined
-reference *R*. IEAtlas searched *"against **both** our integrated benchmarked ncORF library **and the
-canonical human proteome**"*, applied a 5% PSM FDR with *"no protein FDR"*, and retained *"only
-epitopes derived from non-coding regions"*.
-
-**What this establishes is SOURCE-ATTRIBUTION AMBIGUITY, and no more.** An identical amino-acid
-sequence is **not two competing peptide hypotheses** — it is *one* peptide sequence compatible with
-*multiple* source loci. Tandem MS identifies the sequence; it does not choose between a canonical
-gene and an ncORF that encode the same sequence. So the defensible claim is:
-
-> The locus-based retention rule permits peptide sequences compatible with **both** canonical and
-> ncORF sources to enter the non-canonical catalogue **without resolving their source**.
-
-We do **not** claim the pipeline "manufactures" epitopes, "re-labels" canonical peptides, or
-"discarded" a canonical explanation. Demonstrating that would require the search outputs
-(`peptides.txt` `Proteins` / `Leading razor protein` / `Unique (Proteins)` fields), the exact
-February-2022 reference FASTA, or author confirmation — **none of which we have.**
-
-This is **sequence non-uniqueness**, not a claim that
-the biology is absent: it means the reported record cannot distinguish the nominated ncORF from a
-canonical source by sequence alone. The rate is **reference-relative** — always read as *N(R)* for
-the stated reference layer *R*.
-
-The class-specific false-discovery rate underwriting these claims is only *set*-identified from
-what papers report; the fix is a one-line reporting standard, a **class-decoy ledger**, that makes
-it re-verifiable.
 
 ## License
 

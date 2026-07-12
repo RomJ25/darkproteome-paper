@@ -4,8 +4,9 @@ class_decoy_ledger.py — emit a per-class decoy ledger ("antigen datasheet")
 from target-decoy proteomics outputs you ALREADY have, making D_N a free output.
 
 The single missing statistic for re-verifiable non-canonical (cryptic) antigen claims is the
-per-class accepted DECOY count D_N (see "Canonical self in cryptic cancer-epitope catalogues
-and the class-decoy ledger needed to verify non-canonical antigen claims", Rom Jan).
+per-class accepted DECOY count D_N. A pooled target-decoy threshold does not IDENTIFY a
+subgroup's error rate (Woo et al. 2014); the subgroup rate becomes assessable only when the
+per-class accepted target and decoy counts are reported.
 This tool reads existing outputs — a mokapot/Percolator PSM table, or an MSFragger pepXML
 intermediate (which RETAINS decoys + class-labelable accessions) — and emits, per class:
 accepted targets T, accepted decoys D, and the class-FDR estimate (D+1)/T at a chosen
