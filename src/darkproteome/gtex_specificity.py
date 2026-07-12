@@ -4,9 +4,8 @@ Turns the LABELED ribosomal-family PRIOR (pseudogene_specificity.py) into a MEAS
 normal-tissue expression number, using GTEx v8 gene-median TPM (56,200 genes x 54
 normal tissues).
 
-Each of the 43 HCC
-pseudogene-ORF 'cryptic antigen' peptides is an EXACT substring of one or more
-canonical proteins (matched_canonical_genes, verified via SwissProt GN=). A peptide
+Each HCC pseudogene-ORF 'cryptic antigen' peptide in the canonical-self set is an EXACT
+substring of one or more canonical proteins (matched_canonical_genes, verified via SwissProt GN=). A peptide
 identical to a canonical-protein substring is presented wherever that protein is
 made. So if a matched canonical parent gene is EXPRESSED IN NORMAL TISSUE, a T cell
 against the peptide is on-target / off-tumor -> the peptide is presumptively NOT
@@ -17,7 +16,7 @@ pseudogene_specificity.py:
   - HLA Ligand Atlas direct observation  = HARD floor (normal PRESENTATION), and
   - ribosomal-parent family               = a labeled PRIOR (assumed expression).
 GTEx replaces that prior with measured RNA expression across 54 normal tissues, and
-covers ALL 43 parents, not just the ribosomal ones.
+covers ALL matched parents, not just the ribosomal ones.
 
 CONSERVATIVE BY CONSTRUCTION (no over-claiming):
   - normal-tissue medians (not tumor-adjacent); we report several TPM thresholds
@@ -52,7 +51,7 @@ EXPR = 1.0    # standard minimal "expressed" median TPM in a tissue
 ROBUST = 10.0  # robustly expressed
 
 # A few SwissProt GN= symbols differ from the GENCODE v26 symbols GTEx ships.
-# Map the handful that occur among the 43 parents to their GTEx-v26 alias so the
+# Map the handful that occur among the matched parents to their GTEx-v26 alias so the
 # measurement is not lost to a naming change (confirmed 1:1 via HGNC).
 ALIAS = {
     "STMP1": "C7orf73", "ARK2N": "C18orf25", "LLPH": "C12orf32",
@@ -177,7 +176,7 @@ def main():
           "standard minimal-expression call (we also report >=10 and tissue breadth). 'Expressed in "
           "normal' => specificity RISK (on-target/off-tumor), NOT 'the peptide is false'. Absence "
           "from GTEx is not proof of specificity. The HLA Ligand Atlas tier remains the HARD floor; "
-          "GTEx supersedes the ribosomal PRIOR with a measured number over all 43 parents.")
+          "GTEx supersedes the ribosomal PRIOR with a measured number over all matched parents.")
 
 
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
 """Pseudogene-ORF specificity cut -- turn the non-novelty finding into a
 quantified tumor-SPECIFICITY number, rigorously.
 
-Context: 43/116 HCC pseudogene-ORF 'cryptic antigen' peptides are
-exact substrings of the canonical proteome. Non-novelty is settled. The further
+Context: a large fraction of HCC pseudogene-ORF 'cryptic antigen' peptides are
+exact substrings of the canonical proteome (live: see tier1_nonnovelty.py). Non-novelty is settled. The further
 question: are they tumor-SPECIFIC? A peptide identical to a canonical-protein
 substring is presented wherever that protein is -- so if the parent is expressed
 in normal tissue, a T cell against it is on-target/off-tumor.
@@ -44,7 +44,7 @@ PARENT_RE = re.compile(r"P\d+$")  # strip a trailing pseudogene index: RPS3AP12 
 
 
 def target_peptides():
-    """the 43: HCC pseudogene-ORF peptides flagged canonical_self_exact=1."""
+    """HCC pseudogene-ORF peptides flagged canonical_self_exact=1 (computed, not a fixed N)."""
     pep = set()
     with open(PRIMARY, newline="") as fh:
         for r in csv.DictReader(fh):
@@ -68,8 +68,7 @@ def locus_map():
 
 def matched_genes(peptides, sprot=d.SPROT):
     """peptide -> set of canonical gene symbols (GN=) of proteins that contain it.
-    One streaming pass; for the ~43 short peptides a direct `in` test per protein
-    is fast and exact."""
+    One streaming pass; a direct `in` test per protein is fast and exact at this scale."""
     hits = defaultdict(set)
     gene, seq = None, []
 
@@ -96,6 +95,24 @@ def matched_genes(peptides, sprot=d.SPROT):
 def is_ribosomal(g):
     return bool(g) and (g.upper().startswith("RPS") or g.upper().startswith("RPL")
                         or g.upper().startswith("MRPL") or g.upper().startswith("MRPS"))
+
+
+def pseudogene_claim_count():
+    """How many HCC pseudogene-ORF peptide claims are there? Computed, never typed."""
+    import csv as _csv
+    _csv.field_size_limit(10_000_000)
+    path = os.path.join(paths.REPO, "data", "claim_catalog_real.csv")
+    seen = set()
+    with open(path, newline="", encoding="utf-8") as fh:
+        for r in _csv.DictReader(fh):
+            if r.get("orf_class") != "pseudogene-ORF":
+                continue
+            if (r.get("cancer_type") or "") != "Hepatocellular Carcinoma":
+                continue
+            p = (r.get("peptide_sequence") or "").strip().upper()
+            if p and p.isalpha():
+                seen.add(p)
+    return len(seen)
 
 
 def main():
@@ -138,11 +155,16 @@ def main():
           f"= {100*n_direct/n:.0f}%")
     print(f"  >>> ANY normal-presentation evidence (HLA-LA OR ribosomal parent): {n_any}/{n} "
           f"= {100*n_any/n:.0f}%")
+    # The denominator is COMPUTED from the catalog, never typed. It used to be a hardcoded 116 --
+    # the pseudogene count from a claim table that kept only the FIRST peptide of each multi-peptide
+    # gene row. This block already reported a REBUILT numerator (N=213) and then divided it by that
+    # RETIRED denominator, mixing two different claim units in one ratio and inflating the rate.
+    n_claims = pseudogene_claim_count()
     print(f"\n  SPECIFICITY NUMBER: of the {n} pseudogene 'cryptic antigen' peptides that are")
     print(f"  canonical substrings, {n_direct} are directly seen on normal tissue (hard floor) and")
     print(f"  {n_any} have normal-presentation evidence -> presumptively NOT tumor-specific.")
-    print(f"  Of the original 116 HCC pseudogene claims that is {n_any}/116 = {100*n_any/116:.0f}%"
-          f" flagged non-specific (lower bound; canonical-self was the gate).")
+    print(f"  Of ALL {n_claims} HCC pseudogene peptide claims that is {n_any}/{n_claims} = "
+          f"{100*n_any/n_claims:.0f}% flagged non-specific (lower bound; canonical-self was the gate).")
 
     # show the table
     print(f"\n  {'peptide':14s} {'locus':14s} {'matched_gene':16s} parent ribo hlaLA")
@@ -160,7 +182,7 @@ def main():
     print("\nCAVEATS: HLA-LA presence is a CONSERVATIVE floor (its sampling is finite; absence != "
           "specific). Ribosomal-parent is a labeled PRIOR, not measured expression -- see "
           "gtex_specificity.py for the measured GTEx parent-gene-expression extension "
-          "covering all 43 parents.")
+          "covering all matched parents.")
 
 
 if __name__ == "__main__":

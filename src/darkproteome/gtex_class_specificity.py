@@ -101,8 +101,10 @@ def main():
             out_rows.append((cls, loc, loci[loc], found, f"{mx:.2f}", ntis,
                              int(found and mx >= EXPR), int(found and ntis >= BROAD)))
 
-    # claim-weighted view for the two genuinely-non-canonical classes
-    print("\n=== READ-OUT (claim-weighted, the genuinely non-canonical survivors) ===")
+    # Claim-weighted view for the two classes with ~0% canonical-sequence overlap. NB: "no
+    # exact match in the reference" is NOT "genuinely non-canonical" -- that phrasing asserts a
+    # biological fact the sequence cannot show, and is retired.
+    print("\n=== READ-OUT (claim-weighted; classes with no exact canonical match) ===")
     for cls in ("lncRNA-ORF", "altORF"):
         loci = cl.get(cls, {})
         tot = sum(loci.values())
