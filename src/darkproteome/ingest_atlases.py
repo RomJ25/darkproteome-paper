@@ -84,8 +84,11 @@ def ingest_ieatlas(rows_out):
                 antigen_type="TSA",
                 cancer_type=r[3] or NR,
                 evidence_types="immunopeptidomics",  # MS-observed HLA-presented
-                min_peptide_len=str(ln),
-                tumor_specificity_basis=NR,          # IEAtlas does not report specificity per epitope
+                ligand_len=str(ln),
+                source_pep_len=NR,
+                tumor_specificity_modality=NR,       # IEAtlas reports no specificity per epitope
+                tumor_specificity_scope=NR,
+                tumor_specificity_result=NR,
                 validation_level="MS-presented",
                 underlying_dataset_accession="IEAtlas",
                 citation_doi_pmid=IEATLAS_DOI,
@@ -125,8 +128,11 @@ def ingest_cpdb_immuno(rows_out):
                 antigen_type="TSA",
                 cancer_type=NR,                      # not in this table
                 evidence_types="immunopeptidomics",
-                min_peptide_len=(r.get("Peptide length") or str(len(seq))),
-                tumor_specificity_basis=NR,
+                ligand_len=(r.get("Peptide length") or str(len(seq))),
+                source_pep_len=NR,
+                tumor_specificity_modality=NR,
+                tumor_specificity_scope=NR,
+                tumor_specificity_result=NR,
                 validation_level="MS-presented",
                 underlying_dataset_accession="CrypticProteinDB",
                 citation_doi_pmid=CPDB_DOI,
@@ -164,8 +170,18 @@ def ingest_cpdb_epitopes(rows_out):
                 cancer_type=(r[1] or NR),
                 hla_allele=allele or NR,
                 evidence_types="immunopeptidomics, MHC binding prediction",
-                min_peptide_len=str(ln),
-                tumor_specificity_basis="broad-normal-panel" if gtex_low else "not stated",
+                ligand_len=str(ln),
+                source_pep_len=NR,
+                # `gtex_low` is "Expression <1 TPM in GTEx" -- a per-epitope RNA threshold. It is
+                # reported per claim (good scope) but it is the WRONG MODALITY for a presentation
+                # claim: low transcript abundance does not establish absence from the normal
+                # ligandome. It used to earn the same strict-pass as a real normal-ligandome
+                # search. It now scores weak-pass.
+                # keep BOTH answers: gtex_low=no is an explicit detection in normal tissue
+                tumor_specificity_modality="normal-rna-broad",
+                tumor_specificity_scope="per-claim-reported",
+                tumor_specificity_result=("absent-from-normal" if gtex_low
+                                          else "detected-in-normal"),
                 validation_level="MS-presented",
                 underlying_dataset_accession="CrypticProteinDB",
                 citation_doi_pmid=CPDB_DOI,

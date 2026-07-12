@@ -15,6 +15,32 @@ minimal reporting fix.
 The thesis, in one line: **before you trust a catalogue of candidate antigens, audit whether the
 claims in it can even be re-verified from what was reported.**
 
+---
+
+> ### ⚠️ The manuscript in this repository is under major revision — do not cite its headline
+>
+> External review found that the paper's central number — *"0 of 306,844 claims pass all four
+> evidence axes"* — **was true by construction and has been withdrawn.** The scorer could only
+> record a source-ORF pass via a Ribo-seq periodicity percentage or a protein-level FDR, and
+> **neither field is populated on a single claim in the corpus**, so no claim *could* pass and
+> the zero followed from the scoring code rather than from the literature.
+>
+> A second defect ran the other way: a peptide observed by MS with no T-cell assay was scored as
+> an immunogenicity **failure**. It was never assayed. Both errors are the same mistake —
+> **absence of evidence recorded as evidence of absence** — which is precisely what this project
+> exists to criticise.
+>
+> **The code in `src/` is corrected and is authoritative; `manuscript/` is not yet.** The audit
+> now reports a *reporting-and-adjudicability matrix* (below), never a survivor fraction. The
+> sequence-overlap results (56.3% atlas canonical-substring rate; the class-resolved floors) are
+> unaffected and reproduce, though the pseudogene rate is corrected from 37.1% to **57.7%** —
+> the old figure was computed from a claim table that kept only the first peptide of each
+> multi-peptide gene row.
+>
+> Run `python3 src/darkproteome/scoring_conformance.py` before quoting any number from this repo.
+
+---
+
 ## What's here
 
 - **`manuscript/`** — the paper itself. `manuscript.md` is the canonical source; `tex/` builds
@@ -35,22 +61,55 @@ claims in it can even be re-verified from what was reported.**
 - **`scripts/verify_effective_rho.py`** — reproduces the Methods "Simulation" subsection cited
   throughout the manuscript.
 
-## Four independent evidence axes (encoded in `src/darkproteome/axes.py`)
+## Six evidence dimensions (encoded in `src/darkproteome/evidence_dimensions.py`)
 
-A claim is scored on **four axes**, not one blended bar, because a single HLA-I antigen is
-one short 8–12mer ligand, so a protein-existence standard is the wrong test for it. A claim is
-a **strict survivor** only if it strict-passes all four:
+A claim is scored on **six evidence dimensions**, and **never as a single pass/fail survivor
+count**. A joint pass/fail across dimensions the reported record cannot even decide measures the
+scorer, not the claims.
 
-| Axis | Question | Standard |
-|---|---|---|
-| **source_orf** | Is the source ORF plausibly translated? | Ribo-seq ≥70% periodicity **or** the Prensner protein bar (≤0.1% FDR, ≥2 unique ≥9-aa peptides) |
-| **hla_presentation** | Is the peptide actually presented? | eluted-ligand MS, plausible 8–12mer, allele assigned (class-specific FDR confirmed downstream) |
-| **tumor_specificity** | Absent from normal presentation/expression? | broad normal panel (HLA Ligand Atlas / GTEx-Recount3); "no public normal evidence", never "safe" |
-| **immunogenicity** | Do T cells respond? | autologous / HLA-matched T-cell assay (in-vivo = weaker) |
+Each dimension is scored on a **cumulative reporting ladder** — rung *k* counts claims that clear
+rungs 1..*k*:
 
-The auditor never recomputes FDR from raw spectra; it scores each axis **as reported**, and
-labels anything underspecified `unverifiable`. Headline = **strict survivor fraction** (passes
-all four) with a Wilson 95% CI, plus per-axis survival so you see exactly where claims die.
+| Rung | Question |
+|---|---|
+| `asserted` | Is the experiment or analysis named for this claim? |
+| `claim_linked` | Does an individual result travel *with* the claim (not just a study-level method)? |
+| `quantitative` | Is that result a value a prespecified criterion can be applied to? |
+| `modality_appropriate` | Does the measurement answer the endpoint actually being claimed? |
+| **`adjudicable`** | **All of the above → the criterion can be applied independently.** |
+
+| Dimension | Question |
+|---|---|
+| `source_translation` | Is the nominated ORF translated? |
+| `hla_elution` | Was the peptide observed on HLA by MS? |
+| `allele_restriction` | *Which allele* presented it? |
+| `normal_presentation` | Is it absent from **normal HLA presentation**? |
+| `human_tcell_assay` | Do human T cells respond? |
+| `class_fdr_reconstructible` | Can the class-specific identification error be recomputed? |
+
+Two rules govern every dimension, and violating either manufactures results:
+
+- **A zero is not a finding until the record could have said otherwise.** A *structural* zero (no
+  claim reports the field the criterion needs) and an *empirical* zero (claims report it, none
+  clear it) look identical in a survivor count and mean opposite things. `adjudicable` separates
+  them.
+- **Absence of evidence is never evidence of absence.** An MS-observed peptide with no T-cell
+  assay is not a negative immunogenicity result — it is *unassayed*. A ligand outside the HLA-I
+  length window is not a contradiction — no source here states the MHC class, and 13–25mers are
+  ordinary HLA-II ligands.
+
+`adjudicable` is deliberately **not** source-attribution resolution (whether the record leaves
+only the nominated source compatible). A record can carry excellent claim-linked translation
+evidence while a canonical source remains perfectly compatible.
+
+The auditor never recomputes FDR from raw spectra; it scores **as reported**, and always reports
+**stratified** (atlas records / end-to-end cohorts / T-cell-tested), because a pooled denominator
+dominated by atlas records hides the cohorts.
+
+**Is the bar rigged to fail?** No, and this is enforced: `data/sample_claims.csv` carries
+hand-built claims that report everything the criteria ask for, and `scoring_conformance.py`
+asserts they come out adjudicable-and-supporting on *every* dimension — one witness per
+independent route to a pass. If a criterion ever becomes unsatisfiable, the guard fails the build.
 
 ## Run the audit
 
@@ -67,7 +126,7 @@ python3 src/darkproteome/robustness.py data/claim_catalog_real.csv # leniency la
 ```
 
 Self-check that the environment is intact (with `data/external/` populated): `tier1_nonnovelty.py`
-must print `5/2979`, `43/116 = 37.1%`, `0 mismatches`, `54.4%`.
+must print `5/2979`, `213/369 = 57.7%`, `0 mismatches`, `54.4%`.
 
 The class-decoy ledger tool (`src/darkproteome/class_decoy_ledger.py`) is demonstrated end to
 end on a real deposited run in `examples/`; see `examples/README.md`.
@@ -88,7 +147,7 @@ elsewhere (see `data/external/README.md`).
 
 ```bash
 python3 src/darkproteome/ingest_cohorts.py       # -> data/claim_catalog_real.csv (needs openpyxl)
-python3 src/darkproteome/ingest_atlases.py       # -> data/claim_catalog_scaled.csv (306,844 claims; gitignored, large)
+python3 src/darkproteome/ingest_atlases.py       # -> data/claim_catalog_scaled.csv (307,318 claims; gitignored, large)
 python3 src/darkproteome/reference_model.py      # -> data/claim_catalog_scored.csv + Fig. 1 survivorship funnel
 python3 src/darkproteome/ieatlas_frame_audit.py  # the 56.3% canonical-self headline (Results I, Fig. 2)
 python3 src/darkproteome/deepen_specificity.py           # falsification-tested normal-tissue overlap (Results I)
@@ -106,13 +165,34 @@ UniProt/SwissProt. Full accessions, versions, and licenses in `data/SOURCES.md`.
 
 ## Headline result
 
-**0 of 306,844** published non-canonical tumor-antigen claims carry per-claim reusable evidence
-on all four axes at once; a known-real canonical control (MAGE/SSX) fails the identical bar,
-locating the gap in reporting, not the underlying biology. **56.3%** of catalogued cryptic
-"cancer" epitopes in the largest public atlas (IEAtlas) are exact substrings of the canonical
-human proteome: canonical *self* by sequence. The class-specific false-discovery rate
-underwriting these claims is only *set*-identified from what papers report; the fix is a
-one-line reporting standard, a **class-decoy ledger**, that makes it re-verifiable.
+**Withdrawn and replaced** — see the notice at the top of this file.
+
+Of the audited machine-readable claims:
+
+- **Source translation is asserted and never quantified.** A dedicated Ribo-seq/RibORF analysis is
+  named for a handful of claims; translation is *implied* by the MS observation for all of them;
+  and the quantitative statistic needed to apply the field's own criterion independently is
+  present for **none**. Whether translation is biologically real is **not assessed** and is not
+  assessable from a reported record — that is a different study.
+- **Presentation is asserted almost everywhere; it is re-evaluable almost nowhere.** The peptide is
+  reported as HLA-eluted for essentially the whole corpus, yet the **allele it was restricted to**
+  is reported for **0.09%** of claims — and for only **53 of 4,995** in the end-to-end cohorts.
+- **No audited record carries a reusable, machine-readable positive human T-cell result.** This is
+  *not* "the claims failed an assay": nearly all of them were **never assayed**. Where an assay was
+  run, the per-peptide result is often published only inside a figure.
+- **The class-specific accepted-decoy count `D_N` is reported nowhere**, so the class-specific
+  target-decoy estimate is not reconstructible from the published tables for any claim — including
+  those that *do* carry a per-PSM q-value.
+
+**56.3%** of catalogued cryptic "cancer" epitopes in the largest public atlas (IEAtlas) are exact
+substrings of the canonical human proteome. This is **sequence non-uniqueness**, not a claim that
+the biology is absent: it means the reported record cannot distinguish the nominated ncORF from a
+canonical source by sequence alone. The rate is **reference-relative** — always read as *N(R)* for
+the stated reference layer *R*.
+
+The class-specific false-discovery rate underwriting these claims is only *set*-identified from
+what papers report; the fix is a one-line reporting standard, a **class-decoy ledger**, that makes
+it re-verifiable.
 
 ## License
 

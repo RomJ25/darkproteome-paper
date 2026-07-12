@@ -1,100 +1,129 @@
-"""Run the four-axis evidence audit over a Claim Catalog CSV.
+"""The reporting-and-adjudicability audit — the paper's Result 2.
 
-    python3 src/darkproteome/audit.py data/sample_claims.csv
+    python3 src/darkproteome/audit.py data/claim_catalog_scaled.csv
 
-Scores every claim on four INDEPENDENT axes (source ORF validity, HLA presentation,
-tumor specificity, immunogenicity) as reported, and reports the headline:
+There is no "strict survivor fraction": a joint pass/fail count over dimensions the reported
+record cannot even decide measures the scorer, not the claims. See `evidence_dimensions.py`.
 
-    strict survivor fraction = claims that strict-pass ALL FOUR axes / total claims
+What this prints instead, per evidence dimension:
 
-with a Wilson 95% confidence interval, plus per-axis survival so you can see exactly
-where claims die.
+    asserted -> claim_linked -> quantitative -> modality_appropriate -> adjudicable
+
+and, ONLY where adjudicable, the reported outcome. Everything else is "the record does not say",
+which is a finding about the record and never about the biology.
+
+STRATIFIED, always. A pooled denominator dominated by atlas records hides whether the same gap
+exists in the end-to-end cohorts, which is the question a reader actually has.
 """
-
 import csv
-import math
 import os
 import sys
-from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from axes import AXES, score_all, is_strict_survivor  # noqa: E402
+import evidence_dimensions as ed  # noqa: E402
 from schema import validate_row  # noqa: E402
 
-_CODE = {"strict-pass": "P", "weak-pass": "w", "fail": "F", "unverifiable": "?"}
+csv.field_size_limit(10_000_000)
 
 
-def load_catalog(path):
-    with open(path, newline="", encoding="utf-8") as fh:
-        return list(csv.DictReader(fh))
+def stratum_of(row):
+    """atlas / cohort / t-cell-tested — the three populations, never pooled into one bar."""
+    src = (row.get("_source") or "").strip()
+    if ed.human_tcell_state(row) in ("human-assay-positive", "human-assay-negative",
+                                     "nonhuman-assay-indirect", "assayed-result-not-claim-linked"):
+        return "3. T-cell-tested"
+    if src.startswith("cohort:"):
+        return "2. end-to-end cohort"
+    return "1. atlas ligand record"
 
 
-def deduplicate(rows):
-    """Distinct-evidence count: rows sharing a raw dataset accession collapse to one."""
-    seen, distinct = set(), 0
-    for r in rows:
-        acc = (r.get("underlying_dataset_accession") or "").strip().lower()
-        if acc and acc not in ("not reported", "na", "n/a", ""):
-            if acc in seen:
-                continue
-            seen.add(acc)
-        distinct += 1
-    return distinct
-
-
-def wilson_ci(k, n, z=1.96):
-    if n == 0:
-        return (0.0, 0.0)
-    p = k / n
-    denom = 1 + z * z / n
-    centre = (p + z * z / (2 * n)) / denom
-    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
-    return (max(0.0, centre - half), min(1.0, centre + half))
-
-
-def run(path):
-    rows = load_catalog(path)
-    n = len(rows)
-    invalid = [(i, p) for i, r in enumerate(rows, 1) if (p := validate_row(r))]
-
-    verdicts = [score_all(r) for r in rows]
-    survivors = [is_strict_survivor(v) for v in verdicts]
-    axis_pass = {a: sum(1 for v in verdicts if v[a] == "strict-pass") for a in AXES}
-    n_surv = sum(survivors)
-    lo, hi = wilson_ci(n_surv, n)
-
-    print(f"\n=== darkproteome four-axis audit: {os.path.basename(path)} ===\n")
-    print(f"raw claims:               {n}")
-    print(f"deduplicated (by raw MS): {deduplicate(rows)}")
-    print(f"schema-invalid rows:      {len(invalid)}")
-
-    print("\nper-axis strict-pass survival:")
-    for a in AXES:
-        print(f"  {a:<18} {axis_pass[a]:>3}/{n}  ({100*axis_pass[a]/n:.0f}%)")
-
-    print("\n>>> STRICT SURVIVOR FRACTION (passes all four axes):")
-    print(f"    {n_surv}/{n} = {100*n_surv/n:.0f}%   "
-          f"(Wilson 95% CI [{100*lo:.0f}%, {100*hi:.0f}%])")
-
-    print("\nper-claim verdicts  (P=strict-pass  w=weak  F=fail  ?=unverifiable):")
-    print(f"  {'claim':<26} {'orf':>4} {'hla':>4} {'tum':>4} {'imm':>4}  survivor")
-    for r, v, s in list(zip(rows, verdicts, survivors))[:20]:
-        name = (r.get("peptide_sequence") or "?")[:26]
-        cells = "".join(f"{_CODE[v[a]]:>5}" for a in AXES)
-        print(f"  {name:<26}{cells}   {'YES' if s else ''}")
-    if n > 20:
-        print(f"  ... ({n - 20} more rows)")
-
-    if invalid:
-        print(f"\n!! {len(invalid)} schema-invalid row(s):")
-        for i, probs in invalid[:10]:
-            print(f"   row {i}: {'; '.join(probs)}")
+def report(rows, label):
+    m = ed.matrix(rows)
     print()
-    return {"n": n, "survivors": n_surv, "axis_pass": axis_pass}
+    print(ed.format_matrix(m, f"=== {label}  (n={len(rows):,}) ==="))
+
+    # the three-way states that a binary could not express
+    from collections import Counter
+    ns = Counter(ed.normal_presentation_state(r) for r in rows)
+    tc = Counter(ed.human_tcell_state(r) for r in rows)
+    print(f"\n  normal-presentation evidence state:")
+    for k in ("modality-appropriate-claim-linked", "explicit-normal-detection",
+              "indirect-or-study-level", "not-reported"):
+        if ns.get(k):
+            tag = "   <- the ONE true empirical negative" if k == "explicit-normal-detection" else ""
+            print(f"      {k:<38} {ns[k]:>9,}{tag}")
+    print(f"  human T-cell assay state:")
+    for k in ("human-assay-positive", "human-assay-negative", "nonhuman-assay-indirect",
+              "assayed-result-not-claim-linked", "not-assayed"):
+        if tc.get(k):
+            print(f"      {k:<38} {tc[k]:>9,}")
+    return m
+
+
+def main(path):
+    with open(path, newline="", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+    n = len(rows)
+    invalid = [i for i, r in enumerate(rows, 1) if validate_row(r)]
+
+    print(f"\n=== darkproteome reporting & adjudicability audit: {os.path.basename(path)} ===")
+    print(f"\nclaims: {n:,}    schema-invalid rows: {len(invalid)}")
+    print("\nSCOPE. This audits evidence available in public, MACHINE-READABLE, CLAIM-LINKED")
+    print("supplementary tables and atlas exports. Study-level prose, figure-only results, and")
+    print("analyses recoverable only by reprocessing raw data are NOT counted as reusable per-claim")
+    print("evidence. A study can do excellent science and still fail this level — that is the")
+    print("subject, and nothing here is a statement about whether the biology is real.")
+
+    report(rows, "POOLED (do not quote alone — see strata below)")
+
+    strata = {}
+    for r in rows:
+        strata.setdefault(stratum_of(r), []).append(r)
+    for label in sorted(strata):
+        report(strata[label], label)
+
+    print("\n" + "=" * 78)
+    print("THE HEADLINE, stated at the level the evidence supports")
+    print("=" * 78)
+    m = ed.matrix(rows)
+    st, ar, tc, cf = (m["source_translation"], m["allele_restriction"],
+                      m["human_tcell_assay"], m["class_fdr_reconstructible"])
+    ribo = sum(1 for r in rows if "ribo" in (r.get("evidence_types") or "").lower())
+    cohort = [r for r in rows if (r.get("_source") or "").startswith("cohort:")]
+    cohort_allele = sum(1 for r in cohort if ed.allele_restriction(r)["claim_linked"])
+    print(f"""
+  Of {n:,} audited machine-readable claims:
+
+  SOURCE TRANSLATION — three levels, and collapsing them is how the old headline went wrong:
+    - a dedicated translation ANALYSIS (Ribo-seq/RibORF) is named for  {ribo:,}
+    - translation is implied by the MS observation itself for          {st['asserted']:,}
+    - a QUANTITATIVE statistic sufficient to apply the criterion
+      independently is present for                                     {st['quantitative']:,}
+    Translation is ASSERTED and never QUANTIFIED. Whether it is biologically real is NOT
+    ASSESSED here and cannot be — that is a different study.
+
+  HLA PRESENTATION — asserted almost everywhere, re-evaluable almost nowhere:
+    - reported as HLA-eluted:                                          {m['hla_elution']['asserted']:,}
+    - per-peptide ALLELE restriction reported:                         {ar['claim_linked']:,}
+    - ... of which, in the END-TO-END COHORTS (n={len(cohort):,}):{'':>18}{cohort_allele:,}
+    Presentation is generally asserted by resource inclusion; the information needed to
+    RE-EVALUATE it at claim level is sparse. Do NOT read "{ar['claim_linked']:,} of {ar['claim_linked']:,} pass" as
+    good reporting — it is {100*ar['claim_linked']/n:.2f}% COVERAGE.
+
+  HUMAN T-CELL ASSAY:
+    - a claim-linked human assay RESULT travels with                   {tc['adjudicable']:,}
+    - assayed, but the result is published only inside a figure:       {sum(1 for r in rows if ed.human_tcell_state(r) == 'assayed-result-not-claim-linked'):,}
+    No audited record carries a reusable, machine-readable POSITIVE human T-cell result. This is
+    NOT "the claims failed an assay" — {sum(1 for r in rows if ed.human_tcell_state(r) == 'not-assayed'):,} were never assayed at all.
+
+  CLASS-SPECIFIC IDENTIFICATION ERROR:
+    - per-PSM q-value available for                                    {cf['claim_linked']:,}
+    - accepted-decoy count for the claim's CLASS (D_N) available for   {cf['modality_appropriate']:,}
+    So the class-specific target-decoy estimate is not reconstructible from the published tables
+    for ANY claim — including the {cf['claim_linked']:,} that DO carry a per-PSM q-value.""")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print(__doc__)
-        sys.exit(1)
-    run(sys.argv[1])
+    if len(sys.argv) < 2:
+        sys.exit("usage: audit.py <claim_catalog.csv>")
+    main(sys.argv[1])

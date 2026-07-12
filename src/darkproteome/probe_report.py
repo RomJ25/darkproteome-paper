@@ -13,7 +13,7 @@ import sys
 from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from axes import AXES, score_all, is_strict_survivor  # noqa: E402
+import evidence_dimensions as ed  # noqa: E402  -- THE scorer
 
 
 def wilson(k, n, z=1.96):
@@ -26,29 +26,26 @@ def wilson(k, n, z=1.96):
     return (max(0.0, c - h), min(1.0, c + h))
 
 
-def fully_auditable(v):
-    return all(v[a] != "unverifiable" for a in AXES)
-
-
 def report(label, rows):
+    """The reporting ladder per evidence dimension.
+
+    There is NO "strict survivor" line any more, and reviving one would be a mistake: a joint
+    pass/fail count across dimensions the record cannot even decide measures the scorer, not the
+    claims. The old version printed `fail` for every MS-presented peptide -- i.e. it scored
+    "nobody ran a T-cell assay" as an immunogenicity FAILURE.
+    """
     n = len(rows)
     if n == 0:
         print(f"\n## {label}: 0 claims")
         return
-    verdicts = [score_all(r) for r in rows]
+    m = ed.matrix(rows)
     print(f"\n## {label}  (N={n})")
-    for a in AXES:
-        c = Counter(v[a] for v in verdicts)
-        sp, wp, fl, un = c["strict-pass"], c["weak-pass"], c["fail"], c["unverifiable"]
-        print(f"  {a:<18} strict {sp:>4} ({100*sp/n:4.1f}%) | weak {wp:>4} | fail {fl:>4} | unverif {un:>4} ({100*un/n:4.1f}%)")
-    fa = sum(fully_auditable(v) for v in verdicts)
-    flo, fhi = wilson(fa, n)
-    surv = sum(is_strict_survivor(v) for v in verdicts)
-    slo, shi = wilson(surv, n)
-    print(f"  --> fully auditable (all 4 axes decidable): {fa}/{n} = {100*fa/n:.1f}%  "
-          f"(95% CI [{100*flo:.1f}%, {100*fhi:.1f}%])")
-    print(f"  --> STRICT SURVIVORS (strict-pass all 4):    {surv}/{n} = {100*surv/n:.2f}%  "
-          f"(95% CI [{100*slo:.1f}%, {100*shi:.1f}%])")
+    for k in ed.DIMENSIONS:
+        d = m[k]
+        adj, lo, hi = d["adjudicable"], *wilson(d["adjudicable"], n)
+        print(f"  {k:<27} asserted {d['asserted']:>5} | claim-linked {d['claim_linked']:>5} | "
+              f"quantitative {d['quantitative']:>5} | ADJUDICABLE {adj:>5} "
+              f"({100*adj/n:4.1f}%, CI [{100*lo:.1f}-{100*hi:.1f}]) | supports {d[ed.SUPPORTS]:>4}")
 
 
 def main(path):

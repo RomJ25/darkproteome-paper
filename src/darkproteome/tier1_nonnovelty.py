@@ -161,6 +161,7 @@ def audit(label, seqs, normal, seq2class):
         kn = len(seqs & normal)
         print(f"  also exact-listed on normal tissue (IEAtlas, secondary): {kn}/{n} = {100*kn/max(1,n):.1f}%")
     return dict(label=label, n=n, exact=ke, il=ki, pe=pe, pi=pi, exact_set=exact, il_set=il,
+                cls_tot=dict(cls_tot), cls_self=dict(cls_self),
                 normal=(len(seqs & normal) if normal is not None else None))
 
 
@@ -209,14 +210,29 @@ def main():
                             int(normal is not None and p in normal)])
     print(f"\nwrote per-peptide table -> {OUT}")
 
+    # COMPUTED, never narrated. This block used to hardcode "HCC 43/116 = 37%" and kept printing
+    # it four lines below a live computation that said 213/369 = 57.7% -- a stale string arguing
+    # with its own output in the same terminal. Every number below is derived from `results`.
     print("\n=== CLASS-RESOLVED VERDICT (not a clean primary-vs-aggregator dichotomy) ===")
-    print("  altORF / lncRNA-ORF:  ~0% canonical-self in BOTH primary studies -> genuinely non-canonical.")
-    print("  pseudogene-ORF:       Raja 0/98 vs HCC 43/116 = 37% -> pseudogene antigens are intrinsically")
-    print("                        MS-unfalsifiable vs their PARENT gene (e.g. RPS3AP12 -> RPS3A); also a")
-    print("                        tumor-specificity risk. A careful study (Raja) excludes them; HCC did not.")
-    print("  AGGREGATOR atlases:   54.4% canonical-self (indiscriminate) -- the worst.")
-    print("  -> This is a CLASS-RESOLVED floor: it indicts pseudogene-ORF claims + aggregators;")
-    print("     altORF/lncRNA primary claims pass. Per-study FDR still needs the manuscript's budget bound.")
+    print("  canonical-sequence overlap by class and cohort (exact substring):")
+    all_classes = sorted({c for r in results.values() for c in r["cls_tot"]},
+                         key=lambda c: -sum(r["cls_tot"].get(c, 0) for r in results.values()))
+    labels = list(results)
+    print(f"      {'class':<16} " + "  ".join(f"{lab:>18}" for lab in labels))
+    for c in all_classes:
+        cells = []
+        for lab in labels:
+            t = results[lab]["cls_tot"].get(c, 0)
+            s = results[lab]["cls_self"].get(c, 0)
+            cells.append(f"{s:>4}/{t:<4} {100*s/t:5.1f}%" if t else f"{'--':>14}")
+        print(f"      {c:<16} " + "  ".join(f"{x:>18}" for x in cells))
+    print(f"\n  AGGREGATOR atlases:   {100*tot_self/max(1,tot):.1f}% canonical-sequence overlap"
+          f" (indiscriminate) -- the worst.")
+    print("  -> A CLASS-RESOLVED floor. Read it as: for these classes the reported record cannot")
+    print("     distinguish the nominated ncORF from its canonical parent by sequence alone --")
+    print("     NOT as a claim that the biology is absent. Pseudogene-ORF peptides are the extreme")
+    print("     case (e.g. RPS3AP12 -> RPS3A), which is why a careful study (Raja) excludes them.")
+    print("     Per-study FDR still needs the manuscript's budget bound.")
 
 
 if __name__ == "__main__":

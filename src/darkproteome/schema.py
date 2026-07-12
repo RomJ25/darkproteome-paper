@@ -10,7 +10,19 @@ finding, and it is what pushes a claim to `insufficient-info` in the audit.
 
 NOT_REPORTED = "not reported"
 
-# The 19 columns, in order.
+# The columns, in order.
+#
+# Two distinctions are load-bearing and must never collapse back into one field:
+#
+#   ligand_len  vs  source_pep_len
+#       The HLA ligand (8-12aa) and the tryptic peptide supporting the SOURCE PROTEIN (>=9aa) are
+#       different measurements. Most HLA ligands are >= 9aa, so a shared column would satisfy the
+#       protein-existence rule as a coincidence of the number rather than as evidence.
+#
+#   tumor_specificity_modality  vs  _scope  vs  _result
+#       A normal-ligandome search, a GTEx RNA threshold and a cohort inclusion criterion are not
+#       equivalent evidence and must not earn the same verdict. Transcript abundance does not
+#       determine HLA presentation, so an RNA threshold cannot answer a presentation claim.
 COLUMNS = [
     "peptide_sequence",
     "orf_id_or_locus",
@@ -19,11 +31,25 @@ COLUMNS = [
     "cancer_type",
     "hla_allele",
     "evidence_types",
-    "reported_fdr",
+    "reported_fdr",             # protein/ORF-level FDR, as reported
+    "psm_qvalue",               # PSM-level q-value — a DIFFERENT unit; never read as an FDR
+    # D_N: accepted DECOY PSMs in this claim's class, at the accepted threshold. Without it a
+    # class-specific FDR is not reconstructible. It is populated on ZERO rows of the corpus, and
+    # that is the point — HCC's S26 even ships a `target_decoy` column whose 43 rows are ALL
+    # targets. The column exists here so the absence is explicit and machine-checkable rather
+    # than merely narrated, and so any future source that DOES report it drops straight in.
+    "accepted_decoys_in_class",
     "n_unique_peptides",
-    "min_peptide_len",
+    "ligand_len",               # the HLA ligand itself (8–12aa)
+    "source_pep_len",           # tryptic peptide supporting the SOURCE protein (≥9aa)
     "periodicity_pct",
-    "tumor_specificity_basis",
+    "tumor_specificity_modality",
+    "tumor_specificity_scope",
+    # WHAT the check actually returned. The old code recorded only the "yes, tumour-specific"
+    # answers and threw the "no" away -- but an explicit detection in normal tissue is the ONE
+    # true empirical negative for tumour absence, and discarding it made the record look merely
+    # silent where it had in fact spoken.
+    "tumor_specificity_result",
     "validation_level",
     "meets_consensus_bar_as_reported",
     "underlying_dataset_accession",
@@ -41,8 +67,20 @@ CONTROLLED_VOCAB = {
         "pseudogene-ORF", "dORF", "other", NOT_REPORTED,
     },
     "antigen_type": {"TSA", "TAA", "normal-or-other", NOT_REPORTED},
-    "tumor_specificity_basis": {
-        "broad-normal-panel", "matched-normal-only", "not stated", NOT_REPORTED,
+    # (what was measured) x (which normals). Only a BROAD normal LIGANDOME is matched to a
+    # presentation claim: RNA abundance does not determine presentation, and adjacent tissue is
+    # one organ from one donor.
+    "tumor_specificity_modality": {
+        "normal-ligandome-broad", "normal-ligandome-matched",
+        "normal-rna-broad", "normal-rna-matched", "not stated", NOT_REPORTED,
+    },
+    # WHETHER it was reported per claim, or is merely how the authors filtered the table.
+    "tumor_specificity_scope": {
+        "per-claim-reported", "cohort-inclusion-criterion", "not stated", NOT_REPORTED,
+    },
+    # WHAT it returned. `detected-in-normal` is the only true empirical negative in the corpus.
+    "tumor_specificity_result": {
+        "absent-from-normal", "detected-in-normal", "not stated", NOT_REPORTED,
     },
     "validation_level": {
         "nominated", "MS-presented", "T-cell-validated", "in-vivo",

@@ -20,6 +20,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import paths  # noqa: E402  -- centralized data paths
+import evidence_dimensions as ed  # noqa: E402  -- THE scorer; this module must not score
 import deepen_specificity as d  # canonical_hits, load, load_hla_ligand_atlas, tier_of, NORMAL
 
 csv.field_size_limit(10_000_000)
@@ -27,15 +28,23 @@ CAT = os.path.join(paths.REPO, "data", "claim_catalog_scaled.csv")
 OUT = os.path.join(paths.REPO, "data", "claim_catalog_scored.csv")
 
 NR = {"not reported", "not stated", "", "insufficient-info"}
-REUSE_FIELDS = ["hla_allele", "reported_fdr", "periodicity_pct", "tumor_specificity_basis",
+REUSE_FIELDS = ["hla_allele", "reported_fdr", "periodicity_pct", "tumor_specificity_modality",
                 "orf_id_or_locus", "underlying_dataset_accession", "validation_level",
                 "citation_doi_pmid"]
-TCELL = {"T-cell-validated", "in-vivo"}
 
 
 def present(v):
     return (v or "").strip().lower() not in NR
 
+
+# REPORTING-COMPLETENESS vs EVIDENCE-STRENGTH. These are different quantities and must never be
+# substituted for one another. A test that a FIELD IS POPULATED (`present(reported_fdr)`) is not a
+# test that the value CLEARS A BAR: an FDR of 1.0 populates the field exactly as well as an FDR of
+# 0.001. Both quantities are legitimate; they are named apart:
+#   *_reported  -- is the field populated? REPORTING COMPLETENESS. This is NOT source-attribution
+#                  resolution (`A_i`: does the record leave only the nominated source
+#                  compatible?), which is a different object entirely. Do not conflate them.
+#   *_strict    -- does it clear the bar? Delegated ENTIRELY to evidence_dimensions.py.
 
 def aggregate():
     nc, ctrl = {}, {}
@@ -44,33 +53,69 @@ def aggregate():
             seq = (r.get("peptide_sequence") or "").strip().upper()
             if not seq or not seq.isalpha():
                 continue
+            dims = ed.score_all(r)               # THE authoritative scorer
             tbl = ctrl if r.get("_canonical") == "yes" else nc
-            rec = tbl.setdefault(seq, {"allele": False, "source_rigor": False,
-                                       "specificity": False, "immuno": False, "reuse": 0})
+            rec = tbl.setdefault(seq, {
+                "allele": False, "source_rigor_reported": False,
+                "specificity_reported": False, "immuno_reported": False, "reuse": 0,
+                "source_strict": False, "hla_strict": False,
+                "specificity_strict": False, "immuno_strict": False,
+                "source_decidable": False, "specificity_decidable": False,
+            })
+            # -- reporting completeness (a claim about the RECORD, never about the evidence) --
             if present(r.get("hla_allele")):
                 rec["allele"] = True
             if present(r.get("periodicity_pct")) or present(r.get("reported_fdr")):
-                rec["source_rigor"] = True
-            if present(r.get("tumor_specificity_basis")):
-                rec["specificity"] = True
-            if (r.get("validation_level") or "").strip() in TCELL:
-                rec["immuno"] = True
+                rec["source_rigor_reported"] = True
+            if present(r.get("tumor_specificity_modality")):
+                rec["specificity_reported"] = True
+            if present(r.get("validation_level")):
+                rec["immuno_reported"] = True
+            # -- evidence strength (evidence_dimensions.py, and only it) --
+            if dims["source_translation"]["outcome"] == ed.SUPPORTS:
+                rec["source_strict"] = True
+            if dims["hla_elution"]["outcome"] == ed.SUPPORTS:
+                rec["hla_strict"] = True
+            if dims["normal_presentation"]["adjudicable"]:
+                rec["specificity_strict"] = True
+            if dims["human_tcell_assay"]["outcome"] == ed.SUPPORTS:
+                rec["immuno_strict"] = True
+            if dims["source_translation"]["adjudicable"]:
+                rec["source_decidable"] = True
+            if dims["normal_presentation"]["adjudicable"]:
+                rec["specificity_decidable"] = True
             rec["reuse"] = max(rec["reuse"], sum(present(r.get(f)) for f in REUSE_FIELDS))
     return nc, ctrl
 
 
-def survivor(seqs, flags, canon, normal_ref):
+def survivor_reporting(seqs, flags, canon, normal_ref):
+    """What the RECORD contains. Every stage is 'is this reported?', never 'is this true?'."""
     not_canon = {p for p in seqs if p not in canon}
     restricted = {p for p in not_canon if p not in normal_ref}
     allele = {p for p in restricted if flags[p]["allele"]}
-    subst = {p for p in allele if flags[p]["source_rigor"]}
-    immuno = {p for p in subst if flags[p]["immuno"]}
+    subst = {p for p in allele if flags[p]["source_rigor_reported"]}
+    immuno = {p for p in subst if flags[p]["immuno_reported"]}
     return [("all unique peptides", len(seqs)),
-            ("not canonical-self (provenance-clean)", len(not_canon)),
-            ("absent from normal (tumor-restricted)", len(restricted)),
-            ("allele-assigned (actionable presentation)", len(allele)),
-            ("source-translation substantiated", len(subst)),
-            ("human T-cell validated (antigen)", len(immuno))]
+            ("no canonical-sequence match (provenance-clean)", len(not_canon)),
+            ("not seen in a normal ligandome", len(restricted)),
+            ("an HLA allele is REPORTED", len(allele)),
+            ("a translation statistic is REPORTED (any value)", len(subst)),
+            ("an immunogenicity level is REPORTED (any level)", len(immuno))]
+
+
+def survivor_evidence(seqs, flags, canon, normal_ref):
+    """What the record SUBSTANTIATES: adjudicable AND outcome=supports, per evidence_dimensions."""
+    not_canon = {p for p in seqs if p not in canon}
+    restricted = {p for p in not_canon if p not in normal_ref}
+    hla = {p for p in restricted if flags[p]["hla_strict"]}
+    subst = {p for p in hla if flags[p]["source_strict"]}
+    immuno = {p for p in subst if flags[p]["immuno_strict"]}
+    return [("all unique peptides", len(seqs)),
+            ("no canonical-sequence match (provenance-clean)", len(not_canon)),
+            ("not seen in a normal ligandome", len(restricted)),
+            ("HLA elution: adjudicable + supports", len(hla)),
+            ("source translation: adjudicable + supports", len(subst)),
+            ("human T-cell assay: adjudicable + POSITIVE", len(immuno))]
 
 
 def tier_of_pep(p, flags, canon, normal_ref):
@@ -80,11 +125,11 @@ def tier_of_pep(p, flags, canon, normal_ref):
         return "1_normal-present"
     if not flags[p]["allele"]:
         return "2_provenance-clean"
-    if not flags[p]["source_rigor"]:
+    if not flags[p]["source_rigor_reported"]:
         return "3_actionable-presentation"
-    if not flags[p]["immuno"]:
-        return "4_substantiated"
-    return "5_validated-antigen"
+    if not flags[p]["immuno_reported"]:
+        return "4_translation-stat-reported"   # was "4_substantiated" -- it never was
+    return "5_immunogenicity-reported"         # was "5_validated-antigen" -- nor was it
 
 
 def curve(title, rows):
@@ -116,10 +161,35 @@ def main():
 
     # non-canonical normal ref = IEAtlas cryptic-space (HLA Ligand Atlas can't contain cryptic peptides);
     # canonical-control normal ref = both (canonical peptides CAN appear in HLA Ligand Atlas).
-    curve("EVIDENCE-SURVIVORSHIP — non-canonical claims (n=%d unique peptides)" % len(nc_seqs),
-          survivor(nc_seqs, nc, canon_nc, normal_seqs))
-    curve("CONTROL — canonical cancer-testis antigens MAGE/SSX (same filters)",
-          survivor(ctrl_seqs, ctrl, canon_ctrl, normal_seqs | hla_seqs))
+    #
+    # TWO curves, because they answer two different questions and were previously conflated.
+    # The reporting curve is about the RECORD; the evidence curve is about the CLAIMS. Quoting
+    # a number off the first while describing the second is what produced "0 of 306,844".
+    curve("REPORTING CASCADE — what the record CONTAINS (non-canonical, n=%d unique peptides)"
+          % len(nc_seqs), survivor_reporting(nc_seqs, nc, canon_nc, normal_seqs))
+    curve("CONTROL, reporting cascade — curated cancer-testis antigens (same filters)",
+          survivor_reporting(ctrl_seqs, ctrl, canon_ctrl, normal_seqs | hla_seqs))
+
+    curve("EVIDENCE CASCADE — what the record SUBSTANTIATES (adjudicable + supports only)",
+          survivor_evidence(nc_seqs, nc, canon_nc, normal_seqs))
+    curve("CONTROL, evidence cascade — curated cancer-testis antigens (same filters)",
+          survivor_evidence(ctrl_seqs, ctrl, canon_ctrl, normal_seqs | hla_seqs))
+
+    # A zero in the evidence cascade means nothing unless the axis was DECIDABLE. Say so, loudly.
+    n_src_dec = sum(1 for p in nc_seqs if nc[p]["source_decidable"])
+    n_spec_dec = sum(1 for p in nc_seqs if nc[p]["specificity_decidable"])
+    # ADJUDICABILITY -- deliberately NOT called `A`. `A_i` is source-attribution RESOLUTION (does
+    # the record leave only the nominated source compatible?); this is whether the record carries
+    # enough claim-linked information to apply a reporting criterion at all.
+    print("\nADJUDICABILITY of the evidence cascade (NOT the `A` estimand -- see evidence_dimensions):")
+    print(f"  source translation  adjudicable for {n_src_dec:,}/{len(nc_seqs):,} peptides"
+          + ("   <<< its zero says nothing about the claims" if not n_src_dec else ""))
+    print(f"  normal presentation adjudicable for {n_spec_dec:,}/{len(nc_seqs):,} peptides"
+          + ("   <<< likewise" if not n_spec_dec else ""))
+    if not n_src_dec:
+        print("  -> Do NOT read the source-translation drop as attrition. No claim in this corpus")
+        print("     reports the statistic the criterion needs, so none COULD satisfy it. That is a")
+        print("     measurement of the REUSABLE RECORD, not a biological success rate.")
 
     # reusability score distribution (0..8 fields present)
     import collections
@@ -135,16 +205,26 @@ def main():
     print(f"\nwriting scored per-peptide table -> {OUT}")
     with open(OUT, "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
+        # `*_reported` = the field is populated (reusability / `A`). `*_strict` = it clears the
+        # evidence_dimensions bar. Different columns because they are different things.
         w.writerow(["peptide", "canonical_self", "normal_present", "normal_critical_organ",
-                    "allele_assigned", "source_rigor_reported", "specificity_reported",
-                    "immunogenicity_evidence", "reusability_score_8", "tier"])
+                    "allele_reported", "source_rigor_reported", "specificity_reported",
+                    "immunogenicity_reported",
+                    "source_orf_strict", "hla_presentation_strict",
+                    "tumor_specificity_strict", "immunogenicity_strict",
+                    "source_orf_decidable", "tumor_specificity_decidable",
+                    "reusability_score_8", "tier"])
         for p in sorted(nc_seqs):
             norm = p in normal_seqs
             crit = norm and any(d.tier_of(t) == "CRITICAL" for t in normal_d.get(p, ()))
+            f = nc[p]
             w.writerow([p, int(p in canon_nc), int(norm), int(crit),
-                        int(nc[p]["allele"]), int(nc[p]["source_rigor"]),
-                        int(nc[p]["specificity"]), int(nc[p]["immuno"]),
-                        nc[p]["reuse"], tier_of_pep(p, nc, canon_nc, normal_seqs)])
+                        int(f["allele"]), int(f["source_rigor_reported"]),
+                        int(f["specificity_reported"]), int(f["immuno_reported"]),
+                        int(f["source_strict"]), int(f["hla_strict"]),
+                        int(f["specificity_strict"]), int(f["immuno_strict"]),
+                        int(f["source_decidable"]), int(f["specificity_decidable"]),
+                        f["reuse"], tier_of_pep(p, nc, canon_nc, normal_seqs)])
     print("done.")
 
 
