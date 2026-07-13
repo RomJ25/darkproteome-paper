@@ -9,7 +9,7 @@ falsifies a claim we were about to publish.
 
     python3 scripts/methods_audit.py
 
-Sources (EuropePMC full-text XML, fetched 2026-07-13):
+Sources (EuropePMC full-text XML, fetched):
     HCC     10.1126/sciadv.adn3628  -> PMC11235171
     ovarian 10.1126/sciadv.ads7405  -> PMC11837991
 """

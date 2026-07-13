@@ -75,8 +75,41 @@ negatives + 2 mouse positives / 2 mouse + 4 binding negatives (HCC). This is the
 | **GENCODE v26 lncRNA GTF** | https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_26/gencode.v26.long_noncoding_RNAs.gtf.gz (~2.6 MB) | EMBL open (cite Frankish 2019) | **ENST↔ENSG↔gene_name for lncRNA genes** (v26 == GTEx v8). Maps lncRNA-ORF antigens to their lncRNA gene's ENSG → GTEx (coverage 32%→84%); lncRNA-only ⇒ no coding-neighbour contamination. On disk: `data/external/gencode/`. |
 | **PRIDE / MassIVE** | https://www.ebi.ac.uk/pride/ws/archive/v2/ ; massive.ucsd.edu | CC0 default | Raw HLA-elution to re-search vs a custom ncORF DB (must reprocess; deposits used canonical DBs). |
 | caAtlas | zhang-lab.org/caatlas | **CC BY-NC-ND** (watch for commercial) | Canonical/PTM only — comparator, not dark-proteome. |
+| **COD-dipp** (Bedran et al. 2023, *Cancer Immunol Res* 11(6):747–62, `10.1158/2326-6066.CIR-22-0621`) | github.com/immuno-informatics/COD-dipp; data at Figshare `10.6084/m9.figshare.16538097`; 26-study MS reanalysis (772 samples, 11 cancers) | CC BY 4.0 | Independent ncMAP atlas + tumor-selectivity funnel — see note below, don't skip it. |
 
 No single resource gives catalog + Ribo-seq + raw HLA + normal background. Stack:
 GENCODE+nuORFdb (catalog/translation) · PRIDE-reprocess + CrypticProteinDB + IEAtlas (presentation)
 · HLA Ligand Atlas + GTEx-median (+ Recount3) + IEAtlas-normal (specificity).
+
+**COD-dipp is worth reading closely, not just cataloguing (checked):**
+- **The preprint's headline numbers did not survive peer review — don't cite them.** The 2022
+  bioRxiv abstract advertised "140,966 immune-visible genomic regions" and a "7.8×"
+  immunogenicity claim; the *published* 2023 version reports **8,601 ncMAPs (1.7% of 516,382
+  peptides)** and drops the 7.8× framing (the real HLA-supertype finding is "A03 shows 5%
+  noncanonical presentation vs. ~1% average" — a narrower, different claim). Always cite the
+  published numbers.
+- **Independent corroboration of our headline pattern.** A 3-step tumor-selectivity funnel
+  (exclude ncMAPs MS-detected in a normal panel → GTEx v8 parent-gene TPM <1 across 29 tissues,
+  testis excluded → zero Human Protein Atlas protein detection) collapses their 8,601 ncMAPs to
+  **17 stringently cancer-selective candidates** (Table 1) — a ~500-fold funnel, run
+  independently by a different group on different data, landing on the same "the big number
+  doesn't survive a real specificity check" shape as our own audit.
+- **A real caveat in general, but checked live against our own floor — doesn't apply here.**
+  Their Table 1 lists two histone-gene ncMAPs (`HIST1H4L`, `HIST1H2BB`) with low GTEx TPM
+  (0.04, 0.26) that *fail* to qualify as cancer-selective once checked against the Human Protein
+  Atlas — protein detected in 43–44/56 healthy tissues despite the low transcript signal. That's
+  documented mRNA/protein decoupling, and our `gtex_specificity.py` / `gtex_class_specificity.py`
+  floor is GTEx-TPM-only. **Checked: it doesn't create a gap in our results.** The
+  43/43 pseudogene-parent floor is saturated at the ceiling already — every one of the 43
+  peptides clears >=1 TPM in all 54 GTEx tissues, most by orders of magnitude (one, `REIQTAVRL`,
+  matches the H2BC/HIST1H2B family itself — `H2BC3`≡`HIST1H2BB` — at max 200.2 TPM across all
+  54 tissues via the existing max-over-matched-genes logic), so there is no currently-"passes as
+  specific" claim in that floor for a protein check to flip. The altORF and lncRNA-ORF class
+  results (`gtex_class_specificity.py`) already stop at "source transcribed in normal tissue,
+  not proof of normal presentation" — they never claim RNA absence proves protein absence, so
+  they don't inherit this gap either. No pipeline change needed; this stays a documented
+  external caveat, not an open action item.
+- No T-cell/immunogenicity validation anywhere in the paper — their own Discussion states
+  "identified ncMAPs require further validation... immunogenicity prediction is still in its
+  infancy." Same presented-≠-validated gap our audit already flags.
 

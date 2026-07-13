@@ -41,26 +41,33 @@ a peptide non-canonical (Bedran et al. 2023; Kumar et al. 2022).
 
 We audit **IEAtlas**, a public atlas of non-canonical HLA epitopes that has not previously been
 examined against this criterion. **98,193 of 174,465 unique cancer-catalogued peptide sequences
-(56.3%)** exactly match at least one protein in a frozen reviewed human reference *R*. The result is
-not an artifact of our reference era: scored against Swiss-Prot **2022_01** — the release IEAtlas
-actually searched — the rate is **56.2%**, and only 231 sequences (0.24%) are overlaps that a 2022
-analyst could not have seen. It is not an artifact of peptide length: direct standardization to a
-common length distribution leaves it at **56.3%**. It is not ORF-class composition: excluding
-pseudogene ORFs entirely would move it to **55.8%**. Under one pipeline, one reference and one
-peptide unit, two catalogues that apply an explicit exclusion rule sit at **1 / 3,810 (0.026%)** and
-**5 / 2,979 (0.17%)**.
+(56.3%)** exactly match at least one protein in a frozen reviewed human reference *R*.
+
+**The matching canonical proteins were not external to IEAtlas — they were inside its own search
+database.** Its Methods state that spectra were searched against *"both our integrated benchmarked
+ncORF library **and the canonical human proteome** … (downloaded in February 2022),"* after which
+*"only epitopes derived from non-coding regions were retained."* Re-scored against that same
+canonical proteome (Swiss-Prot **2022_01**), **97,999 sequences (56.2%)** match a database entry that
+was present when the spectrum was assigned, competing with the ncORF the peptide was attributed to.
+The finding is therefore **internal to the resource**, not a retrospective comparison against a
+reference it never consulted: only 231 sequences (0.24%) are overlaps a February-2022 analyst could
+not have made. It is not an artifact of peptide length (**56.3%** length-standardized), nor of
+ORF-class composition (**55.8%** with no pseudogene ORFs at all). Under one pipeline, one reference
+and one peptide unit, two catalogues that apply an explicit exclusion rule sit at **1 / 3,810
+(0.026%)** and **5 / 2,979 (0.17%)**.
 
 Such matches do not establish canonical production. They do prevent unique attribution to the
 nominated non-canonical source from peptide sequence and ordinary tandem-MS evidence alone.
 
-**The search library carries much of this ambiguity already.** Enumerating the HLA-I-length peptide
-space of the libraries themselves, **34.1%** of nuORFdb v1.2's distinct 9-mers also occur in
-canonical human proteins, against **1.0–2.4%** for the GENCODE Ribo-seq ORF sets — a 14–34×
-difference in *latent* ambiguity, measured under our own pipeline for both. IEAtlas integrates
-nuORFdb; because RPFdb and Translnc were unavailable to us, the corresponding proportion for its
-complete integrated library is **unknown**. Ouspenskaia et al. searched the same nuORFdb and
-published a catalogue at 3%, so a high-ambiguity library is not sufficient to produce a high-ambiguity
-catalogue: the exclusion step does the work.
+**Latent ambiguity differs enormously between search libraries.** Enumerating the HLA-I-length peptide
+space of the libraries themselves, **34.1%** of nuORFdb v1.2's distinct 9-mers also occur in canonical
+human proteins, against **1.0–2.4%** for the GENCODE Ribo-seq ORF sets — a 14–34× difference in
+*latent* ambiguity, measured under our own pipeline for both. **A high-ambiguity library does not
+compose into a high-ambiguity one**: Translnc, a second of IEAtlas's three sources, is at **0.6%**, and
+the union nuORFdb ∪ Translnc **falls to 20.2%**. With RPFdb v2.0 unobtainable, the complete integrated
+library's proportion is **not determined** — it is capped at **47.6%** but has no positive floor.
+Ouspenskaia et al. searched the same nuORFdb and published a catalogue at 3%, so a high-ambiguity
+library is not sufficient to produce a high-ambiguity catalogue: the exclusion step does the work.
 
 **The consequence is observable inside the resource.** Canonical-overlapping cancer-catalogued
 sequences appear in IEAtlas's **own** normal-tissue export at **22.4%**, versus **9.1%** for the
@@ -149,6 +156,49 @@ not. Rebuilding the reference at Swiss-Prot 2022_01 (20,376 human proteins) move
 **0.1 percentage points**; only **231 sequences (0.24% of the overlap set)** are matches that a 2022
 analyst could not have made. The overlap was almost entirely visible at build time.
 
+#### The canonical proteins were in IEAtlas's own search database
+
+The era check above understates the point, because it treats Swiss-Prot 2022_01 as a *reference we
+chose*. It is not. It is **the canonical half of IEAtlas's own search database.** From its Methods:
+
+> Files were searched against **both** our integrated benchmarked ncORF library **and the canonical
+> human proteome** obtained from the UniProt database with Swiss-Prot protein evidence (downloaded in
+> February 2022). […] **Only epitopes derived from non-coding regions were retained.**
+
+MaxQuant, given several FASTA inputs, concatenates them into a single target database; every spectrum
+is scored against canonical and non-canonical candidates **together**. So for each of the **97,999
+(56.2%)** catalogued sequences that occur in a canonical human protein, an entry carrying that
+identical sequence was **physically present in the database the spectrum was matched against**,
+alongside the ncORF to which the peptide was ultimately attributed.
+
+Nothing here depends on that being one search rather than two. Were the two FASTAs instead searched
+separately and compared, the canonical proteome would still have been consulted by the pipeline that
+produced the catalogue, and the overlap would still have been visible to it. The claim is only that
+**the canonical sequences were inside the procedure, not outside it** — which is what the Methods say.
+
+This changes what kind of claim the paper is making. The source ambiguity is not something an external
+auditor reconstructed after the fact against a reference the resource never consulted. **It is a
+property of the search itself**, and the search engine's own output records it: MaxQuant's
+`peptides.txt` carries a `Proteins` column listing every database entry that contains each peptide.
+The information the remedy in §5 asks for already existed, in an intermediate file, and was discarded
+at the step described as *"only epitopes derived from non-coding regions were retained."*
+
+The exclusion test is also not a foreign operation. Building the library, IEAtlas reports that *"FASTA
+files of peptides were merged, and **peptides entirely contained within other peptides were
+removed**."* That is an exact substring-containment test — the same test this paper applies — run
+across the ncORF library to remove internal redundancy. It is not described as having been run
+**against the canonical proteome**, though that proteome was loaded into the same search. The remedy
+is that operation applied once more, in a direction the pipeline had already implemented.
+
+The reading is falsifiable and we state the check: had the canonical half of that database been used
+to **exclude** shared sequences — as CrypticProteinDB and Raja et al. describe doing, and as their
+rates of 0.026% and 0.17% reflect — this rate would be near zero. It is 56.2%.
+
+**This does not show that any peptide is canonically derived, and it does not show that anyone acted
+improperly.** Sequence identity is symmetric, and the canonical entry is not "the right answer" either;
+MS identifies the sequence, never the locus. What it shows is that the evidence needed to mark these
+sequences *source-ambiguous* was inside the pipeline that produced the catalogue.
+
 **Under one pipeline**, applied identically to every catalogue we could reprocess — same reference,
 same exact-substring criterion, same unique-sequence unit:
 
@@ -186,7 +236,7 @@ did — same ORF class, different rule.
 That 1.0% of sequences map to several genes *within the atlas's own annotations* is itself a small,
 direct instance of the ambiguity this paper is about.
 
-### R2. nuORFdb contains extensive latent canonical-sequence overlap
+### R2. Latent canonical ambiguity differs enormously between libraries — and does not compose
 
 Applying the same measurement to the **search space** rather than the output — the distinct 9-mers of
 each ncORF library, and how many also occur in reviewed canonical human proteins (**full libraries, no
@@ -207,24 +257,71 @@ canonical proteins.
 different k-mer windows: an 8–11mer candidate-universe enumeration gives nuORFdb **34.4%** and GENCODE
 Ribo-seq (phase 1) **2.5%**; the 9-mer enumeration above gives **34.1%** and **2.4%**.
 
-**What this does not establish.** IEAtlas integrates nuORFdb together with RPFdb and Translnc, which
-were unavailable to us. The proportion for the **complete integrated library is unknown** — and it is
-*not* bounded below by 34.1%. Adding a library *B* to nuORFdb *A* changes the rate to
-|(*A* ∪ *B*) ∩ *C*| / |*A* ∪ *B*|, which can fall as easily as rise: if *B* contributes mostly
-non-canonical k-mers, the combined proportion drops below 34.1%. We therefore report nuORFdb's
-ambiguity as a property of nuORFdb, and a plausible major contributor to what IEAtlas catalogues —
-not as a quantitative explanation of 56.3%.
+#### The integrated library does not inherit nuORFdb's ambiguity
 
-**The library is not sufficient on its own.** Ouspenskaia et al. searched the *same* nuORFdb and
-published a catalogue at 3%. A high-ambiguity library plus a peptide-level exclusion step yields a
-low-ambiguity catalogue. The exclusion step does the work.
+An earlier draft claimed 34.1% was a **lower bound** on IEAtlas's complete integrated library
+(nuORFdb + RPFdb + Translnc). **That was false and is withdrawn.** Adding a library *B* to nuORFdb *A*
+changes the rate to |(*A* ∪ *B*) ∩ *C*| / |*A* ∪ *B*|, which is **not monotone**: if *B* contributes
+mostly non-canonical *k*-mers, the combined proportion **falls**.
 
-#### Why the catalogue's rate exceeds the library's: a detection effect, tested
+It falls. We obtained Translnc — a second of IEAtlas's three sources, in the version it cites — and
+measured the union directly:
 
-The catalogued rate (56.3%) is higher than nuORFdb's latent ambiguity (34.1%). A natural explanation
-is detection bias: canonically-encoded peptides derive from abundant, ubiquitously-expressed proteins
-and are over-detected in an immunopeptidome relative to their share of the search space. Earlier
-drafts asserted this without testing it. It is testable inside the resource, and we tested it.
+| library | distinct 9-mers | also canonical | rate |
+|---|---:|---:|---:|
+| nuORFdb v1.2 | 8,448,245 | 2,884,119 | **34.1%** |
+| Translnc | 6,164,584 | 39,382 | **0.6%** |
+| **nuORFdb ∪ Translnc** | 14,364,357 | 2,907,391 | **20.2%** |
+
+Translnc is almost free of latent canonical ambiguity, and the two libraries are nearly disjoint (only
+1.7% of the union's 9-mers occur in both). Adding it therefore enlarges the denominator far faster than
+the numerator, and the rate **drops by 13.9 pp, from 34.1% to 20.2%**. The withdrawn "lower bound" was
+not merely unproven; it is **false in exactly the direction the objection predicted, on IEAtlas's own
+second source**. (Re-scored against Swiss-Prot 2022_01: unchanged, 20.2%.)
+
+The gap between the two is not arbitrary, and it generalises. Translnc catalogues peptides from
+**lncRNA loci**, which are by construction distinct from protein-coding genes and therefore share
+little sequence with them. nuORFdb catalogues ORFs of **coding genes** — uORFs, dORFs, out-of-frame
+and in-frame alternative ORFs — whose reading frames overlap or abut the very proteins in the canonical
+reference. **A library's latent ambiguity is largely determined by whether its ORFs sit inside coding
+genes**, which is a property its builders know and could report at zero cost. This is the concrete
+content of recommendation (c) in §5.
+
+**What is and is not now bounded.** RPFdb v2.0 remains genuinely unavailable — the live site serves
+only v3.0, and it distributes RibORF genomic *coordinates*, not amino-acid sequences, so
+back-translation would produce *our* library rather than IEAtlas's. Carrying its contribution as the
+single unknown *m* (novel 9-mers it adds, of which *x* are canonical), the combined rate is
+(*h* + *x*) / (*u* + *m*). Maximising over both, the three-source library's 9-mer ambiguity **cannot
+exceed 47.6%**, distribution-free and whatever RPFdb contains. That cap is a **hard ceiling, not an
+estimate**: it is attained only in the corner where every canonical 9-mer not already in the union is
+contributed by RPFdb *and* RPFdb contributes nothing else. There is **no corresponding floor**: as *m*
+grows, *h*/(*u* + *m*) → 0. **The combined rate is not determined by our measurement**, and no
+measurement of a subset of the libraries could determine it.
+
+**The library is not sufficient on its own.** The evidence that the *exclusion step*, not the library,
+is what governs a catalogue's overlap rate is our own same-pipeline reprocessing: CrypticProteinDB and
+Raja et al., which describe explicit exclusion rules, sit at **0.026%** and **0.17%** (§1). Ouspenskaia
+et al. add the one control neither of those provides — they searched the **same nuORFdb** and their
+published catalogue is nonetheless low (3%, Bedran et al.). We attach **no arithmetic** to that 3%: it
+is a published cross-pipeline figure, and the unit caveat above applies to it as much as to any other.
+The qualitative point is all we need and all we claim — a high-ambiguity library does not force a
+high-ambiguity catalogue.
+
+#### A detection effect, tested — and what we refuse to infer
+
+**We do not compare the catalogue's rate to the library's as levels.** An earlier draft opened this
+subsection by observing that the catalogued 56.3% "exceeds" nuORFdb's 34.1%, and read the difference as
+an excess arising during detection. **That inference is invalid and is withdrawn.** The two numbers are
+different objects: 56.3% is over distinct catalogued *peptides* at native lengths, after search, FDR
+and deduplication; 34.1% is over distinct *9-mers* of a candidate search space in which nothing has
+been detected. Different units, different denominators, different lengths — the same cross-unit error
+as the fold-change against other catalogues that we withdraw in §1, and it is not rescued by the union
+figure either (56.3% must not be read against 20.2%, or against the 47.6% cap).
+
+The detection hypothesis is nonetheless real and testable *without* that comparison — a peptide of an
+abundant, ubiquitous protein should be over-detected in an immunopeptidome relative to its share of the
+search space. Earlier drafts asserted this without testing it. Both tests below are internal to a single
+space or are ratios of ratios, so neither requires a cross-unit subtraction.
 
 **Prediction 1 — breadth of detection.** A peptide of an abundant, ubiquitous protein should be
 detected across more of IEAtlas's 15 cancer types. Canonical-overlapping sequences are seen in a mean
@@ -241,10 +338,51 @@ yet: there, ribosomal ORFs are slightly **depleted** among canonical-overlapping
 The catalogue's enrichment is therefore a **2.77× excess over its own search space** — it was not
 inherited from the library, and arose during detection.
 
-This is corroboration, not proof: breadth of detection is a proxy for abundance, not a measurement of
-it, and a direct test would use protein-abundance data. What is licensed is that the excess of the
-catalogued rate over the library rate is *consistent with detection bias, and explained by neither
-peptide length nor library composition.*
+Note what Prediction 2 does and does not compare. It is a **ratio of ratios** — an *enrichment* measured
+within the catalogue, set against the *same enrichment* measured within the library — and a ratio of
+ratios is dimensionless, so it survives the unit mismatch that makes a comparison of the two raw rates
+meaningless. It says the association between being canonical-overlapping and being ribosomal is
+stronger in the catalogue than in the search space it was drawn from. It does **not** license any claim
+that the catalogue's overlap rate sits some number of percentage points above the library's — that
+quantity is not defined.
+
+**Prediction 3 — the direct test.** Predictions 1 and 2 use *breadth of detection* and *ribosomal
+membership* as **proxies** for abundance. We replace them with a measurement: **PaxDb v6.1** (human,
+whole-organism integrated, ppm), joined to the canonical proteins the catalogued sequences actually
+match (**91.4%** of the reviewed proteome joins; 96,210 of the 98,193 overlapping sequences carry an
+abundance).
+
+*Which canonical proteins do the catalogued sequences hit?* **Abundant ones.** At the protein level —
+where there is no peptide-clustering problem at all, because the unit *is* the protein — canonical
+proteins hit by a catalogued sequence have a median abundance of **0.872 ppm** against **0.086 ppm**
+for those never hit, a **10.14×** difference (AUC **0.679**).
+
+*Does abundance predict how broadly a peptide was detected?* **Yes — but weakly, and we state the
+weakness rather than the headline.** Binning canonical-overlapping sequences by the abundance of their
+matched canonical protein, mean detection breadth rises across every quintile after length
+standardization, from **1.40** cancer types (Q1) to **1.78** (Q5) — a Q5−Q1 gap of **0.377**, with a
+gene-clustered bootstrap **95% CI [0.335, 0.42]** that excludes zero under **both** cluster definitions
+(matched canonical gene, and IEAtlas source gene), and which reproduces on the previous PaxDb release
+(**0.38**). **The crude, unstandardized trend saturates** — it climbs through the low quintiles and
+flattens across the top — and is monotone *only* after length standardization; the crude gap is
+**0.23**. The direction and the interval are solid. **A strong dose–response is not**, and we do not
+claim one.
+
+Three controls, each of which could have killed it:
+
+| control | the attack it answers | result |
+|---|---|---|
+| **peptide length** | short peptides both match canonical proteins more readily *and* recur more | trend holds in **18 / 18** length strata |
+| **protein length** | longer proteins are hit more often *by chance*, so "hit" may just mean "long" | hit proteins **are** longer (median 490 vs 360 aa) — but the abundance effect holds in **10 / 10** protein-length deciles |
+| **placebo** | does the machinery invent trends? | breaking the peptide→protein link **collapses** the gap to **0.0** (0 of 200 draws reach the observed 0.377) |
+
+**What this licenses, and what it does not.** The abundance explanation is now **measured, not
+proxied**: canonical-overlapping sequences preferentially match abundant canonical proteins, and that
+abundance predicts detection breadth, surviving peptide length, protein length and a placebo. But the
+per-sequence association is **weak** (Spearman ρ = **0.061**): abundance is *one* contributor to which
+sequences get detected, **not** the whole explanation, and we do not claim otherwise. Nor does any of
+this speak to provenance — it is evidence about **what gets detected**, and MS still identifies the
+sequence, never the locus.
 
 ### R3. The consequence is observable inside the resource
 
@@ -341,6 +479,15 @@ unique to the nominated ncORF within the searched space, and if not, list every 
 preserves the peptide *and* the ambiguity, rather than discarding either, and it is strictly more
 informative than the exclusion rule it generalises.
 
+*And it is cheap.* A remedy that demanded a long list of loci per peptide would be glib, so we measured
+the list. Across the 97,999 catalogued sequences that match the canonical half of IEAtlas's own search
+database, the **median number of compatible canonical genes is 1**; **93.1% are compatible with exactly
+one** canonical gene and **98.0% with at most two** (maximum 22). The label is, for the large majority
+of ambiguous sequences, **a single gene symbol** — one column, not a redesign. And as §1 showed, a
+concatenated search already computes it: MaxQuant's `peptides.txt` lists every database entry
+containing each peptide. The remedy asks resources to **publish a column their own pipelines already
+produce**.
+
 **(b) Per class — a class-decoy ledger.** Accepted target and decoy counts per class, the class
 definitions, the thresholding stage, and the formula used — enough to reconstruct the class-specific
 estimate. Ouspenskaia et al. demonstrate it is achievable.
@@ -397,11 +544,16 @@ been told about.
 - The 1.4–5% values for four other catalogues are **published figures from a different pipeline**, cited
   as context. We report **no fold-change** against them.
 - Class labels for non-pseudogene classes are **source-supplied and uncorroborated**.
-- The pseudogene→parent homology analysis (Supplement) rests on **symbol-derived parentage**, which is
-  not reliable enough to carry a headline; it requires an authoritative pseudogene–parent annotation
-  before it can be promoted.
-- The detection-bias result (R2) uses **breadth of detection as a proxy for abundance**, not a
-  measurement of it.
+- The pseudogene→parent homology analysis (Supplement) now uses a **curated, versioned** annotation
+  (NCBI Gene `gene_group`) rather than symbol-stripping, and the parent hit survives a
+  **family-respecting** null even when the decoys are the parent's own **strong paralogs** (52.3%
+  observed vs 16.6%, *p* < 1e-4) — the two objections that put it there. It stays in the Supplement
+  anyway: **133 testable peptides**, and the curated mapping is not
+  independent of the symbol it replaces, because HGNC names a pseudogene *after* its parent. It
+  explains *why* part of the pseudogene class is source-ambiguous; it does not measure the headline.
+- The detection-bias result (R2) is now a **direct measurement** (PaxDb v6.1), not a proxy, and it
+  survives peptide length, protein length and a placebo. But the **per-sequence association is weak**
+  (Spearman ρ = 0.061). Abundance is **one** contributor to what gets detected, not the explanation.
 
 **What we would like to be wrong about.** If IEAtlas's pipeline resolves source attribution in a way its
 Methods do not describe — for instance through a protein-inference step that assigns shared sequences to
@@ -448,9 +600,22 @@ fewer distinct ncORF-specific k-mers and so over-weights the canonical-shared on
 containment *is* sampled (4,000 ORFs, seed 0); that statistic is an O(*n·m*) substring scan and is
 unbiased under random sampling, unlike a k-mer union.
 
-**Union caveat.** For libraries *A*, *B* and canonical set *C*, the combined rate is
-|(*A* ∪ *B*) ∩ *C*| / |*A* ∪ *B*|, which is **not** monotone in the addition of *B*. No bound on the
-combined library's ambiguity is claimed from nuORFdb alone.
+**Union caveat, and the union itself.** For libraries *A*, *B* and canonical set *C*, the combined rate
+is |(*A* ∪ *B*) ∩ *C*| / |*A* ∪ *B*|, which is **not** monotone in the addition of *B*. No bound on the
+combined library's ambiguity is claimed from nuORFdb alone. The union of the two sources we hold is
+measured directly (nuORFdb ∪ Translnc = 20.2%, *below* nuORFdb's 34.1%). RPFdb v2.0 is not measured
+and is **not approximated**: the live site serves only v3.0, and it distributes RibORF genomic
+*coordinates* rather than amino-acid sequences, so back-translation would require many free parameters
+and would yield *our* library rather than IEAtlas's. Its contribution is carried as a single free
+unknown *m*, giving a distribution-free cap of **47.6%** on the three-source library and **no positive
+floor**.
+
+**A comparison we do not make.** The library rate (distinct 9-mers of an undetected candidate space)
+and the catalogue rate (distinct peptides at native lengths, after search, FDR and deduplication) are
+**different objects with different units and denominators**. We report no difference, ratio or excess
+between them. The detection test is stated only as a within-catalogue contrast (breadth) and a **ratio
+of ratios** (ribosomal enrichment in the catalogue against the same enrichment in the library), both of
+which are immune to the unit mismatch.
 
 ### The detection-bias test
 
@@ -513,8 +678,18 @@ document hashes are in the repository.
   monotone only under nested expansion of *R*.
 - That IEAtlas is "11–40×" any other catalogue. **We report no fold-change against externally
   published rates.**
-- That we have measured IEAtlas's whole library. We hold nuORFdb but not RPFdb or Translnc, and the
-  combined proportion is **unknown** — not bounded below by 34.1%.
-- That detection bias is *proven*. Breadth of detection is a **proxy** for abundance.
-- That the pseudogene→parent analysis is headline-grade. It uses **symbol-derived parentage** and sits
-  in the Supplement pending an authoritative annotation.
+- That we have measured IEAtlas's whole library. We hold nuORFdb and Translnc but **not RPFdb v2.0**,
+  which is unobtainable. The combined proportion is **not determined** — capped at 47.6%, with no
+  positive floor, and certainly **not bounded below by 34.1%**.
+- That the catalogue's overlap rate can be compared to a library's **as levels**. They are different
+  units (peptides vs 9-mers) over different denominators (detected output vs candidate space). We
+  report no difference, ratio or excess between them — **including against the 20.2% union and the
+  47.6% cap.**
+- That detection bias is *proven*, or that abundance is the *explanation*. It is now **directly
+  measured** (PaxDb v6.1) rather than proxied, and survives length, protein length and a placebo — but
+  the per-sequence association is **weak** (ρ = 0.061) and the crude trend **saturates**. Abundance is
+  **one** contributor to what gets detected.
+- That the pseudogene→parent analysis is headline-grade. It now uses a **curated, versioned** parent
+  annotation (NCBI Gene `gene_group`) and survives a family-respecting null, but it rests on **133
+  testable peptides**, and the curated mapping is **not independent** of the gene symbol it replaces.
+  It stays in the Supplement as a **mechanistic vignette**, not a measurement.

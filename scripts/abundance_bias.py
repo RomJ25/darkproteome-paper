@@ -1,9 +1,21 @@
 """Test the abundance-bias hypothesis instead of asserting it -- and try hard to break it.
 
-The catalogued canonical-overlap rate (56.3%) EXCEEDS the latent ambiguity of the library IEAtlas
-searched (nuORFdb, 34.1%). The manuscript states, but does NOT test, an explanation: detection bias.
-Canonically-encoded peptides derive from abundant, ubiquitously-expressed proteins, so they are
-over-detected in an immunopeptidome relative to their share of the search space.
+CORRECTION (ERROR #18). This docstring used to open by saying the catalogued
+canonical-overlap rate (56.3%) "EXCEEDS" the library's latent ambiguity (nuORFdb, 34.1%), and treated
+the difference as the thing to be explained. THAT COMPARISON IS INVALID AND IS WITHDRAWN. 56.3% is
+over distinct catalogued PEPTIDES at native lengths, after search, FDR and dedup; 34.1% is over
+distinct 9-MERS of an undetected candidate space. Different units, denominators and lengths -- the
+same cross-unit error as the withdrawn "11-40x" fold-change. Do not quote a difference, ratio or
+excess between those two numbers (nor against the 20.2% union or the 47.6% cap from library_union.py).
+
+THE RESULTS BELOW ARE UNAFFECTED, because neither ever rested on that comparison. P1 is a
+WITHIN-CATALOGUE contrast. P2 is a RATIO OF RATIOS -- an enrichment measured in the catalogue against
+the same enrichment measured in the library -- which is dimensionless and so immune to the unit
+mismatch. Only the framing sentence was wrong.
+
+THE HYPOTHESIS, stated without the bad comparison: canonically-encoded peptides derive from abundant,
+ubiquitously-expressed proteins, so they are over-detected in an immunopeptidome relative to their
+share of the search space. The manuscript asserted this without testing it.
 
 That is testable inside the resource. Two predictions, each with the control that could refute it.
 

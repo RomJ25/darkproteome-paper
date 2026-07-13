@@ -48,7 +48,7 @@ def main():
 
     groups = {"IEAtlas": cats["IEAtlas"], "CrypticProteinDB": crypt}
 
-    # Raja lives in the tier-1 table, with its own canonical_self_exact column.
+    # Raja lives in the non-novelty floor table, with its own canonical_self_exact column.
     raja = [r for r in csv.DictReader(open(TIER1, newline="", encoding="utf-8"))
             if r["cohort"].startswith("Raja")]
 

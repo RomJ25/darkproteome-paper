@@ -2,7 +2,20 @@
 
     python3 src/darkproteome/robustness.py data/claim_catalog_real.csv
 
-Three objections, stress-tested against `evidence_dimensions.py`:
+REWRITTEN 2026-07-13. The previous version stress-tested the four-axis STRICT-SURVIVOR count,
+which is retired: it was structurally zero (nothing reports a translation statistic) and it scored
+unassayed claims as failures. Any leniency ladder built on it was measuring the scorer.
+
+And it had been telling us so. Its own §2 concluded:
+
+    "the two forcing axes are source_orf AND immunogenicity"
+
+Those are EXACTLY the two dimensions that turned out to be broken -- one structurally unpassable,
+one treating "nobody ran the assay" as a failed assay. The script was reporting the bug, and we
+read it as a result. That is the single best argument in this repo for auditing claims against the
+code that produces them.
+
+What is stress-tested now, against `evidence_dimensions.py`:
 
   1. Corpus definition   -- does the reporting result move if you cut the corpus differently?
   2. Criterion leniency  -- how far must the criteria be relaxed before the record can adjudicate

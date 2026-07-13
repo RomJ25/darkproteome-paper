@@ -1,0 +1,266 @@
+{
+  "generated": "scripts/pseudogene_parent_authoritative.py",
+  "question": "Of pseudogene-assigned catalogued peptides that overlap a canonical protein, what fraction match the pseudogene's AUTHORITATIVE parent gene?",
+  "authoritative_source": {
+    "name": "NCBI Gene gene_group -- curated 'Related functional gene' / 'Related pseudogene'",
+    "url": "https://ftp.ncbi.nlm.nih.gov/gene/DATA/gene_group.gz",
+    "versions": {
+      "NCBI gene_group": "build 2026-07-13 (ftp.ncbi.nlm.nih.gov/gene/DATA/gene_group.gz)",
+      "NCBI Homo_sapiens.gene_info": "build 2026-07-13 (ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/)",
+      "HGNC hgnc_complete_set": "build 2026-07-10 (storage.googleapis.com/public-download-files/hgnc/tsv/tsv/)",
+      "GENCODE annotation": "v26 (clone-name -> ENSG bridge only)",
+      "pseudogene.org psiDR": "GENCODE v7 / hg19, 2012 -- downloaded for the record, NOT used (see docstring)",
+      "pseudogene.org PseudoPipe": "Ensembl 90, 2017 -- downloaded for the record, NOT used (see docstring)"
+    },
+    "human_pseudogenes_with_curated_parent": 13437,
+    "multi_parent_cases": 0,
+    "independence_caveat": "NOT independent of the gene symbol: HGNC names a pseudogene after the parent it descends from, so high agreement with the symbol heuristic is EXPECTED and is not corroboration. What it buys is a curated, versioned relation and correct handling of renames/family cases."
+  },
+  "coverage": {
+    "canonical_substring_pseudogene_peptides": 213,
+    "distinct_pseudogene_symbols": 62,
+    "symbols_resolved_to_geneid": 37,
+    "symbols_with_curated_parent": 36,
+    "coverage_all_symbols_pct": 58.1,
+    "coverage_named_symbols_pct": 97.3,
+    "symbols_absent_from_all_registries": [
+      "AC005262.1",
+      "AC009302.1",
+      "AC013267.1",
+      "AC013356.1",
+      "AC073626.2",
+      "AC087499.4",
+      "AC092447.1",
+      "AC092447.2",
+      "AC092447.9",
+      "AC098859.1",
+      "AC099677.3",
+      "AC108022.1",
+      "AC109454.1",
+      "AC243972.2",
+      "AL049830.1",
+      "AL158050.1",
+      "AL161636.2",
+      "AL353705.4",
+      "AL357373.1",
+      "AL358472.1",
+      "AL589182.2",
+      "AL772284.1",
+      "AP001024.1",
+      "AP001086.1",
+      "AP001858.2"
+    ],
+    "symbols_resolved_but_no_curated_parent": [
+      "GNG5P2"
+    ],
+    "resolution_routes": {
+      "GENCODE name -> ENSG -> gene_info": 2,
+      "gene_info symbol": 31,
+      "HGNC symbol/prev/alias": 4
+    }
+  },
+  "authoritative_result": {
+    "testable_peptides": 133,
+    "untestable_parent_not_in_swissprot": 1,
+    "hit_own_curated_parent": 77,
+    "hit_rate_pct": 57.9,
+    "gene_level_pseudogenes": 35,
+    "gene_level_with_parent_hit": 33
+  },
+  "heuristic_baseline": {
+    "note": "parent_gene_test.py, the symbol-stripping heuristic under audit",
+    "reported_in_supplement_S1": "79/132 = 59.8%, null mean 4.9, p < 1e-4"
+  },
+  "head_to_head": {
+    "peptides_both_mappings_yield_parent": 127,
+    "heuristic_agrees_with_curated": 124,
+    "heuristic_disagrees": 3,
+    "agreement_pct": 97.6,
+    "heuristic_yields_no_parent_but_curated_exists": 7,
+    "peptide_level_verdict_flips": 7,
+    "disagreeing_symbols": [
+      [
+        "MKRN4P",
+        "MKRN4",
+        "MKRN1"
+      ]
+    ],
+    "verdict_flips_detail": [
+      {
+        "pseudogene": "ZNF720P1",
+        "peptide": "KSFSHSSSL",
+        "heuristic_parent": "ZNF720",
+        "curated_parent": "KRABD5",
+        "heuristic_call": "HIT",
+        "authoritative_call": "MISS"
+      },
+      {
+        "pseudogene": "AC104131.1",
+        "peptide": "LSSAEENEPSQAETAVE",
+        "heuristic_parent": null,
+        "curated_parent": "ARK2N",
+        "heuristic_call": "MISS",
+        "authoritative_call": "HIT"
+      },
+      {
+        "pseudogene": "AC007238.1",
+        "peptide": "PERDSEPF",
+        "heuristic_parent": null,
+        "curated_parent": "IK",
+        "heuristic_call": "MISS",
+        "authoritative_call": "HIT"
+      },
+      {
+        "pseudogene": "AC007238.1",
+        "peptide": "RQGTRNKKL",
+        "heuristic_parent": null,
+        "curated_parent": "IK",
+        "heuristic_call": "MISS",
+        "authoritative_call": "HIT"
+      },
+      {
+        "pseudogene": "AC104131.1",
+        "peptide": "SDTLSSAEENEPSQAETA",
+        "heuristic_parent": null,
+        "curated_parent": "ARK2N",
+        "heuristic_call": "MISS",
+        "authoritative_call": "HIT"
+      },
+      {
+        "pseudogene": "AC007238.1",
+        "peptide": "TTNDIVISK",
+        "heuristic_parent": null,
+        "curated_parent": "IK",
+        "heuristic_call": "MISS",
+        "authoritative_call": "HIT"
+      },
+      {
+        "pseudogene": "AC007238.1",
+        "peptide": "YAKLRQQEI",
+        "heuristic_parent": null,
+        "curated_parent": "IK",
+        "heuristic_call": "MISS",
+        "authoritative_call": "HIT"
+      }
+    ],
+    "reviewer_objection_upheld_concretely": {
+      "case": "ZNF720P1 / KSFSHSSSL",
+      "what_happened": "The heuristic's same_gene() drift rule calls two symbols the same gene if they share a >=3-char prefix with a numeric remainder. It therefore fires on numbered gene FAMILIES: same_gene('ZNF720', 'ZNF135') is True, as is same_gene('RPL18','RPL7'). The peptide KSFSHSSSL occurs in ZNF135/ZNF256/ZNF483 and NOT in its true curated parent KRABD5 (ZNF720 is KRABD5's PREVIOUS symbol). The heuristic scored a spurious parent hit by zinc-finger string collision; the curated relation deletes it.",
+      "verdict": "The reviewer's gene-family objection is UPHELD as a mechanism. Its aggregate cost, however, is 1 spurious hit."
+    },
+    "net_effect": "heuristic 79/132 = 59.8% (73 exact + 6 drift-rule) -> authoritative 77/133 = 57.9%. One spurious family-collision hit removed; six clone-style peptides (AC007238.1 -> IK, AC104131.1 -> ARK2N) newly parentable via the GENCODE->Ensembl->NCBI bridge. The two corrections nearly cancel."
+  },
+  "family_structure": {
+    "parents_in_testable_set": 35,
+    "kmer": 9,
+    "within_pool_shared_kmer_components": 35,
+    "within_pool_components_with_more_than_one_parent": 0,
+    "within_pool_stratified_nulls_degenerate": true,
+    "within_pool_degeneracy_meaning": "The parents are pairwise 9-mer-disjoint, so every family stratum is a singleton and the stratified permutation reduces to the identity. This is the ANSWER to the exchangeability objection (a shuffled parent is essentially never hit because no two parents share sequence), not an evasion of it. Nulls B and C are reported as DEGENERATE and their p-values are NOT quoted as evidence. Null D is the family-respecting null that actually runs.",
+    "parents_with_nonempty_proteome_wide_family": 21,
+    "peptides_hitting_a_NON_parent_paralog_of_their_parent": 19,
+    "peptides_hitting_a_NON_parent_paralog_pct": 14.3
+  },
+  "nulls": {
+    "A_naive_free": {
+      "label": "NAIVE / FREE  -- parents exchangeable across the whole pool (the null the reviewer objected to)",
+      "full": {
+        "observed": 77,
+        "n": 133,
+        "observed_pct": 57.9,
+        "null_mean": 4.4,
+        "null_mean_pct": 3.3,
+        "null_max": 12,
+        "n_ge_observed": 0,
+        "p": 9.999000099990002e-05
+      },
+      "permutable_subset": {
+        "observed": 77,
+        "n": 133,
+        "observed_pct": 57.9,
+        "null_mean": 4.4,
+        "null_mean_pct": 3.3,
+        "null_max": 12,
+        "n_ge_observed": 0,
+        "p": 9.999000099990002e-05
+      },
+      "n_permutable_items": 133,
+      "n_informative_strata": 1
+    },
+    "B_hgnc_family": {
+      "label": "HGNC GENE-FAMILY -- parents shuffled only within a curated family",
+      "full": {
+        "observed": 77,
+        "n": 133,
+        "observed_pct": 57.9,
+        "null_mean": 75.4,
+        "null_mean_pct": 56.7,
+        "null_max": 77,
+        "n_ge_observed": 1950,
+        "p": 0.19508049195080493
+      },
+      "permutable_subset": {
+        "observed": 5,
+        "n": 5,
+        "observed_pct": 100.0,
+        "null_mean": 3.4,
+        "null_mean_pct": 67.8,
+        "null_max": 5,
+        "n_ge_observed": 1950,
+        "p": 0.19508049195080493
+      },
+      "n_permutable_items": 5,
+      "n_informative_strata": 1
+    },
+    "C_shared_kmer": {
+      "label": "SHARED-9MER HOMOLOGY -- parents shuffled only within a sequence-sharing component (STRICTEST)",
+      "full": {
+        "observed": 77,
+        "n": 133,
+        "observed_pct": 57.9,
+        "null_mean": 77.0,
+        "null_mean_pct": 57.9,
+        "null_max": 77,
+        "n_ge_observed": 10000,
+        "p": 1.0
+      },
+      "permutable_subset": null,
+      "n_permutable_items": 0,
+      "n_informative_strata": 0
+    },
+    "D_family_decoy_swap": {
+      "label": "FAMILY-DECOY SWAP -- true parent replaced by a random close paralog (NON-DEGENERATE; THE null to quote). Run against two decoy pools.",
+      "pools": {
+        "any_shared_kmer": {
+          "decoy_pool": "ANY shared 9-mer (permissive)",
+          "n_items_with_family": 101,
+          "observed": 53,
+          "n": 101,
+          "observed_pct": 52.5,
+          "null_mean": 7.2,
+          "null_mean_pct": 7.1,
+          "null_max": 15,
+          "n_ge_observed": 0,
+          "p": 9.999000099990002e-05
+        },
+        "strong_paralogs": {
+          "decoy_pool": "STRONG paralogs only (>=10 shared 9-mers)",
+          "n_items_with_family": 65,
+          "observed": 34,
+          "n": 65,
+          "observed_pct": 52.3,
+          "null_mean": 10.8,
+          "null_mean_pct": 16.6,
+          "null_max": 18,
+          "n_ge_observed": 0,
+          "p": 9.999000099990002e-05
+        }
+      },
+      "parent_hits_total": 77,
+      "parent_hits_that_are_parent_SPECIFIC": 58,
+      "parent_hits_also_compatible_with_a_paralog": 19
+    }
+  },
+  "permutations": 10000,
+  "seed": 0
+}

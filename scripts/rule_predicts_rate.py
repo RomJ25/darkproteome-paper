@@ -109,7 +109,7 @@ def main():
         k = sum(1 for p in peps if selfmap.get(p))
         rows.append((label, k, n))
 
-    # Raja, from the tier-1 artifact (same measurement)
+    # Raja, from the non-novelty floor artifact (same measurement)
     raja = [r for r in csv.DictReader(open(TIER1)) if r["cohort"].startswith("Raja")]
     rows.append(("Raja ovarian", sum(int(r["canonical_self_exact"]) for r in raja), len(raja)))
 

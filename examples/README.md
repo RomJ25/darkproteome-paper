@@ -11,18 +11,11 @@ data the field already deposits.
 
 ```bash
 python3 src/darkproteome/class_decoy_ledger.py \
-    --pepxml data/external/pxd055609_pepxml/T5-1546_Ovarian_MSFragger_MHC_ClassI_101821.pepXML \
+    --pepxml T5-1546_Ovarian_MSFragger_MHC_ClassI_101821.pepXML \
     --alpha 0.03 \
     --canonical-fasta data/external/swissprot_human.fasta \
-    --stratify-multiplicity \
     --out examples/PXD055609_T5_ledger
 ```
-
-(`--pepxml` takes a path — if you set `$DARKPROTEOME_DATA` elsewhere, use
-`$DARKPROTEOME_DATA/pxd055609_pepxml/...` instead. The tracked
-`PXD055609_T5_ledger.json`/`.tsv` in this directory were generated with
-`--stratify-multiplicity`, so it's included above to reproduce them exactly —
-see the stratification section below for what that flag adds.)
 
 **Input:** one MSFragger `pepXML` from **PXD055609** (Raja et al., ovarian immunopeptidome — the cohort the
 manuscript audits end to end). The `pepXML` *intermediate* is the right input precisely because it **retains
@@ -74,14 +67,6 @@ every stratum, showing that gap isn't an artifact of cryptic peptides being disp
 (they aren't — canonical and noncanonical have statistically indistinguishable PSM-multiplicity distributions).
 `--unit unique-peptide` dedupes to one row per (class, peptide, decoy-status) as documented.
 
-The 1.68%→0.29% / 6.25%→0.66% figures above are the pooled-across-all-5-samples numbers from
-`psm_multiplicity_probe.py`, which reuses the ledger's own loader/classifier so its output is
-directly comparable:
-
-```bash
-python3 src/darkproteome/psm_multiplicity_probe.py data/external/pxd055609_pepxml/*.pepXML --alpha 0.03
-```
-
 ## Guarding against the ecological-inference mistake (`eco_diagnostic.py`)
 
 On real data, trying to recover a class's true FDR by regressing pooled per-sample FDR on the class fraction
@@ -100,10 +85,22 @@ python3 src/darkproteome/eco_diagnostic.py data/external/pxd055609_pepxml/*.pepX
 
 ## Interoperating with diagFDR
 
-This is a companion to diagFDR (the general verifiable-FDR R package on CRAN [21]), not a rival — two bridges:
+This is a companion to diagFDR (the general verifiable-FDR R package on CRAN [21]), not a rival — three bridges:
 - **It reads diagFDR's input shape.** `--psms` consumes a PSM table with id / decoy-label / q-value / accession
   columns — the same per-PSM contract diagFDR expects.
 - **It emits that contract.** `--emit-diagfdr out.diagfdr.tsv` writes the per-PSM table
   (`id, is_decoy, q, pep, run, score`), so a deposit available only as a **pepXML** — which diagFDR cannot read —
-  can be passed *through* this tool into diagFDR. The class-decoy ledger then adds the per-class split that a
-  global-FDR diagnostic does not provide.
+  can be passed *through* this tool into diagFDR. This file carries every PSM (target and decoy, accepted and
+  rejected, matching the threshold sweep diagFDR's own diagnostics need) but no class label — it lets diagFDR
+  diagnose the whole analysis's scope/calibration/stability, not a class-specific split.
+- **It emits the class-stratified contract diagFDR needs for that split.** `--emit-diagfdr-by-class DIR` writes
+  one `<class>.tsv` file per class (same six-column contract) plus `class_manifest.json`, reusing the exact
+  per-PSM classification already computed for the main ledger — no new heuristic, and every class file's
+  alpha-accepted subset reproduces the main ledger's own `T_class`/`D_class` exactly (verified, both on this
+  fixture and live on PXD055609 T5). Load the resulting files as named universes —
+  `dfdr_run_all(xs = list(canonical = ..., noncanonical = ...))` — for a per-class diagFDR diagnostic; diagFDR's
+  own `dfdr_run_all()` requires a *named* list and already runs every diagnostic independently per name, so no
+  diagFDR-side change is needed. One caveat: `dfdr_run_all()` also auto-generates a scope-disagreement (Jaccard)
+  plot whenever more than one universe is supplied — for mutually exclusive class partitions (not diagFDR's own
+  run-wise-vs-global use case) that plot is expected to show near-zero overlap by construction, not a real
+  disagreement; read it accordingly.

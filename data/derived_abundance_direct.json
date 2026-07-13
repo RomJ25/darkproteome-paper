@@ -1,0 +1,335 @@
+{
+  "paxdb_version": "v6.1 (latest, 2026-07-09), 9606 WHOLE_ORGANISM integrated, ppm",
+  "join": {
+    "swissprot_proteins": 20431,
+    "joined_via_paxdb_uniprot_link": 18353,
+    "joined_via_gene_symbol": 330,
+    "joined_total": 18683,
+    "join_rate": 0.9144
+  },
+  "catalogue": {
+    "unique_sequences": 174465,
+    "canonical_overlapping": 98193,
+    "overlap_rate": 0.5628,
+    "overlapping_with_abundance": 96210,
+    "overlapping_dropped_no_abundance": 1983,
+    "scored_csv_mismatches": 0
+  },
+  "A_which_proteins_are_hit": {
+    "ab_max": {
+      "median_ppm": 4.18,
+      "fold_vs_background": 11.88,
+      "frac_above_bg_median": 0.7641,
+      "auc_vs_background": 0.684
+    },
+    "ab_med": {
+      "median_ppm": 4.045,
+      "fold_vs_background": 11.49,
+      "frac_above_bg_median": 0.7617,
+      "auc_vs_background": 0.682
+    },
+    "protein_level": {
+      "n_hit": 11641,
+      "n_not_hit": 7042,
+      "median_hit_ppm": 0.872,
+      "median_nothit_ppm": 0.086,
+      "fold": 10.14,
+      "auc": 0.679
+    }
+  },
+  "B_abundance_predicts_breadth": {
+    "ab_max": {
+      "monotone": true,
+      "q5_minus_q1_crude": 0.23,
+      "q5_minus_q1_lengthstd": 0.377,
+      "spearman_rho": 0.061,
+      "ci95_cluster_canonical_gene": [
+        0.335,
+        0.42
+      ],
+      "ci95_cluster_source_gene": [
+        0.337,
+        0.419
+      ],
+      "ci_excludes_zero_both_clusterings": true,
+      "bin_means_lengthstd": {
+        "Q1": 1.403,
+        "Q2": 1.577,
+        "Q3": 1.662,
+        "Q4": 1.724,
+        "Q5": 1.781
+      },
+      "bin_n": {
+        "Q1": 19219,
+        "Q2": 19225,
+        "Q3": 19277,
+        "Q4": 19239,
+        "Q5": 19250
+      }
+    },
+    "ab_med": {
+      "monotone": true,
+      "q5_minus_q1_crude": 0.232,
+      "q5_minus_q1_lengthstd": 0.383,
+      "spearman_rho": 0.061,
+      "ci95_cluster_canonical_gene": [
+        0.341,
+        0.425
+      ],
+      "ci95_cluster_source_gene": [
+        0.344,
+        0.425
+      ],
+      "ci_excludes_zero_both_clusterings": true,
+      "bin_means_lengthstd": {
+        "Q1": 1.401,
+        "Q2": 1.582,
+        "Q3": 1.658,
+        "Q4": 1.724,
+        "Q5": 1.783
+      },
+      "bin_n": {
+        "Q1": 19242,
+        "Q2": 19226,
+        "Q3": 19247,
+        "Q4": 19228,
+        "Q5": 19267
+      }
+    }
+  },
+  "B_deciles_lengthstd": {
+    "D1": 1.342,
+    "D2": 1.464,
+    "D3": 1.531,
+    "D4": 1.623,
+    "D5": 1.637,
+    "D6": 1.688,
+    "D7": 1.719,
+    "D8": 1.73,
+    "D9": 1.767,
+    "D10": 1.796
+  },
+  "B_deciles_monotone": true,
+  "C1_peptide_length_strata": {
+    "tested": 18,
+    "holding": 18,
+    "per_length": {
+      "8": {
+        "n": 6236,
+        "q1": 1.21,
+        "q5": 1.476,
+        "q5_minus_q1": 0.266,
+        "rho": 0.112
+      },
+      "9": {
+        "n": 42585,
+        "q1": 1.623,
+        "q5": 2.12,
+        "q5_minus_q1": 0.498,
+        "rho": 0.112
+      },
+      "10": {
+        "n": 11053,
+        "q1": 1.472,
+        "q5": 1.809,
+        "q5_minus_q1": 0.337,
+        "rho": 0.064
+      },
+      "11": {
+        "n": 6777,
+        "q1": 1.419,
+        "q5": 1.711,
+        "q5_minus_q1": 0.292,
+        "rho": 0.068
+      },
+      "12": {
+        "n": 3620,
+        "q1": 1.176,
+        "q5": 1.368,
+        "q5_minus_q1": 0.193,
+        "rho": 0.098
+      },
+      "13": {
+        "n": 3066,
+        "q1": 1.085,
+        "q5": 1.319,
+        "q5_minus_q1": 0.234,
+        "rho": 0.147
+      },
+      "14": {
+        "n": 4608,
+        "q1": 1.087,
+        "q5": 1.431,
+        "q5_minus_q1": 0.344,
+        "rho": 0.183
+      },
+      "15": {
+        "n": 5308,
+        "q1": 1.114,
+        "q5": 1.417,
+        "q5_minus_q1": 0.303,
+        "rho": 0.161
+      },
+      "16": {
+        "n": 4510,
+        "q1": 1.117,
+        "q5": 1.391,
+        "q5_minus_q1": 0.273,
+        "rho": 0.164
+      },
+      "17": {
+        "n": 3044,
+        "q1": 1.072,
+        "q5": 1.376,
+        "q5_minus_q1": 0.304,
+        "rho": 0.17
+      },
+      "18": {
+        "n": 1796,
+        "q1": 1.052,
+        "q5": 1.26,
+        "q5_minus_q1": 0.209,
+        "rho": 0.141
+      },
+      "19": {
+        "n": 1086,
+        "q1": 1.034,
+        "q5": 1.208,
+        "q5_minus_q1": 0.174,
+        "rho": 0.122
+      },
+      "20": {
+        "n": 746,
+        "q1": 1.084,
+        "q5": 1.195,
+        "q5_minus_q1": 0.111,
+        "rho": 0.097
+      },
+      "21": {
+        "n": 556,
+        "q1": 1.132,
+        "q5": 1.222,
+        "q5_minus_q1": 0.09,
+        "rho": 0.121
+      },
+      "22": {
+        "n": 408,
+        "q1": 1,
+        "q5": 1.336,
+        "q5_minus_q1": 0.336,
+        "rho": 0.2
+      },
+      "23": {
+        "n": 314,
+        "q1": 1.029,
+        "q5": 1.205,
+        "q5_minus_q1": 0.177,
+        "rho": 0.217
+      },
+      "24": {
+        "n": 276,
+        "q1": 1,
+        "q5": 1.239,
+        "q5_minus_q1": 0.239,
+        "rho": 0.203
+      },
+      "25": {
+        "n": 221,
+        "q1": 1.036,
+        "q5": 1.125,
+        "q5_minus_q1": 0.089,
+        "rho": 0.176
+      }
+    }
+  },
+  "C2_protein_length_control": {
+    "hit_median_aa": 490,
+    "nothit_median_aa": 360.0,
+    "auc_length_hit_vs_not": 0.616,
+    "rho_protein_length_vs_abundance": -0.048,
+    "deciles_tested": 10,
+    "deciles_auc_above_half": 10,
+    "mean_auc_within_deciles": 0.679,
+    "per_decile": {
+      "1": {
+        "n_hit": 859,
+        "n_not": 1001,
+        "fold": 53.36,
+        "auc": 0.753
+      },
+      "2": {
+        "n_hit": 1022,
+        "n_not": 845,
+        "fold": 39.78,
+        "auc": 0.736
+      },
+      "3": {
+        "n_hit": 1071,
+        "n_not": 799,
+        "fold": 24.64,
+        "auc": 0.733
+      },
+      "4": {
+        "n_hit": 934,
+        "n_not": 927,
+        "fold": 28.1,
+        "auc": 0.779
+      },
+      "5": {
+        "n_hit": 1118,
+        "n_not": 741,
+        "fold": 10.29,
+        "auc": 0.687
+      },
+      "6": {
+        "n_hit": 1233,
+        "n_not": 652,
+        "fold": 6.64,
+        "auc": 0.66
+      },
+      "7": {
+        "n_hit": 1230,
+        "n_not": 636,
+        "fold": 6.05,
+        "auc": 0.656
+      },
+      "8": {
+        "n_hit": 1338,
+        "n_not": 536,
+        "fold": 5.43,
+        "auc": 0.637
+      },
+      "9": {
+        "n_hit": 1404,
+        "n_not": 467,
+        "fold": 3.16,
+        "auc": 0.594
+      },
+      "10": {
+        "n_hit": 1432,
+        "n_not": 438,
+        "fold": 1.89,
+        "auc": 0.555
+      }
+    },
+    "survives": true
+  },
+  "C3_placebo": {
+    "n_draws": 200,
+    "placebo_median": 0.0,
+    "placebo_p975": 0.033,
+    "observed": 0.377,
+    "draws_ge_observed": 0,
+    "collapses": true
+  },
+  "version_robustness_v5_q5_minus_q1": 0.38,
+  "bootstrap": {
+    "B": 2000,
+    "seed": 20260713,
+    "clusters": [
+      "matched canonical gene",
+      "IEAtlas source gene"
+    ]
+  },
+  "verdict": "CORROBORATES"
+}

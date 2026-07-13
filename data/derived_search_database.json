@@ -1,0 +1,12 @@
+{
+ "canonical_proteins_in_search_db": 20376,
+ "n_peptides": 174465,
+ "n_matching_search_db": 97999,
+ "pct_matching_search_db": 56.2,
+ "median_compatible_proteins": 1,
+ "median_compatible_genes": 1,
+ "pct_exactly_one_gene": 93.1,
+ "pct_at_most_two_genes": 98.0,
+ "max_compatible_genes": 22,
+ "methods_quotes_verified": true
+}

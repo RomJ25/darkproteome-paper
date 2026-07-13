@@ -112,7 +112,7 @@ def main():
             if p and p.isalpha():
                 pep_gene.setdefault(p, r.get("orf_id_or_locus") or "")
 
-    # which of them are canonical substrings (from the tier-1 artifact)
+    # which of them are canonical substrings (from the non-novelty floor artifact)
     canon = set()
     with open(TIER1, newline="", encoding="utf-8") as fh:
         for r in csv.DictReader(fh):

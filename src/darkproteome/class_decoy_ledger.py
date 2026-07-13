@@ -4,9 +4,8 @@ class_decoy_ledger.py — emit a per-class decoy ledger ("antigen datasheet")
 from target-decoy proteomics outputs you ALREADY have, making D_N a free output.
 
 The single missing statistic for re-verifiable non-canonical (cryptic) antigen claims is the
-per-class accepted DECOY count D_N. A pooled target-decoy threshold does not IDENTIFY a
-subgroup's error rate (Woo et al. 2014); the subgroup rate becomes assessable only when the
-per-class accepted target and decoy counts are reported.
+per-class accepted DECOY count D_N (see "Canonical self in cryptic cancer-epitope catalogues
+and the class-decoy ledger needed to verify non-canonical antigen claims", Rom Jan).
 This tool reads existing outputs — a mokapot/Percolator PSM table, or an MSFragger pepXML
 intermediate (which RETAINS decoys + class-labelable accessions) — and emits, per class:
 accepted targets T, accepted decoys D, and the class-FDR estimate (D+1)/T at a chosen
@@ -184,6 +183,12 @@ def main():
     ap.add_argument("--canonical-fasta", help="SwissProt FASTA -> flag canonical-self (non-novelty axis)")
     ap.add_argument("--emit-diagfdr", metavar="PATH",
                     help="also write the per-PSM diagFDR contract TSV (id, is_decoy, q, pep, run, score)")
+    ap.add_argument("--emit-diagfdr-by-class", metavar="DIR",
+                    help="write one diagFDR-contract TSV per class into DIR (<class>.tsv), plus "
+                         "class_manifest.json — for class-stratified diagFDR diagnostics "
+                         "(dfdr_run_all(xs=list(canonical=..., noncanonical=...))); reuses the same "
+                         "per-PSM classification already computed for the main ledger, not a new "
+                         "heuristic")
     ap.add_argument("--run-col", help="PSM-table column naming the run/file (for --emit-diagfdr)")
     ap.add_argument("--run", help="single run label for --emit-diagfdr (default: analysis_id)")
     ap.add_argument("--pep-col", help="PSM-table column with the posterior error probability (for --emit-diagfdr)")
@@ -291,6 +296,48 @@ def main():
                             p.get("pep", ""), p.get("run", run_default), p.get("score", "")])
                 n_emit += 1
 
+    class_manifest = None
+    if a.emit_diagfdr_by_class:
+        os.makedirs(a.emit_diagfdr_by_class, exist_ok=True)
+        run_default = a.run or meta["analysis_id"]
+        by_class = {}
+        for p in psms:
+            if p.get("q") is None:
+                continue
+            by_class.setdefault(p["class"], []).append(p)
+        # NOTE: loop var deliberately named class_rows, not rows -- `rows` is the outer
+        # per-class ledger-summary list, reused below in the final print loop; shadowing
+        # it here would silently corrupt that unrelated print statement.
+        class_manifest = {
+            "input_sha256": meta["input_sha256"],
+            "classification_method": "class_map" if class_map else "default heuristic (classify())",
+            "q_value_provenance": "preserved as-reported/as-computed for the main ledger, never "
+                                   "recomputed per class",
+            "scope": "every PSM with a q-value (target and decoy, accepted and rejected) -- matches "
+                     "--emit-diagfdr's scope, not just the alpha-accepted subset, since diagFDR's "
+                     "own stability/tail diagnostics sweep a threshold range",
+            "classes": {},
+        }
+        for cls, class_rows in sorted(by_class.items()):
+            path = os.path.join(a.emit_diagfdr_by_class, f"{cls}.tsv")
+            with open(path, "w", newline="") as f:
+                w = csv.writer(f, delimiter="\t")
+                w.writerow(["id", "is_decoy", "q", "pep", "run", "score"])
+                t = d = 0
+                for p in class_rows:
+                    w.writerow([p["id"], int(bool(p["is_decoy"])), p["q"],
+                                p.get("pep", ""), p.get("run", run_default), p.get("score", "")])
+                    if p["is_decoy"]:
+                        d += 1
+                    else:
+                        t += 1
+            class_manifest["classes"][cls] = {
+                "file": os.path.basename(path), "n_target_rows": t, "n_decoy_rows": d,
+                "n_total_rows": len(class_rows),
+            }
+        with open(os.path.join(a.emit_diagfdr_by_class, "class_manifest.json"), "w") as f:
+            json.dump(class_manifest, f, indent=2)
+
     print(f"# class-decoy ledger  ({fdr_basis}; unit={a.unit}; alpha={a.alpha})")
     print(f"  GLOBAL: T={gT} D={gD}  FDR_hat=(D+1)/T={(gD + 1) / max(gT, 1):.2%}")
     for r in rows:
@@ -310,6 +357,9 @@ def main():
     msg = f"wrote {a.out}.json + {a.out}.tsv"
     if a.emit_diagfdr:
         msg += f" + {a.emit_diagfdr} ({n_emit} PSMs; diagFDR contract)"
+    if class_manifest:
+        cls_summary = ", ".join(f"{c}={v['n_total_rows']}" for c, v in class_manifest["classes"].items())
+        msg += f" + {a.emit_diagfdr_by_class}/ ({cls_summary}; per-class diagFDR contract + manifest)"
     print(msg)
 
 

@@ -27,10 +27,13 @@ def save(fig,name):
     plt.close(fig); print("wrote",name)
 
 # ---- Fig 2: the REPORTING & ADJUDICABILITY MATRIX ----
-# A survivorship funnel is the wrong instrument here. A funnel asserts that each stage FAILED the
-# previous one; most of these cells are not failures, they are SILENCES. Drawing a dimension the
-# record cannot even decide as though it were attrition renders a property of the scorer as a
-# property of the claims. The matrix cannot tell that lie.
+# REPLACES the survivorship funnel (retired), which was dead twice over:
+#   (1) it drew "source-translation substantiated = 0" as ATTRITION, but nothing in the corpus
+#       reports a translation statistic, so that zero was STRUCTURAL -- a property of the scorer
+#       rendered as a property of the claims; and
+#   (2) the four-axis survivor model it depicted no longer exists.
+# A funnel asserts that each stage FAILED the previous one. Most of these cells are not failures:
+# they are silences. The matrix says so, and cannot say otherwise.
 F2 = figure_data.fig2()
 DIMS = ["source_translation","hla_elution","allele_restriction",
         "normal_presentation","human_tcell_assay","class_fdr_reconstructible"]
@@ -172,9 +175,10 @@ for yi,hi in zip(y,his):
         ax.text(0.045,yi,r"$P=0$",va="center",fontsize=8)
 ax.set_yticks(y); ax.set_yticklabels(claims,fontsize=8); ax.set_xlim(-0.02,1.12); ax.set_ylim(-0.6,2.6)
 ax.set_xlabel(r"$P(\mathrm{claim\ true}\mid\mathrm{published\ record})$:  sharp identified interval")
-# SUPPLEMENT ONLY. This panel renders `P = 0` -- a point-identified probability that a claim is
-# FALSE -- which the sequence evidence cannot support. Sequence overlap shows only that the record
-# does not EXCLUDE a canonical source; it never shows the biology is absent. Emitted under a
-# supplement name so it cannot silently reappear in a main-text float.
+# FIG 4 IS OUT OF THE MAIN TEXT (both reviewers). It renders `P = 0` -- a POINT-IDENTIFIED
+# probability that the claim is false -- which is exactly the biological-falsification language
+# the paper has withdrawn. The sequence evidence cannot show a claim is false; it can only show
+# the record does not EXCLUDE a canonical source. Emitted under a supplement name so it cannot
+# silently reappear in a main-text float.
 save(fig,"supp_fig_partial_order")
 print("ALL FIGURES DONE ->", OUT)

@@ -1,0 +1,146 @@
+{
+  "k": 9,
+  "sampling": "none -- full libraries measured; sampling is biased upward here",
+  "libraries_measured": {
+    "nuORFdb_v1.2": "data/external/nuorfdb/PA_nuORFdb_v1.2_protein.fasta",
+    "TransLnc": "data/external/translnc/lncRNA_peptide_AA_seq.fasta"
+  },
+  "rpfdb_v2.0": {
+    "measured": false,
+    "reason": "RPFdb v2.0 -- the third source IEAtlas integrates -- is NOT measured here and is NOT approximated. The live RPFdb site serves v3.0 only (IEAtlas used v2.0), and RPFdb distributes RibORF genomic COORDINATES, not amino-acid sequences; translating them back would require many free parameters and would produce our library, not IEAtlas's. It is treated as genuinely unavailable, and its contribution is carried through as the single free unknown m (novel 9-mers it adds)."
+  },
+  "nonstandard_kmers": {
+    "nuorfdb": 1,
+    "translnc": 106
+  },
+  "by_reference": [
+    {
+      "reference": "SwissProt modern (human)",
+      "canonical_proteins": 20431,
+      "canonical_kmers": 10409261,
+      "nuorfdb": {
+        "kmers": 8448245,
+        "canonical": 2884119,
+        "pct": 34.14
+      },
+      "translnc": {
+        "kmers": 6164584,
+        "canonical": 39382,
+        "pct": 0.64
+      },
+      "shared_nuorfdb_translnc": {
+        "kmers": 248472,
+        "canonical": 16110,
+        "pct": 6.48
+      },
+      "union": {
+        "kmers": 14364357,
+        "canonical": 2907391,
+        "pct": 20.24
+      },
+      "union_effect_pp": -13.9
+    },
+    {
+      "reference": "SwissProt 2022_01 (human, OX=9606) [era-correct]",
+      "canonical_proteins": 20376,
+      "canonical_kmers": 10384855,
+      "nuorfdb": {
+        "kmers": 8448245,
+        "canonical": 2879951,
+        "pct": 34.09
+      },
+      "translnc": {
+        "kmers": 6164584,
+        "canonical": 40028,
+        "pct": 0.65
+      },
+      "shared_nuorfdb_translnc": {
+        "kmers": 248472,
+        "canonical": 16198,
+        "pct": 6.52
+      },
+      "union": {
+        "kmers": 14364357,
+        "canonical": 2903781,
+        "pct": 20.22
+      },
+      "union_effect_pp": -13.87
+    }
+  ],
+  "primary_reference": "SwissProt modern (human)",
+  "monotonicity_test": {
+    "nuorfdb_alone_pct": 34.14,
+    "union_pct": 20.24,
+    "effect_of_adding_translnc_pp": -13.9,
+    "direction": "DOWN",
+    "verdict": "reviewer CONFIRMED empirically: adding a real second IEAtlas source LOWERS the union rate; 34.1% is not a lower bound"
+  },
+  "interval": {
+    "u_union_kmers": 14364357,
+    "h_union_canonical": 2907391,
+    "canonical_kmers": 10409261,
+    "canonical_headroom": 7501870,
+    "formula": "(h + x) / (u + m), 0 <= x <= min(m, |C| - h)",
+    "rows": [
+      {
+        "label": "0  (RPFdb adds nothing new)",
+        "m": 0,
+        "lo_pct": 20.24,
+        "hi_pct": 20.24
+      },
+      {
+        "label": "0.10 x u",
+        "m": 1436435,
+        "lo_pct": 18.4,
+        "hi_pct": 27.49
+      },
+      {
+        "label": "0.25 x u",
+        "m": 3591089,
+        "lo_pct": 16.19,
+        "hi_pct": 36.19
+      },
+      {
+        "label": "0.50 x u",
+        "m": 7182178,
+        "lo_pct": 13.49,
+        "hi_pct": 46.83
+      },
+      {
+        "label": "= headroom  <<< MAX peaks here",
+        "m": 7501870,
+        "lo_pct": 13.3,
+        "hi_pct": 47.6
+      },
+      {
+        "label": "1.00 x u",
+        "m": 14364357,
+        "lo_pct": 10.12,
+        "hi_pct": 36.23
+      },
+      {
+        "label": "2.00 x u",
+        "m": 28728714,
+        "lo_pct": 6.75,
+        "hi_pct": 24.16
+      },
+      {
+        "label": "5.00 x u",
+        "m": 71821785,
+        "lo_pct": 3.37,
+        "hi_pct": 12.08
+      },
+      {
+        "label": "10.0 x u",
+        "m": 143643570,
+        "lo_pct": 1.84,
+        "hi_pct": 6.59
+      }
+    ],
+    "ceiling_pct": 47.6,
+    "ceiling_attained_at_m": 7501870,
+    "floor_pct": null,
+    "floor_note": "no positive floor exists: h/(u+m) -> 0 as m grows without bound",
+    "combined_rate_determined": false
+  }
+}

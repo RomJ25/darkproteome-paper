@@ -75,6 +75,7 @@ def main():
 
     test_multiplicity()
     test_validation()
+    test_emit_diagfdr_by_class()
 
 
 def test_validation():
@@ -176,6 +177,68 @@ def test_multiplicity():
     print("PASS — --unit unique-peptide dedupes correctly (canonical 2T/1D, noncanonical 2T/2D); "
           "--stratify-multiplicity buckets correctly (canonical n=1 1T/1D n>=3 1T/0D; "
           "noncanonical n=1 1T/2D n=2 1T/0D).")
+
+
+# --emit-diagfdr-by-class on FIXTURE at alpha=0.01: reuses the same per-PSM classification as the
+# main ledger (canonical/noncanonical/variant), scoped like --emit-diagfdr to every PSM with a
+# q-value (accepted AND rejected), not just the alpha-accepted subset. Hand-traced from the fixture:
+# canonical = c1,c2,c3,d1 (accepted) + r2,r3 (rejected, both canonical accessions) = 4T/2D;
+# noncanonical = n1,n2,n3,d2 (accepted) + r1 (rejected, noncanonical accession) = 4T/1D;
+# variant = v1 (accepted) only = 1T/0D.
+EXPECTED_BY_CLASS = {
+    "canonical":    (4, 2, {"c1", "c2", "c3", "d1", "r2", "r3"}),
+    "noncanonical": (4, 1, {"n1", "n2", "n3", "d2", "r1"}),
+    "variant":      (1, 0, {"v1"}),
+}
+
+
+def test_emit_diagfdr_by_class():
+    fails = []
+    outdir = tempfile.mkdtemp()
+    byclass = os.path.join(outdir, "byclass")
+    cmd = [sys.executable, TOOL, "--psms", FIXTURE,
+           "--id-col", "PSMId", "--decoy-col", "is_decoy", "--q-col", "mokapot_qvalue",
+           "--accession-col", "Proteins", "--alpha", "0.01",
+           "--out", os.path.join(outdir, "ledger"), "--emit-diagfdr-by-class", byclass]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode != 0:
+        print("FAIL — --emit-diagfdr-by-class exited %d\n%s" % (r.returncode, r.stderr)); sys.exit(1)
+
+    manifest = json.load(open(os.path.join(byclass, "class_manifest.json")))
+    for cls, (T, D, ids) in EXPECTED_BY_CLASS.items():
+        got = manifest["classes"].get(cls)
+        if not got or (got["n_target_rows"], got["n_decoy_rows"]) != (T, D):
+            fails.append("  class %s: expected T=%d D=%d, got %s" % (cls, T, D, got))
+        path = os.path.join(byclass, f"{cls}.tsv")
+        if not os.path.isfile(path):
+            fails.append("  class %s: %s not written" % (cls, path)); continue
+        rows = [ln.rstrip("\n").split("\t") for ln in open(path)]
+        if rows[0] != ["id", "is_decoy", "q", "pep", "run", "score"]:
+            fails.append("  class %s: header wrong: %s" % (cls, rows[0]))
+        got_ids = {row[0] for row in rows[1:]}
+        if got_ids != ids:
+            fails.append("  class %s: expected ids %s, got %s" % (cls, sorted(ids), sorted(got_ids)))
+
+    # Cross-check: filtering each class file to q<=alpha must exactly reproduce the main
+    # ledger's own T_class/D_class for that class -- the internal-consistency check that
+    # actually matters (the by-class emission and the main ledger must agree).
+    ledger = {row["class"]: row for row in json.load(open(os.path.join(outdir, "ledger.json")))["ledger"]}
+    for cls in EXPECTED_BY_CLASS:
+        path = os.path.join(byclass, f"{cls}.tsv")
+        rows = [ln.rstrip("\n").split("\t") for ln in open(path)][1:]
+        accepted = [row for row in rows if float(row[2]) <= 0.01]
+        t = sum(1 for row in accepted if row[1] == "0")
+        d = sum(1 for row in accepted if row[1] == "1")
+        exp_t, exp_d = ledger[cls]["T_class"], ledger[cls]["D_class"]
+        if (t, d) != (exp_t, exp_d):
+            fails.append("  class %s: by-class-file-filtered-to-alpha (T=%d D=%d) disagrees with "
+                         "the main ledger (T=%d D=%d)" % (cls, t, d, exp_t, exp_d))
+
+    if fails:
+        print("FAIL — --emit-diagfdr-by-class:\n" + "\n".join(fails)); sys.exit(1)
+    print("PASS — --emit-diagfdr-by-class writes one diagFDR-contract file per class "
+          "(canonical 6 rows/4T-2D, noncanonical 5 rows/4T-1D, variant 1 row/1T-0D) plus a "
+          "manifest, and filtering each class file to alpha reproduces the main ledger exactly.")
 
 
 if __name__ == "__main__":

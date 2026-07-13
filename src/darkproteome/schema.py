@@ -10,18 +10,21 @@ finding, and it is what pushes a claim to `insufficient-info` in the audit.
 
 NOT_REPORTED = "not reported"
 
-# The columns, in order.
+# The 22 columns, in order.
 #
-# Two distinctions are load-bearing and must never collapse back into one field:
+# Two columns were split on because each was carrying two different measurements,
+# and the scorers read them with two different meanings:
 #
-#   ligand_len  vs  source_pep_len
-#       The HLA ligand (8-12aa) and the tryptic peptide supporting the SOURCE PROTEIN (>=9aa) are
-#       different measurements. Most HLA ligands are >= 9aa, so a shared column would satisfy the
-#       protein-existence rule as a coincidence of the number rather than as evidence.
+#   min_peptide_len          -> ligand_len + source_pep_len
+#       Every ingester set it to len(HLA ligand), but `axes.score_source_orf` read it as the
+#       tryptic peptide length supporting the SOURCE PROTEIN (≥9aa). 93.6% of the corpus is a
+#       ≥9aa ligand, so the protein-existence rule would have passed on a coincidence of the
+#       number. (It never fired — no row reports an FDR — so nothing was miscounted.)
 #
-#   tumor_specificity_modality  vs  _scope  vs  _result
-#       A normal-ligandome search, a GTEx RNA threshold and a cohort inclusion criterion are not
-#       equivalent evidence and must not earn the same verdict. Transcript abundance does not
+#   tumor_specificity_basis  -> tumor_specificity_modality + tumor_specificity_scope
+#       The single value "broad-normal-panel" was assigned on three non-equivalent kinds of
+#       evidence (a normal ligandome search, a GTEx RNA threshold, and a cohort inclusion
+#       criterion) and all three earned an identical strict-pass. Transcript abundance does not
 #       determine HLA presentation, so an RNA threshold cannot answer a presentation claim.
 COLUMNS = [
     "peptide_sequence",

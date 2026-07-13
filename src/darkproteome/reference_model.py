@@ -37,13 +37,19 @@ def present(v):
     return (v or "").strip().lower() not in NR
 
 
-# REPORTING-COMPLETENESS vs EVIDENCE-STRENGTH. These are different quantities and must never be
-# substituted for one another. A test that a FIELD IS POPULATED (`present(reported_fdr)`) is not a
-# test that the value CLEARS A BAR: an FDR of 1.0 populates the field exactly as well as an FDR of
-# 0.001. Both quantities are legitimate; they are named apart:
-#   *_reported  -- is the field populated? REPORTING COMPLETENESS. This is NOT source-attribution
-#                  resolution (`A_i`: does the record leave only the nominated source
-#                  compatible?), which is a different object entirely. Do not conflate them.
+# REPORTING-COMPLETENESS vs EVIDENCE-STRENGTH. Until this module scored the first and
+# CALLED it the second: `source_rigor` was `present(periodicity_pct) or present(reported_fdr)` --
+# a test that the FIELD IS POPULATED -- and the survivorship curve then labelled that stage
+# "source-translation substantiated". An FDR of 1.0 counted exactly like an FDR of 0.001. That is
+# the very error this paper indicts, committed by this paper's own code, and it was a THIRD
+# scorer disagreeing with the authoritative one and with `consensus_bar.py`.
+#
+# Both quantities are legitimate and we keep both -- but they are now named apart and never
+# substituted for one another:
+#   *_reported  -- is the field populated? REPORTING COMPLETENESS. NOT the reviewer's `A`
+#                  estimand: `A_i` is source-attribution RESOLUTION (does the record leave only
+#                  the nominated source compatible?), a different object entirely. Conflating the
+#                  two was the error in the first replacement table -- do not reintroduce it.
 #   *_strict    -- does it clear the bar? Delegated ENTIRELY to evidence_dimensions.py.
 
 def aggregate():
@@ -178,9 +184,10 @@ def main():
     # A zero in the evidence cascade means nothing unless the axis was DECIDABLE. Say so, loudly.
     n_src_dec = sum(1 for p in nc_seqs if nc[p]["source_decidable"])
     n_spec_dec = sum(1 for p in nc_seqs if nc[p]["specificity_decidable"])
-    # ADJUDICABILITY -- deliberately NOT called `A`. `A_i` is source-attribution RESOLUTION (does
-    # the record leave only the nominated source compatible?); this is whether the record carries
-    # enough claim-linked information to apply a reporting criterion at all.
+    # ADJUDICABILITY -- deliberately NOT called `A`. `A_i` is source-attribution RESOLUTION
+    # (does the record leave only the nominated source compatible?); this is whether the record
+    # carries enough claim-linked information to apply a reporting criterion at all. Conflating
+    # the two was the error in the first replacement table.
     print("\nADJUDICABILITY of the evidence cascade (NOT the `A` estimand -- see evidence_dimensions):")
     print(f"  source translation  adjudicable for {n_src_dec:,}/{len(nc_seqs):,} peptides"
           + ("   <<< its zero says nothing about the claims" if not n_src_dec else ""))

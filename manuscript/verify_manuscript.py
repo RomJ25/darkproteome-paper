@@ -11,7 +11,7 @@ non-zero and the paper does not build.
 
 It also fails if the paper:
   * asserts any of the phrasings RETRACTED during review, outside an explicit withdrawal or
-    disclaimer. Five of these were publication blockers found by external review on 2026-07-13:
+    disclaimer. Five of these were publication blockers found by external review on:
       - "11-40x" -- a fold-change against rates from ANOTHER pipeline. Not a measurement.
       - "z = 74"  -- a two-proportion z on 174,465 CLUSTERED observations. Never valid.
       - "lower bound on its library" -- |(A u B) n C| / |A u B| is NOT monotone in adding B.
@@ -41,6 +41,11 @@ SCORED = os.path.join(REPO, "data", "claim_catalog_scored.csv")
 R3 = os.path.join(REPO, "data", "derived_r3_inference.json")
 BIAS = os.path.join(REPO, "data", "derived_detection_bias.json")
 ERA = os.path.join(REPO, "data", "derived_era_reference.json")
+SDB = os.path.join(REPO, "data", "derived_search_database.json")
+UNI = os.path.join(REPO, "data", "derived_library_union.json")
+PSG = os.path.join(REPO, "data", "derived_pseudogene_parent.json")
+ABD = os.path.join(REPO, "data", "derived_abundance_direct.json")
+SUPP = os.path.join(REPO, "manuscript", "supplement_v2.md")
 ATL = os.path.join(REPO, "data", "external", "atlases")
 IE_CANCER = os.path.join(ATL, "IEAtlas_Epitopes_In_Cancer_Tissues.txt")
 MS = os.path.join(REPO, "manuscript", "manuscript_v2.md")
@@ -53,7 +58,7 @@ BANNED = [
     "manufactures", "systematically re-labels", "discarded by the retention",
     "genuinely non-canonical", "canonical self", "strict survivor",
     "rule predicts the rate", "predicts the canonical-overlap rate",
-    # -- the five blockers from the 2026-07-13 external review --
+    # -- the five blockers from the external review --
     "11-40", "11–40",                       # fold-change across pipelines: not measured
     "z = 74", "z=74",                       # invalid: clustered observations
     "lower bound on its library",           # union rate is not monotone
@@ -67,6 +72,18 @@ BANNED = [
     # labels). If any reappears, the old double-counted split is back.
     "9,874", "16,323", "88,827", "158,688", "60.5%",
     "22,003 entries",                       # unit error: they are unique SEQUENCES, not rows
+    # -- ERROR #18, found by us, not the reviewer. Comparing the catalogue's rate (distinct PEPTIDES,
+    # native lengths, post-search/FDR/dedup) to a library's rate (distinct 9-MERS of an undetected
+    # candidate space) as LEVELS is a cross-unit comparison -- the identical error to the withdrawn
+    # "11-40x" fold-change. The ribosomal test survives because it is a RATIO OF RATIOS, which is
+    # dimensionless. These phrasings assert the invalid level comparison.
+    # NB: these were once written as "rate exceeds the library" / "exceeds the library's", which a
+    # single inserted word ("exceeds the SEARCH library's") walked straight past. Ban the short stem.
+    "exceeds the library",
+    "exceeds the search library",
+    "excess of the catalogued rate over the library rate",
+    "catalogued rate (56.3%) is higher",
+    "is higher than nuORFdb",
 ]
 
 REQUIRED = [
@@ -76,18 +93,24 @@ REQUIRED = [
     ("Nesvizhskii", "the shared-peptide / protein-inference problem is textbook"),
     ("Our contribution is empirical", "the paper must concede the principles are not new"),
     ("within-resource comparator", "the non-overlapping set is not a control"),
+    # The estimand upgrade. If either of these vanishes, the paper has silently reverted to the
+    # weaker "external audit against a reference of our choosing" framing.
+    ("and the canonical human proteome", "IEAtlas's Methods, verbatim: the canonical proteome was searched"),
+    ("own search database", "the overlap is INTERNAL to the resource, not retrospective"),
 ]
 
 
 def main():
-    for p in (TIER1, SCALED, SCORED, R3, BIAS, ERA, MS):
+    for p in (TIER1, SCALED, SCORED, R3, BIAS, ERA, SDB, UNI, MS):
         if not os.path.exists(p):
-            sys.exit(f"missing required artifact: {p}\n(regenerate: see escalations/"
-                     "2026-07-13-class-label-provenance/)")
+            sys.exit(f"missing required artifact: {p}\n"
+                     "(regenerate it with the analysis script that emits it)")
 
     r3 = json.load(open(R3))
     bias = json.load(open(BIAS))
     era = json.load(open(ERA))
+    sdb = json.load(open(SDB))
+    uni = json.load(open(UNI))
 
     selfmap = {r["peptide"]: int(r["canonical_self"])
                for r in csv.DictReader(open(SCORED, newline="", encoding="utf-8"))}
@@ -134,6 +157,74 @@ def main():
         (f"{era['retrospective_only']}", "overlaps a 2022 analyst could not have seen"),
         (f"{era['retrospective_pct_of_overlap']}%", "retrospective share of the overlap set"),
     ]
+
+    # --- the search database: the canonical proteins were IN IT (the estimand upgrade) ---
+    # This is the paper's strongest claim, so it gets the hardest guard: the script that produced
+    # these numbers re-verifies IEAtlas's two load-bearing Methods quotes VERBATIM against the
+    # on-disk paper, and refuses to emit the artifact otherwise. If that flag is ever false, the
+    # framing is unfounded and the build must fail rather than print a number.
+    if not sdb.get("methods_quotes_verified"):
+        sys.exit("FATAL: derived_search_database.json does not attest that IEAtlas's Methods quotes "
+                 "were verified. The 'own search database' framing is unfounded. Re-run "
+                 "scripts/search_database.py")
+    checks += [
+        (f"{sdb['n_matching_search_db']:,}", "sequences matching the search database's canonical half"),
+        (f"{sdb['pct_exactly_one_gene']}%", "ambiguous sequences compatible with exactly ONE gene"),
+        (f"{sdb['pct_at_most_two_genes']}%", "ambiguous sequences compatible with at most TWO genes"),
+    ]
+
+    # --- R2 library union (blocker 1): the retraction, now MEASURED rather than conceded ---
+    mono = uni["monotonicity_test"]
+    if mono["direction"] != "DOWN":
+        sys.exit("FATAL: derived_library_union.json no longer shows the union rate FALLING. The "
+                 "paper's account of why '34.1% is a lower bound' was false must be rewritten.")
+    pr = next(r for r in uni["by_reference"] if r["reference"] == uni["primary_reference"])
+    cap = max(r["hi_pct"] for r in uni["interval"]["rows"])
+    checks += [
+        (f"{pr['translnc']['pct']:.1f}%", "Translnc latent canonical ambiguity"),
+        (f"{pr['union']['pct']:.1f}%", "nuORFdb union Translnc"),
+        (f"{pr['union']['kmers']:,}", "distinct 9-mers in the union"),
+        (f"{abs(mono['effect_of_adding_translnc_pp']):.1f} pp", "drop from adding Translnc"),
+        (f"{cap:.1f}%", "distribution-free cap on the 3-source library"),
+    ]
+
+    # --- R2 direct abundance (replaces the detection-breadth PROXY) ---
+    # The placebo is the load-bearing control: if breaking the peptide->protein link does NOT collapse
+    # the trend, the machinery invents trends and every number in this block is worthless.
+    if os.path.exists(ABD):
+        ab = json.load(open(ABD))
+        if not ab["C3_placebo"]["collapses"]:
+            sys.exit("FATAL: the abundance placebo did NOT collapse. The trend is an artifact of the "
+                     "machinery and the claim must come out of the paper.")
+        if ab["verdict"] != "CORROBORATES":
+            sys.exit(f"FATAL: abundance verdict is {ab['verdict']!r}, not CORROBORATES. The paper "
+                     "asserts a measured abundance effect that the artifact does not support.")
+        # A cross-version check that SILENTLY returns null is worse than none: the earlier PaxDb
+        # release has a different column layout, and a parser that skipped every row emitted `null`
+        # with no error. A null here means the check did not run -- do not let it pass as if it had.
+        if ab.get("version_robustness_v5_q5_minus_q1") is None:
+            sys.exit("FATAL: the PaxDb cross-version check is null -- it did not actually run. "
+                     "Re-run abundance_direct.py; do not report a robustness check that was skipped.")
+        pl, bb = ab["A_which_proteins_are_hit"]["protein_level"], ab["B_abundance_predicts_breadth"]["ab_max"]
+        checks += [
+            (f"{100*ab['join']['join_rate']:.1f}%", "PaxDb join rate"),
+            (f"{ab['catalogue']['overlapping_with_abundance']:,}", "overlapping sequences with abundance"),
+            (f"{pl['median_hit_ppm']} ppm", "median abundance, canonical proteins that are hit"),
+            (f"{pl['median_nothit_ppm']} ppm", "median abundance, canonical proteins never hit"),
+            (f"{pl['fold']}×", "abundance fold, hit vs not-hit"),
+            (f"{pl['auc']}", "protein-level AUC"),
+            (f"{bb['q5_minus_q1_lengthstd']}", "Q5-Q1 detection-breadth gap, length-standardized"),
+            (f"[{bb['ci95_cluster_canonical_gene'][0]}, {bb['ci95_cluster_canonical_gene'][1]}]",
+             "gene-clustered 95% CI on the abundance-breadth gap"),
+            (f"{bb['spearman_rho']}", "per-sequence Spearman rho (WEAK -- must be reported)"),
+            # The CRUDE gap must appear too. The trend is monotone only AFTER length standardization;
+            # quoting only the standardized figure would imply a clean dose-response that is not there.
+            (f"{bb['q5_minus_q1_crude']}", "CRUDE (unstandardized) Q5-Q1 gap -- the trend saturates"),
+            (f"{ab['version_robustness_v5_q5_minus_q1']}", "same gap on the previous PaxDb release"),
+            (f"{ab['C2_protein_length_control']['deciles_auc_above_half']} / "
+             f"{ab['C2_protein_length_control']['deciles_tested']}",
+             "protein-length deciles in which the effect holds"),
+        ]
 
     # --- R3 inference (blocker 5): the z is GONE; RR + clustered CI replace it ---
     checks += [
@@ -219,7 +310,10 @@ def main():
                   flags=re.S | re.M | re.I)
     ok_line = re.compile(
         r"do(es)? not claim|we do not|never write|retracted|banned|~~|❌"
-        r"|withdraw|invalid|was wrong|earlier draft|no fold-change|not a lower bound|not monotone",
+        r"|withdraw|invalid|was wrong|earlier draft|no fold-change|not a lower bound|not monotone"
+        # naming what was withdrawn, in a script header or a correction notice
+        r"|do not say|never say|used to (make|say|open)|no longer|correction|error #"
+        r"|never valid|be deleted|refuse|must not|cross-unit|not a bound",
         re.I)
     for b in BANNED:
         for m in re.finditer(re.escape(b), body, re.I):
@@ -233,6 +327,73 @@ def main():
     for cite, why in REQUIRED:
         if cite not in text:
             bad.append(f"MISSING REQUIRED: {cite!r} -- {why}")
+
+    # --- the SUPPLEMENT was never verified at all. It carries numbers, so it can drift. ---
+    if os.path.exists(SUPP) and os.path.exists(PSG):
+        supp = open(SUPP, encoding="utf-8").read()
+        p = json.load(open(PSG))
+        ar, cv, h2h = p["authoritative_result"], p["coverage"], p["head_to_head"]
+        # Null D is the only NON-DEGENERATE family-respecting null (B and C collapse because the
+        # parents are pairwise 9-mer-disjoint). It is run against two decoy pools; the STRONG-paralog
+        # pool is the hard one and the paper must report it, not just the permissive one.
+        pools = p["nulls"]["D_family_decoy_swap"]["pools"]
+        dw, ds = pools["any_shared_kmer"], pools["strong_paralogs"]
+        supp_checks = [
+            (f"{ar['hit_rate_pct']}%", "S1 authoritative parent-match rate"),
+            (f"{ar['hit_own_curated_parent']} / {ar['testable_peptides']}", "S1 parent hits / testable"),
+            (f"{h2h['agreement_pct']}%", "S1 heuristic-vs-curated agreement"),
+            (f"{cv['coverage_all_symbols_pct']}%", "S1 coverage of all pseudogene symbols"),
+            (f"{cv['coverage_named_symbols_pct']}%", "S1 coverage of NAMED symbols"),
+            (f"{dw['observed_pct']}%", "S1 null-D observed rate (permissive decoys)"),
+            (f"{dw['null_mean_pct']}%", "S1 null-D null mean (permissive decoys)"),
+            (f"{ds['observed_pct']}%", "S1 null-D observed rate (STRONG paralog decoys)"),
+            (f"{ds['null_mean_pct']}%", "S1 null-D null mean (STRONG paralog decoys)"),
+        ]
+        for needle, lab in supp_checks:
+            if needle not in supp:
+                bad.append(f"{lab}: supplement does not contain {needle!r}")
+        # Nulls B and C are DEGENERATE. Quoting their p-values as evidence would be dishonest --
+        # null C's p = 1.0 arises because the parents are pairwise 9-mer-disjoint, which is the
+        # ANSWER to the exchangeability objection, not a failed test.
+        if "DEGENERATE" not in supp.upper():
+            bad.append("S1 must disclose that nulls B and C are DEGENERATE, not quote them")
+        checks += supp_checks
+
+    # --- The ban swept ONLY the manuscript. That is the hole that let ERROR #18 live on in
+    # abundance_bias.py's docstring and in ONEPAGER.md after the paper itself was fixed -- and it is
+    # the same hole that let a retracted claim survive in library_ambiguity.py's header in round 2.
+    # A retracted claim asserted in a LIVE script or a PUBLIC-FACING doc is exactly as quotable as one
+    # in the paper. Sweep them too, with the same disclaimer exemption.
+    live = [os.path.join(REPO, "ONEPAGER.md")]
+    # The analysis scripts sit in a different directory in the research repo than in the release
+    # repo. Sweep whichever exists, so ONE guard file works unmodified in both -- a divergent copy
+    # is a guard that silently stops guarding the repo you forgot to update.
+    for cand in (os.path.join(REPO, "scripts"),):
+        if os.path.isdir(cand):
+            live += [os.path.join(cand, f) for f in sorted(os.listdir(cand)) if f.endswith(".py")]
+    for path in live:
+        if not os.path.exists(path):
+            continue
+        try:
+            txt = open(path, encoding="utf-8", errors="replace").read()
+        except OSError:
+            continue
+        # QUARANTINED scripts (consequence.py, rule_predicts_rate.py) refuse to run and print a
+        # retraction notice instead of output. They KEEP the retracted text on purpose, for the
+        # record. Flagging them would be noise, and a noisy guard is one that gets ignored.
+        if "DO NOT QUOTE THIS SCRIPT'S OUTPUT" in txt:
+            continue
+        lines = txt.split("\n")
+        for b in BANNED:
+            for m in re.finditer(re.escape(b), txt, re.I):
+                ln = txt.count("\n", 0, m.start())
+                # A retraction notice is a BLOCK -- "ALL RETRACTED IN REVIEW:" heads a bullet list,
+                # and the bullets do not each repeat the word. Check a window, not one line.
+                window = "\n".join(lines[max(0, ln - 4): ln + 1])
+                if ok_line.search(window):
+                    continue
+                bad.append(f"RETRACTED PHRASE IN {os.path.relpath(path, REPO)}: {b!r} "
+                           f"-> …{lines[ln].strip()[:60]}…")
 
     if bad:
         print("MANUSCRIPT VERIFICATION: FAIL\n")

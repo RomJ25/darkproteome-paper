@@ -210,9 +210,9 @@ def main():
                             int(normal is not None and p in normal)])
     print(f"\nwrote per-peptide table -> {OUT}")
 
-    # COMPUTED, never narrated. A hardcoded rate in a summary block keeps printing long after the
-    # analysis above it has changed, and ends up arguing with its own output in the same terminal.
-    # Every number below is derived from `results`.
+    # COMPUTED, never narrated. This block used to hardcode "HCC 43/116 = 37%" and kept printing
+    # it four lines below a live computation that said 213/369 = 57.7% -- a stale string arguing
+    # with its own output in the same terminal. Every number below is derived from `results`.
     print("\n=== CLASS-RESOLVED VERDICT (not a clean primary-vs-aggregator dichotomy) ===")
     print("  canonical-sequence overlap by class and cohort (exact substring):")
     all_classes = sorted({c for r in results.values() for c in r["cls_tot"]},

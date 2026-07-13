@@ -2,8 +2,10 @@
 
     python3 src/darkproteome/audit.py data/claim_catalog_scaled.csv
 
-There is no "strict survivor fraction": a joint pass/fail count over dimensions the reported
-record cannot even decide measures the scorer, not the claims. See `evidence_dimensions.py`.
+This replaces the four-axis survivor funnel (retired). There is no "strict survivor
+fraction" any more, and reviving one would be a mistake: a joint pass/fail count over dimensions
+the record cannot even decide is not a measurement of the claims, it is a measurement of the
+scorer. See `evidence_dimensions.py`.
 
 What this prints instead, per evidence dimension:
 
@@ -12,8 +14,8 @@ What this prints instead, per evidence dimension:
 and, ONLY where adjudicable, the reported outcome. Everything else is "the record does not say",
 which is a finding about the record and never about the biology.
 
-STRATIFIED, always. A pooled denominator dominated by atlas records hides whether the same gap
-exists in the end-to-end cohorts, which is the question a reader actually has.
+STRATIFIED, always. A pooled denominator dominated by 293,222 IEAtlas rows hides whether the same
+defect exists in the end-to-end cohorts, which is the question a reader actually has.
 """
 import csv
 import os

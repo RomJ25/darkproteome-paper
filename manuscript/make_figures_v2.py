@@ -11,7 +11,7 @@ Three figures, one per result:
                           sequences as a WITHIN-RESOURCE COMPARATOR (not a control), reported with
                           the length-standardized risk ratio and its gene-clustered CI
 
-WHAT IS DELIBERATELY NOT DRAWN (external review, 2026-07-13):
+WHAT IS DELIBERATELY NOT DRAWN (external review):
   * Bedran et al.'s four published rates (1.4-5%) are NOT plotted beside ours. They come from a
     different pipeline, reference, dedup and peptide unit. Putting them on one axis invites exactly
     the fold-change reading ("11-40x") that we withdrew -- and a figure argues that comparison more
@@ -42,6 +42,9 @@ TIER1 = os.path.join(REPO, "data", "primary_tier1_nonnovelty.csv")
 R3 = json.load(open(os.path.join(REPO, "data", "derived_r3_inference.json")))
 BIAS = json.load(open(os.path.join(REPO, "data", "derived_detection_bias.json")))
 ERA = json.load(open(os.path.join(REPO, "data", "derived_era_reference.json")))
+UNI = json.load(open(os.path.join(REPO, "data", "derived_library_union.json")))
+ABD = json.load(open(os.path.join(REPO, "data", "derived_abundance_direct.json")))
+_UREF = next(r for r in UNI["by_reference"] if r["reference"] == UNI["primary_reference"])
 
 plt.rcParams.update({"savefig.dpi": 300, "font.size": 9, "axes.spines.top": False,
                      "axes.spines.right": False, "font.family": "serif",
@@ -139,24 +142,38 @@ b.text(0.5, -0.30, f"only {ERA['retrospective_only']} sequences ({ERA['retrospec
 save(fig, "f1_measurement")
 
 # ------------------------------------------------- F2: the library, and what it does NOT explain
-fig, (a, b) = plt.subplots(1, 2, figsize=(8.2, 3.4),
-                           gridspec_kw={"width_ratios": [1.1, 1]})
-LIB = [("nuORFdb v1.2\n(integrated by IEAtlas)", 34.1),
-       ("GENCODE Ribo-seq\nORFs (phase 1)", 2.4),
-       ("GENCODE Ribo-seq\nORFs (phase 2)", 1.0)]
-a.bar([x[0] for x in LIB], [x[1] for x in LIB], color=[RED, GREEN, GREEN], alpha=.9)
-for i, (_l, v) in enumerate(LIB):
-    a.text(i, v + 1.0, f"{v}%", ha="center", fontsize=8)
+fig, (a, b, c) = plt.subplots(1, 3, figsize=(11.6, 3.4),
+                              gridspec_kw={"width_ratios": [1.25, .95, 1.0]})
+# Two of IEAtlas's three sources, and their union -- the point is that the union FALLS. Values are
+# read from the artifact so the figure cannot drift from the paper.
+_nu = _UREF["nuorfdb"]["pct"]
+_tl = _UREF["translnc"]["pct"]
+_un = _UREF["union"]["pct"]
+LIB = [("nuORFdb v1.2\n(source 1)", _nu, RED),
+       ("Translnc\n(source 2)", _tl, BLUE),
+       ("union\n(measured)", _un, "#7B3FA0"),
+       ("GENCODE\nRibo-seq p1", 2.4, GREEN),
+       ("GENCODE\nRibo-seq p2", 1.0, GREEN)]
+a.bar([x[0] for x in LIB], [x[1] for x in LIB], color=[x[2] for x in LIB], alpha=.9)
+for i, (_l, v, _c) in enumerate(LIB):
+    a.text(i, v + 1.1, f"{v:.1f}%", ha="center", fontsize=8)
 a.set_ylabel("latent canonical ambiguity\n(% of distinct 9-mers)")
-a.set_ylim(0, 44)
-a.tick_params(axis="x", labelsize=7)
-a.axhspan(1.0, 2.4, color=GREY, alpha=.12, zorder=0)
-a.set_title("(a) The search space is already ambiguous", loc="left", fontsize=9)
-a.text(1.5, 27, "IEAtlas integrates nuORFdb. Its Methods\n"
-                "do not describe a peptide-level exclusion\n"
-                "rule. Ouspenskaia et al. searched the SAME\n"
-                "library and published a catalogue at 3%.",
-       fontsize=6.4, color="#444", va="center", ha="center")
+a.set_ylim(0, 46)
+a.tick_params(axis="x", labelsize=6.6)
+a.set_title("(a) Libraries differ enormously — and do NOT compose", loc="left", fontsize=9)
+# The retraction, drawn: adding a real second source LOWERS the union rate.
+# Two traps here, both invisible in source and obvious on the PNG:
+#   * the arrowhead must NOT land on the "20.2%" bar label -- stop it well above (+5.0, not +1.6).
+#   * "->" as a literal U+2192 renders as TOFU in the serif face. Spell it in words.
+a.annotate("", xy=(1.9, _un + 3.4), xytext=(0.34, _nu - 1.2),
+           arrowprops=dict(arrowstyle="->", color="#7B3FA0", lw=1.0,
+                           connectionstyle="arc3,rad=.28"))
+a.text(1.05, 42.0, f"adding Translnc LOWERS the union\n"
+                   f"({_nu:.1f}% down to {_un:.1f}%). Union rates are\n"
+                   f"not monotone: {_nu:.1f}% is NOT a lower bound.",
+       fontsize=6.2, color="#7B3FA0", ha="center", va="center")
+a.text(3.5, 26, "RPFdb v2.0 (source 3) is\nunobtainable, so the full\nlibrary is NOT determined.",
+       fontsize=6.0, color="#666", ha="center", va="center")
 
 # the detection effect: ribosomal-ORF enrichment, catalogue vs the search space it was drawn from
 rr_cat, rr_lib = BIAS["ribo_catalogue_rr"], BIAS["ribo_library_rr"]
@@ -181,6 +198,33 @@ b.annotate("", xy=(1, rr_cat - .05), xytext=(0, rr_lib + .05),
                            connectionstyle="arc3,rad=-.25"))
 b.text(0.5, 2.42, f"{BIAS['ribo_excess']}× excess\narises during detection", fontsize=6.6,
        color="#444", ha="center")
+
+# (c) the DIRECT abundance measurement -- this replaces the proxy, so it must be drawn, including
+# its weakness. The bars are the length-standardized breadth per abundance quintile.
+_bb = ABD["B_abundance_predicts_breadth"]["ab_max"]
+_bm = _bb["bin_means_lengthstd"]
+_qs = ["Q1", "Q2", "Q3", "Q4", "Q5"]
+_vals = [_bm[q] for q in _qs]
+c.bar(range(5), _vals, color=[BLUE, "#5B8FD4", "#8E7FC8", "#C06090", RED], alpha=.92, width=.62)
+for i, v in enumerate(_vals):
+    c.text(i, v + .012, f"{v:.2f}", ha="center", fontsize=7)
+c.set_xticks(range(5))
+c.set_xticklabels(_qs, fontsize=7.5)
+c.set_xlabel("abundance of the matched canonical protein\n(PaxDb quintile, low to high)", fontsize=7)
+c.set_ylabel("mean cancer types detected in\n(length-standardized)")
+c.set_ylim(1.30, 1.90)
+c.set_title("(c) Abundance predicts detection — weakly", loc="left", fontsize=9)
+_pl = ABD["A_which_proteins_are_hit"]["protein_level"]
+c.text(2.0, 1.855,
+       f"canonical proteins the catalogue hits are\n"
+       f"{_pl['fold']}× more abundant than those it never hits\n"
+       f"(median {_pl['median_hit_ppm']} vs {_pl['median_nothit_ppm']} ppm)",
+       fontsize=6.0, color="#444", ha="center", va="center")
+# The honest caveat belongs ON the figure, not only in the caption.
+c.text(0.5, -0.42, f"Q5−Q1 = {_bb['q5_minus_q1_lengthstd']} cancer types  ·  Spearman ρ = "
+                   f"{_bb['spearman_rho']}  —  real, and small.\nAbundance is one contributor to what "
+                   f"gets detected, not the explanation.",
+       transform=c.transAxes, ha="center", fontsize=6.2, color="#666", style="italic")
 save(fig, "f2_library")
 
 # ------------------------------------------------- F3: the consequence, correctly inferred
