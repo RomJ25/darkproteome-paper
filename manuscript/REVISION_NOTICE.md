@@ -1,7 +1,9 @@
 # Revision notice — the manuscript in this directory is superseded
 
-`manuscript.md`, `manuscript.pdf` and `manuscript.html` in this directory are the version that
-went to external review. **Two of their central claims have been withdrawn.** They are retained
+`manuscript.md` and `manuscript.html` in this directory are the version that went to external
+review. **No `manuscript.pdf` is published**: a PDF cannot be updated once downloaded, and a PDF is
+what gets cited — an unmarked PDF is exactly how a retracted result outlives its retraction. The
+sources remain, so it is regenerable by anyone who wants it. **Two of their central claims have been withdrawn.** They are retained
 unaltered so the correction is inspectable, not to be cited.
 
 ## 1. "0 of 306,844 claims pass all four evidence axes" — WITHDRAWN (true by construction)

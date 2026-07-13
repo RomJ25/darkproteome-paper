@@ -1,3 +1,18 @@
+> # 🔴 WITHDRAWN — DO NOT CITE, QUOTE, OR BUILD THIS PAPER.
+>
+> **Withdrawn.** Its headline — *"0 of 306,844 claims pass all four evidence axes"* — was
+> **vacuous**: it was **true by construction**. The scorer could only record a pass via statistics that
+> no source publishes, so no claim *could* pass, and the result was fixed before any datum was read. A
+> second defect scored *unassayed* claims as immunogenicity **failures** — absence of evidence recorded
+> as evidence of absence, which is exactly the error this project exists to criticise.
+>
+> **The current paper is [`manuscript_v2.md`](manuscript_v2.md)** (+ [`supplement_v2.md`](supplement_v2.md)).
+> See [`REVISION_NOTICE.md`](REVISION_NOTICE.md).
+>
+> This notice lives in the **Markdown source** on purpose: it must survive into every artifact built
+> from it. (The `.pdf` is deliberately **not published**, because a PDF cannot be updated once
+> downloaded — and a PDF is what gets cited.)
+
 # Canonical self in cryptic cancer-epitope catalogues and the class-decoy ledger needed to verify non-canonical antigen claims
 
 **Rom Jan**¹  

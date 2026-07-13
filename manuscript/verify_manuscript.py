@@ -383,6 +383,11 @@ def main():
         # record. Flagging them would be noise, and a noisy guard is one that gets ignored.
         if "DO NOT QUOTE THIS SCRIPT'S OUTPUT" in txt:
             continue
+        # The release builder is TOOLING, not a claim-bearing document. Its retracted strings are
+        # SUBSTITUTION RULES -- the left-hand sides it rewrites on the way out. Banning them there
+        # would be banning the machinery that removes them.
+        if os.path.basename(path) == "build_public_release.py":
+            continue
         lines = txt.split("\n")
         for b in BANNED:
             for m in re.finditer(re.escape(b), txt, re.I):
