@@ -1,0 +1,37 @@
+{
+  "k": 9,
+  "by_library": {
+    "nuORFdb v1.2": {
+      "n_orf": 229251,
+      "distinct_kmers": 8448245,
+      "canonical_kmers": 2884119,
+      "pct": 34.1
+    },
+    "GENCODE Ribo-seq ORFs (phase 1)": {
+      "n_orf": 7264,
+      "distinct_kmers": 245094,
+      "canonical_kmers": 5907,
+      "pct": 2.4
+    },
+    "GENCODE Ribo-seq ORFs (phase 2)": {
+      "n_orf": 28359,
+      "distinct_kmers": 502528,
+      "canonical_kmers": 4961,
+      "pct": 1.0
+    }
+  },
+  "gencode_phase1": {
+    "n_orf": 7264,
+    "distinct_kmers": 245094,
+    "canonical_kmers": 5907,
+    "pct": 2.4
+  },
+  "gencode_phase2": {
+    "n_orf": 28359,
+    "distinct_kmers": 502528,
+    "canonical_kmers": 4961,
+    "pct": 1.0
+  },
+  "gencode_range_lo_pct": 1.0,
+  "gencode_range_hi_pct": 2.4
+}

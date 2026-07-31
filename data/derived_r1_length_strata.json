@@ -1,0 +1,120 @@
+{
+  "n_total": 174465,
+  "n_overlap": 98193,
+  "crude_pct": 56.28,
+  "own_distribution_reweighted_pct": 56.28,
+  "strata": [
+    {
+      "length": 8,
+      "n": 13728,
+      "overlap": 6345,
+      "pct": 46.2
+    },
+    {
+      "length": 9,
+      "n": 80064,
+      "overlap": 43362,
+      "pct": 54.2
+    },
+    {
+      "length": 10,
+      "n": 20319,
+      "overlap": 11242,
+      "pct": 55.3
+    },
+    {
+      "length": 11,
+      "n": 11888,
+      "overlap": 6903,
+      "pct": 58.1
+    },
+    {
+      "length": 12,
+      "n": 6088,
+      "overlap": 3702,
+      "pct": 60.8
+    },
+    {
+      "length": 13,
+      "n": 4949,
+      "overlap": 3145,
+      "pct": 63.5
+    },
+    {
+      "length": 14,
+      "n": 7557,
+      "overlap": 4727,
+      "pct": 62.6
+    },
+    {
+      "length": 15,
+      "n": 8475,
+      "overlap": 5425,
+      "pct": 64.0
+    },
+    {
+      "length": 16,
+      "n": 7336,
+      "overlap": 4631,
+      "pct": 63.1
+    },
+    {
+      "length": 17,
+      "n": 4941,
+      "overlap": 3139,
+      "pct": 63.5
+    },
+    {
+      "length": 18,
+      "n": 3039,
+      "overlap": 1846,
+      "pct": 60.7
+    },
+    {
+      "length": 19,
+      "n": 1862,
+      "overlap": 1112,
+      "pct": 59.7
+    },
+    {
+      "length": 20,
+      "n": 1261,
+      "overlap": 772,
+      "pct": 61.2
+    },
+    {
+      "length": 21,
+      "n": 945,
+      "overlap": 583,
+      "pct": 61.7
+    },
+    {
+      "length": 22,
+      "n": 702,
+      "overlap": 420,
+      "pct": 59.8
+    },
+    {
+      "length": 23,
+      "n": 514,
+      "overlap": 328,
+      "pct": 63.8
+    },
+    {
+      "length": 24,
+      "n": 437,
+      "overlap": 285,
+      "pct": 65.2
+    },
+    {
+      "length": 25,
+      "n": 360,
+      "overlap": 226,
+      "pct": 62.8
+    }
+  ],
+  "min_n_for_range": 30,
+  "range_lo_pct": 46.2,
+  "range_hi_pct": 65.2,
+  "n_strata_in_range": 18
+}
