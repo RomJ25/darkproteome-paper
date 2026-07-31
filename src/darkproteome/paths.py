@@ -38,6 +38,16 @@ GENCODE_LNC    = os.path.join(BASE, "gencode", "gencode.v26.long_noncoding_RNAs.
 CPDB_IMMUNO    = os.path.join(ATLAS_DIR, "immunopeptides_cryptic.csv")
 CPDB_EPITOPES  = os.path.join(ATLAS_DIR, "epitopes_cryptic.csv")
 
+# pseudogene->parent authoritative-mapping registries (canonical_self_annotator.py); same four
+# files pseudogene_parent_authoritative.py uses, named here so that module can import via paths
+# rather than hardcoding REPO-relative paths the way escalation scripts do.
+PSEUDOGENE_PARENTS_DIR = os.path.join(BASE, "pseudogene_parents")
+NCBI_GENE_INFO         = os.path.join(PSEUDOGENE_PARENTS_DIR, "Homo_sapiens.gene_info.gz")
+NCBI_GENE_GROUP        = os.path.join(PSEUDOGENE_PARENTS_DIR, "gene_group.gz")
+HGNC_COMPLETE_SET      = os.path.join(PSEUDOGENE_PARENTS_DIR, "hgnc_complete_set.txt")
+GENCODE_V26_ANNOTATION = os.path.join(PSEUDOGENE_PARENTS_DIR, "gencode.v26.annotation.gtf.gz")
+NUORFDB_PROTEIN_FASTA  = os.path.join(BASE, "nuorfdb", "PA_nuORFdb_v1.2_protein.fasta")
+
 
 def require(*required):
     """Raise a clear, actionable error if any required input file is missing."""

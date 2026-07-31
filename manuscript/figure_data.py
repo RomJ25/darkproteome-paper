@@ -3,19 +3,28 @@
     python3 manuscript/figure_data.py          # print the manifest
     from figure_data import fig1, fig2         # use it
 
-WHY THIS FILE EXISTS. A figure that carries its own copy of the numbers is a second scorer, and
-second scorers drift: a hardcoded rate keeps printing long after the analysis that produced it has
-changed, and no amount of proof-reading the prose will catch it. Here the figures IMPORT their
-data, so a figure cannot disagree with the pipeline that produced it.
+WHY THIS FILE EXISTS. `make_figures.py` used to hardcode its data:
 
-Two values in particular must be computed and never typed:
-  * the class-resolved canonical-substring rates, which depend on the claim UNIT (a gene-level row
-    holding many peptides is not one peptide-level claim); and
-  * the CrypticProteinDB rate, which is small but NOT zero -- and that is the whole point of the
-    bar, since it shows the overlap is avoidable. Its denominator is the UNION of the database's
-    two files; leaving that implicit invites two different numbers.
+    vals   = [0.2, 0.0, 0.0, 37.1, 56.3, 0.0]              # Fig 1a
+    counts = [180650, 82453, 75471, 80, 0, 0]              # Fig 2
 
-`manifest()` prints every value with its provenance so a caption can be checked against it.
+Both were stale and one was never right at all:
+  * 37.1% was the pseudogene rate computed from a claim table that kept only the FIRST peptide
+    of each multi-peptide gene row. The true peptide-level rate is 57.7%. The figure kept
+    printing 37.1% long after the code stopped producing it.
+  * CrypticProteinDB was a literal `0.0`, rendering as a zero-height "0%" bar. Its real rate is
+    ~0.026% -- small, but NOT zero, and the difference is the entire point of showing it (the
+    overlap is AVOIDABLE, and one atlas nearly avoids it). Its denominator is computed here as
+    the UNION of the database's two files, which resolves a 3,774-vs-3,810 discrepancy that had
+    been open since.
+  * Fig 2's fourth stage was labelled "source-translation substantiated" and drew a count of 0 as
+    if it were attrition. Nothing in the corpus reports a translation statistic, so that zero was
+    structural -- the funnel was drawing a property of the scorer as a property of the claims.
+
+A figure that carries its own copy of the numbers is a fourth scorer. This module is the fix:
+the figures import their data, so a figure CANNOT disagree with the analysis that produced it.
+
+`manifest()` prints every value with its provenance so the caption can be checked against it.
 """
 import csv
 import os
@@ -43,8 +52,8 @@ def _need(path, how):
 def fig1():
     """Panel (a): exact canonical-substring rate, by class x cohort, + the atlases.
 
-    Every cell is a live numerator/denominator from the tier-1 artifact. The atlas rates are
-    computed from the scaled catalog. Nothing is typed.
+    Every cell is a live numerator/denominator from tier1_nonnovelty.py's own output. The atlas
+    rates are computed from the scaled catalog. Nothing is typed.
     """
     _need(TIER1, "python3 src/darkproteome/tier1_nonnovelty.py")
     _need(SCALED, "python3 src/darkproteome/ingest_atlases.py")
@@ -67,9 +76,10 @@ def fig1():
             bars.append({"label": f"{lab}\n({short})", "k": k, "n": n,
                          "pct": 100 * k / n, "cohort": short, "cls": cls})
 
-    # ATLAS bars. Computed, never typed: CrypticProteinDB's rate is small but NOT zero, and a
-    # hardcoded `0.0` would render as a zero-height bar -- erasing the very fact the bar exists to
-    # show, that the overlap is avoidable. `canonical_self` per peptide comes from the scored table.
+    # ATLAS bars. These MUST be computed, not typed: the old figure hardcoded CrypticProteinDB as
+    # a literal `0.0`, which rendered as a zero-height "0%" bar. Its true rate is small but NOT
+    # zero, and the difference is the entire reason the bar is in the figure -- it shows the
+    # overlap is AVOIDABLE. `canonical_self` per peptide comes from the scored table.
     _need(SCORED, "python3 src/darkproteome/reference_model.py")
     selfmap = {}
     with open(SCORED, newline="", encoding="utf-8") as fh:
@@ -85,9 +95,11 @@ def fig1():
                 continue
             seen[src].add(p)
 
-    # CrypticProteinDB ships TWO files, and the "CrypticProteinDB" bar means the whole database:
-    # the union of both. Leaving that implicit is how two different denominators get quoted for the
-    # same bar.
+    # CrypticProteinDB ships TWO files and the "CrypticProteinDB" bar means the whole database.
+    # This denominator is exactly where a long-standing discrepancy lived: the manuscript said
+    # 1/3,774 while a check computed 3,810 and the difference was never resolved.
+    # It is simply immuno (3,774 unique peptides) + epitopes (36) = 3,810. Stating the union
+    # explicitly is the fix; leaving it implicit is how the two numbers drifted for nine days.
     ATLAS_GROUPS = {
         "IEAtlas\n(atlas)": ("IEAtlas",),
         "Cryptic-\nProteinDB": ("CrypticProteinDB-immuno", "CrypticProteinDB-epitopes"),
@@ -107,8 +119,10 @@ def fig1():
 def fig2():
     """The reporting-and-adjudicability matrix — REPLACES the survivorship funnel.
 
-    Returns the matrix `audit.py` prints -- pooled AND by stratum, because a pooled denominator
-    dominated by atlas records hides the end-to-end cohorts entirely.
+    The funnel is dead twice over: it drew a structurally-impossible dimension as attrition, and
+    the survivor model it depicted no longer exists. This returns the matrix `audit.py` prints,
+    pooled AND by stratum, because a pooled denominator dominated by 293k atlas rows hides the
+    cohorts entirely.
     """
     _need(SCALED, "python3 src/darkproteome/ingest_atlases.py")
     rows = []
@@ -146,6 +160,8 @@ def manifest():
     for b in f1["bars"]:
         print(f"    {b['cohort']:<5} {b['cls']:<45} {b['k']:>5}/{b['n']:<6} = {b['pct']:6.3f}%")
     print("  atlas unique peptides:", f1["atlas_peptides"])
+    print("  NOTE the pseudogene(HCC) cell: the figure used to print 37.1% here, from a claim")
+    print("       table that kept only the FIRST peptide of each gene row. It is 57.7%.")
 
     f2 = fig2()
     print(f"\nFIG 2 — reporting & adjudicability matrix (n={f2['n_pooled']:,})")
@@ -163,8 +179,9 @@ def manifest():
               f"   T-cell={m['human_tcell_assay']['adjudicable']:>3,}")
     print(f"\n  human T-cell states: {f2['tcell_states']}")
     print(f"  normal-presentation states: {f2['normal_states']}")
-    print("\n  A zero in the ADJUDICABLE column means the reported record cannot decide the")
-    print("  dimension -- NOT that the claims failed it. Do not draw it as attrition.")
+    print("\n  The funnel this replaces drew stage 'source-translation substantiated' = 0 as")
+    print("  ATTRITION. It was structural: nothing in the corpus reports a translation")
+    print("  statistic, so the bar was a property of the scorer, not of the claims.")
 
 
 if __name__ == "__main__":

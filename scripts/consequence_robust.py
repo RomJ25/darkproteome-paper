@@ -63,15 +63,19 @@ def load():
     selfmap = {r["peptide"]: int(r["canonical_self"])
                for r in csv.DictReader(open(SCORED, newline="", encoding="utf-8"))}
     genes = defaultdict(set)
+    tissues = defaultdict(set)
     with open(IE_C, newline="", encoding="utf-8", errors="replace") as fh:
         rd = csv.reader(fh, delimiter="\t")
         next(rd, None)
         for r in rd:
-            if len(r) < 3 or not r[0]:
+            if len(r) < 4 or not r[0]:
                 continue
             q = r[0].strip().upper()
             if q.isalpha():
                 genes[q].add((r[2] or "").split("_")[0].upper())
+                t = (r[3] or "").strip()
+                if t:
+                    tissues[q].add(t)
     normal = set()
     with open(IE_N, newline="", encoding="utf-8", errors="replace") as fh:
         rd = csv.reader(fh, delimiter="\t")
@@ -86,9 +90,10 @@ def load():
             continue
         a = any(PSEUDO.match(g) for g in gs)
         b = any(not PSEUDO.match(g) for g in gs)
+        ts = tissues.get(q) or {"?"}
         rows.append({
             "pep": q, "len": len(q), "x": selfmap[q], "y": 1 if q in normal else 0,
-            "clust": min(gs), "cls": "pseudogene-only" if a and not b
+            "clust": min(gs), "tissue_clust": min(ts), "cls": "pseudogene-only" if a and not b
                                      else ("non-pseudogene-only" if b and not a else "mixed"),
         })
     return rows
@@ -138,6 +143,7 @@ def main():
     print(f"  {'len':>4}{'n(ovl)':>9}{'% normal':>10}{'n(comp)':>9}{'% normal':>10}{'RR':>8}")
     print("  " + "-" * 50)
     lens = sorted({r["len"] for r in rows})
+    rr_by_length = {}
     for L in lens:
         a = [r for r in ov if r["len"] == L]
         b = [r for r in nov if r["len"] == L]
@@ -145,6 +151,9 @@ def main():
             continue
         pa = sum(r["y"] for r in a) / len(a)
         pb = sum(r["y"] for r in b) / len(b)
+        rr_L = (pa / pb) if pb else float("nan")
+        if rr_L == rr_L:
+            rr_by_length[L] = round(rr_L, 2)
         print(f"  {L:>4}{len(a):>9,}{100*pa:>9.1f}%{len(b):>9,}{100*pb:>9.1f}%"
               f"{(pa/pb if pb else float('nan')):>8.2f}")
 
@@ -169,11 +178,13 @@ def main():
     print("=" * 84)
     print(f"  {'stratum':<22}{'n':>9}{'RR (length-std)':>18}")
     print("  " + "-" * 49)
+    stratum_rr = {}
     for c in ("pseudogene-only", "non-pseudogene-only", "mixed"):
         sub = [r for r in rows if r["cls"] == c]
         if len(sub) < 100:
             continue
         r_c, _, _ = std_rr(sub, weights)
+        stratum_rr[c] = round(r_c, 2)
         print(f"  {c:<22}{len(sub):>9,}{r_c:>17.2f}x")
     print(f"  {'(partition check)':<22}"
           f"{sum(1 for r in rows if r['cls'] in ('pseudogene-only','non-pseudogene-only','mixed')):>9,}")
@@ -204,6 +215,49 @@ def main():
     print(f"\n  => CI {'EXCLUDES' if valid else 'INCLUDES'} 1.0. The association is "
           f"{'established under clustered inference' if valid else 'NOT established'}.")
 
+    # ---- 4b. tissue-clustered bootstrap (additional robustness axis) ---------------
+    # The manuscript names tissue among the dependence structures ("clustered by source gene,
+    # gene family, dataset, tissue, donor, HLA allele and pipeline") but until now only gene was
+    # ever operationalized as a resampling unit -- tissue was read nowhere in load(). This adds
+    # tissue (a peptide's min() tissue, same convention as the gene cluster key) as a second,
+    # independent clustering axis, reported alongside the gene-clustered CI, not replacing it.
+    print("\n" + "=" * 84)
+    print("4b. TISSUE-CLUSTERED BOOTSTRAP (a second, independent robustness axis)")
+    print("=" * 84)
+    byt = defaultdict(list)
+    for r in rows:
+        byt[r["tissue_clust"]].append(r)
+    tclusters = list(byt.values())
+    rngt = RNG(SEED)
+    boot_t = []
+    for _ in range(B):
+        samp = []
+        for _ in range(len(tclusters)):
+            samp.extend(tclusters[rngt.randint(len(tclusters))])
+        v, _, _ = std_rr(samp, weights)
+        if v == v:
+            boot_t.append(v)
+    boot_t.sort()
+    lo_t = boot_t[int(0.025 * len(boot_t))]
+    hi_t = boot_t[int(0.975 * len(boot_t)) - 1]
+    print(f"  resampled {len(tclusters):,} tissue clusters with replacement, B = {len(boot_t):,}")
+    print(f"  length-standardized RR = {rr:.2f}x   95% CI [{lo_t:.2f}, {hi_t:.2f}]")
+    valid_t = lo_t > 1.0
+    print(f"\n  => CI {'EXCLUDES' if valid_t else 'INCLUDES'} 1.0 under tissue-clustered "
+          f"resampling too.")
+
+    # HONESTY CHECK, not just a headline: 15 raw clusters is not 15 clusters' worth of bootstrap
+    # information if they are wildly unbalanced (found on a fresh-review pass -- the top
+    # 2 of 15 tissue clusters hold 41% of the catalogue between them). The effective cluster count
+    # (the Herfindahl-based diversity measure 1/sum(p_i^2), standard for "how many roughly-equal
+    # units does this unbalanced set behave like") quantifies exactly how much weaker this axis is
+    # than its raw count suggests, rather than leaving that as an eyeballed impression in prose.
+    tsizes = [len(v) for v in tclusters]
+    ttotal = sum(tsizes)
+    n_eff_tissue = 1 / sum((n / ttotal) ** 2 for n in tsizes)
+    print(f"  effective tissue-cluster count (Herfindahl 1/sum(p_i^2)): {n_eff_tissue:.1f} "
+          f"of {len(tclusters)} raw clusters -- read the CI as indicative, not precise.")
+
     art = os.path.join(REPO, "data", "derived_r3_inference.json")
     json.dump({
         "n_total": len(rows), "n_overlapping": len(ov), "n_comparator": len(nov),
@@ -215,6 +269,11 @@ def main():
         "rr_crude": round((ck / len(ov)) / (nk / len(nov)), 2),
         "rr_length_standardized": round(rr, 2),
         "ci95": [round(lo, 2), round(hi, 2)], "bootstrap_B": len(boot), "seed": SEED,
+        "rr_by_stratum": stratum_rr,
+        "rr_by_length": rr_by_length,
+        "n_tissue_clusters": len(tclusters),
+        "ci95_tissue_clustered": [round(lo_t, 2), round(hi_t, 2)],
+        "n_eff_tissue_clusters": round(n_eff_tissue, 1),
     }, open(art, "w"), indent=2)
     print(f"\n  wrote {os.path.relpath(art, REPO)}")
 

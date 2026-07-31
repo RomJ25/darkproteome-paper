@@ -39,12 +39,15 @@ TIER1 = os.path.join(REPO, "data", "primary_tier1_nonnovelty.csv")
 SCALED = os.path.join(REPO, "data", "claim_catalog_scaled.csv")
 SCORED = os.path.join(REPO, "data", "claim_catalog_scored.csv")
 R3 = os.path.join(REPO, "data", "derived_r3_inference.json")
+R1L = os.path.join(REPO, "data", "derived_r1_length_strata.json")
 BIAS = os.path.join(REPO, "data", "derived_detection_bias.json")
 ERA = os.path.join(REPO, "data", "derived_era_reference.json")
 SDB = os.path.join(REPO, "data", "derived_search_database.json")
 UNI = os.path.join(REPO, "data", "derived_library_union.json")
+LAM = os.path.join(REPO, "data", "derived_library_ambiguity.json")
 PSG = os.path.join(REPO, "data", "derived_pseudogene_parent.json")
 ABD = os.path.join(REPO, "data", "derived_abundance_direct.json")
+P2SPLIT = os.path.join(REPO, "data", "derived_p2_pseudogene_split.json")
 SUPP = os.path.join(REPO, "manuscript", "supplement_v2.md")
 ATL = os.path.join(REPO, "data", "external", "atlases")
 IE_CANCER = os.path.join(ATL, "IEAtlas_Epitopes_In_Cancer_Tissues.txt")
@@ -89,7 +92,7 @@ BANNED = [
 REQUIRED = [
     ("Bedran", "the criterion + the metric (Cancer Immunol Res 2023)"),
     ("Woo et al. 2014", "class-specific FDR under-control is prior art"),
-    ("Kumar et al. 2022", "'most shared peptides should be dropped' is prior art"),
+    ("Aggarwal et al. 2022", "'most shared peptides should be dropped' is prior art"),
     ("Nesvizhskii", "the shared-peptide / protein-inference problem is textbook"),
     ("Our contribution is empirical", "the paper must concede the principles are not new"),
     ("within-resource comparator", "the non-overlapping set is not a control"),
@@ -97,20 +100,39 @@ REQUIRED = [
     # weaker "external audit against a reference of our choosing" framing.
     ("and the canonical human proteome", "IEAtlas's Methods, verbatim: the canonical proteome was searched"),
     ("own search database", "the overlap is INTERNAL to the resource, not retrospective"),
+    # Found in a fresh-review pass: a submittable manuscript needs a references section,
+    # and the PSM-vs-peptide FDR unit mismatch is load-bearing for R4/S2's reporting-gap argument.
+    ("## References", "a manuscript citing ~16 works by author-year needs a bibliography"),
+    ("peptide spectrum match false discovery rate", "the PSM-level FDR quote grounding the R4/S2 unit-mismatch caveat"),
 ]
 
 
+def flex(s):
+    """A literal string, as a regex tolerant of markdown line-wrapping. Found in a
+    fresh-review pass: every check in this file used exact substring/`in` matching, which silently
+    misses a needle if the source .md happens to wrap a line exactly at one of its spaces (the
+    manuscript's prose wraps at ~100 chars and is hand-edited, so this is not hypothetical -- it
+    already happened once, to a 'no positive floor' phrase this exact guard was supposed to catch
+    drift on). re.escape() in this Python version escapes a literal space as '\\ '; replacing that
+    with '\\s+' keeps every other character an exact literal match while letting exactly the
+    space-vs-newline distinction pass."""
+    return re.escape(s).replace("\\ ", r"\s+")
+
+
 def main():
-    for p in (TIER1, SCALED, SCORED, R3, BIAS, ERA, SDB, UNI, MS):
+    for p in (TIER1, SCALED, SCORED, R3, BIAS, ERA, SDB, UNI, LAM, MS, P2SPLIT):
         if not os.path.exists(p):
             sys.exit(f"missing required artifact: {p}\n"
                      "(regenerate it with the analysis script that emits it)")
 
     r3 = json.load(open(R3))
     bias = json.load(open(BIAS))
+    p2split = json.load(open(P2SPLIT))
     era = json.load(open(ERA))
     sdb = json.load(open(SDB))
     uni = json.load(open(UNI))
+    lam = json.load(open(LAM))
+    pr = next(r for r in uni["by_reference"] if r["reference"] == uni["primary_reference"])
 
     selfmap = {r["peptide"]: int(r["canonical_self"])
                for r in csv.DictReader(open(SCORED, newline="", encoding="utf-8"))}
@@ -142,11 +164,20 @@ def main():
         (f"{facts['cryptic'][0]:,} / {facts['cryptic'][1]:,}", "CrypticProteinDB n/N"),
         ("0.026%", "CrypticProteinDB rate"),
         (f"{facts['raja'][0]:,} / {facts['raja'][1]:,}", "Raja n/N"),
-        # R2 -- measured TWICE, over different k-mer windows. The paper must report BOTH.
-        ("34.1%", "nuORFdb latent canonical ambiguity (9-mer)"),
+    ]
+
+    # R2 -- measured TWICE, over different k-mer windows. The paper must report BOTH. These were
+    # hardcoded literals until a fresh-review pass found it -- unlike every other check
+    # in this file, they never re-derived from a live artifact. nuORFdb's rate/kmer-count now reads
+    # from derived_library_union.json (already loaded as `uni` below for the neighboring Translnc/
+    # union checks); the GENCODE Ribo-seq range now reads from derived_library_ambiguity.json (which
+    # previously didn't exist at all -- library_ambiguity.py only ever printed to stdout).
+    checks += [
+        (f"{pr['nuorfdb']['pct']:.1f}%", "nuORFdb latent canonical ambiguity (9-mer)"),
         ("34.4%", "nuORFdb, independent 8-11mer corroboration"),
-        ("1.0–2.4%", "GENCODE Ribo-seq ORF latent ambiguity"),
-        ("8,448,245", "nuORFdb distinct 9-mers"),
+        (f"{lam['gencode_range_lo_pct']:.1f}–{lam['gencode_range_hi_pct']:.1f}%",
+         "GENCODE Ribo-seq ORF latent ambiguity"),
+        (f"{pr['nuorfdb']['kmers']:,}", "nuORFdb distinct 9-mers"),
     ]
 
     # --- the era-correct reference (blocker 2) ---
@@ -156,7 +187,28 @@ def main():
         (f"{era['proteins_2022_01']:,}", "human proteins in Swiss-Prot 2022_01"),
         (f"{era['retrospective_only']}", "overlaps a 2022 analyst could not have seen"),
         (f"{era['retrospective_pct_of_overlap']}%", "retrospective share of the overlap set"),
+        # Found by an independent fresh-review pass: the paper's own 231/97,999/98,193 did
+        # not visibly reconcile without the backward-loss count (sequences matching 2022_01 but not
+        # the modern reference -- the two releases are not simply nested). era_correct_reference.py
+        # always computed this but never persisted it until now.
+        (f"{era['lost_only']}", "sequences matching Swiss-Prot 2022_01 but not the modern reference"),
     ]
+
+    # --- R1 by-length robustness (round-4 review): replaces the TAUTOLOGICAL "length-standardized
+    # to the catalogue's own distribution" row, which is a mathematical identity (it reproduces the
+    # crude rate for ANY population, confounded or not) and was never backed by an artifact distinct
+    # from the headline string. The honest check is the per-length range itself. ---
+    if os.path.exists(R1L):
+        r1l = json.load(open(R1L))
+        if abs(r1l["own_distribution_reweighted_pct"] - r1l["crude_pct"]) > 0.05:
+            sys.exit("FATAL: derived_r1_length_strata.json's own-distribution reweighting no longer "
+                     "reproduces the crude rate -- the tautology argument in this comment is wrong, "
+                     "or the pipeline changed. Re-derive before trusting either number.")
+        checks += [
+            (f"{r1l['range_lo_pct']}%–{r1l['range_hi_pct']}%", "R1 overlap rate range across length strata"),
+        ]
+    else:
+        skipped.append("R1 length-strata range (derived_r1_length_strata.json missing)")
 
     # --- the search database: the canonical proteins were IN IT (the estimand upgrade) ---
     # This is the paper's strongest claim, so it gets the hardest guard: the script that produced
@@ -178,14 +230,43 @@ def main():
     if mono["direction"] != "DOWN":
         sys.exit("FATAL: derived_library_union.json no longer shows the union rate FALLING. The "
                  "paper's account of why '34.1% is a lower bound' was false must be rewritten.")
-    pr = next(r for r in uni["by_reference"] if r["reference"] == uni["primary_reference"])
     cap = max(r["hi_pct"] for r in uni["interval"]["rows"])
     checks += [
-        (f"{pr['translnc']['pct']:.1f}%", "Translnc latent canonical ambiguity"),
-        (f"{pr['union']['pct']:.1f}%", "nuORFdb union Translnc"),
-        (f"{pr['union']['kmers']:,}", "distinct 9-mers in the union"),
-        (f"{abs(mono['effect_of_adding_translnc_pp']):.1f} pp", "drop from adding Translnc"),
-        (f"{cap:.1f}%", "distribution-free cap on the 3-source library"),
+        (f"{pr['translnc']['pct']:.1f}%", "Translnc latent canonical ambiguity (whole-file diagnostic)"),
+        (f"{pr['union']['pct']:.1f}%", "nuORFdb union Translnc (whole-file diagnostic)"),
+        (f"{pr['union']['kmers']:,}", "distinct 9-mers in the whole-file union"),
+        (f"{abs(mono['effect_of_adding_translnc_pp']):.1f} pp", "drop from adding Translnc (whole-file)"),
+        (f"{cap:.1f}%", "distribution-free cap on the 3-source library (whole-file diagnostic)"),
+    ]
+
+    # --- human-only Translnc variant (found in a fresh-review pass): the whole-file
+    # union above mixes ~148,667 mouse-convention Translnc entries into a human-immunopeptidome
+    # calculation. The human-only variant is reported as PRIMARY throughout the paper; the whole-file
+    # numbers above are kept only as the diagnostic showing why species-filtering matters. ---
+    if "human_only_variant" not in uni:
+        sys.exit("FATAL: derived_library_union.json has no human_only_variant -- re-run "
+                 "library_union.py. The paper's primary union/ceiling numbers depend on it.")
+    ho = uni["human_only_variant"]
+    checks += [
+        (f"{ho['translnc_kmers']:,}", "Translnc, human-only entries, distinct 9-mers"),
+        (f"{ho['translnc_canonical']:,}", "Translnc, human-only entries, canonical-matching 9-mers"),
+        (f"{ho['translnc_pct']:.1f}%", "Translnc, human-only entries, latent canonical ambiguity"),
+        (f"{ho['union_canonical']:,}", "canonical-matching 9-mers in the human-only union"),
+        (f"{ho['union_pct']:.1f}%", "nuORFdb union Translnc, human-only (PRIMARY)"),
+        (f"{ho['union_kmers']:,}", "distinct 9-mers in the human-only union"),
+        (f"{ho['ceiling_pct']:.1f}%", "distribution-free cap, human-only union (PRIMARY)"),
+        # Found by a fresh-review pass: the manuscript's "re-scored against Swiss-Prot
+        # 2022_01, essentially unchanged" claim for the human-only union had no computation behind it
+        # at all -- only the whole-file union was ever checked against both references. Now computed
+        # for real in library_union.py and guarded here.
+        (f"{ho['union_pct_era_correct']:.1f}%", "human-only union, re-scored against Swiss-Prot 2022_01"),
+    ]
+    # --- found in a consistency-sweep re-read: an earlier draft asserted the nuORFdb-vs-
+    # Translnc(human-only) gap was "34x" -- that number belongs to a different pair (nuORFdb vs GENCODE
+    # Ribo-seq phase 2, ~34.1/1.0) and was carried over uncorrected. Guard the real ratio live. ---
+    nu_vs_translnc_gap = round(pr["nuorfdb"]["pct"] / ho["translnc_pct"])
+    checks += [
+        (f"~{nu_vs_translnc_gap}×", "nuORFdb-vs-Translnc(human-only) latent-ambiguity gap"),
     ]
 
     # --- R2 direct abundance (replaces the detection-breadth PROXY) ---
@@ -226,6 +307,52 @@ def main():
              "protein-length deciles in which the effect holds"),
         ]
 
+        # Reachability restrictions on the "never hit" population (found in a fresh-review
+        # pass): gene-appears-elsewhere-in-catalogue (output-side) and library-9mer-content (search-side)
+        # give two different, non-interchangeable corrections -- both must be guarded so neither can
+        # silently drift or vanish.
+        checks += [
+            (f"{pl['n_reachable']:,}", "never-hit proteins, gene reachable elsewhere in catalogue"),
+            (f"{pl['n_absent']:,}", "never-hit proteins, gene absent from catalogue entirely"),
+            (f"{pl['fold_reachability_restricted']}×", "abundance fold, reachability-restricted"),
+            (f"{pl['auc_reachability_restricted']}", "AUC, reachability-restricted"),
+            (f"{pl['n_lib_reachable']:,}", "never-hit proteins sharing >=1 library 9-mer"),
+            (f"{pl['n_lib_unreachable']:,}", "never-hit proteins sharing NO library 9-mer"),
+            (f"{pl['fold_library_content_restricted']}×", "abundance fold, library-content-restricted"),
+            (f"{pl['auc_library_content_restricted']}", "AUC, library-content-restricted"),
+            (f"{pl['library_kmers_n']:,}", "library 9-mers used for the reachability test"),
+            (f"{round(pl['median_hit_ppm']/pl['median_absent_ppm'], 2)}×",
+             "abundance fold, hit vs fully-absent-gene subset alone"),
+            # Found by a fresh-review pass: the fold above was checked but its accompanying
+            # AUC (quoted in the manuscript right next to it) had no computation anywhere in the
+            # generator script or this guard -- an orphaned, unverifiable number. Now computed
+            # (abundance_direct.py) and guarded here, live.
+            (f"{pl['auc_fully_unreachable_alone']}", "AUC, hit vs fully-absent-gene subset alone"),
+            # The two "share of never-hit proteins excluded" percentages quoted in Prediction 3's
+            # library-content paragraph -- one was silently wrong (49.4% where the arithmetic on the
+            # already-guarded n_absent/n_not_hit counts gives 50.6%; 49.4% is instead the complementary
+            # RETAINED fraction). Guard both live from the counts already checked above.
+            (f"{round(100 * pl['n_lib_unreachable'] / pl['n_not_hit'], 1)}%",
+             "share of never-hit proteins excluded by the library-content restriction"),
+            (f"{round(100 * pl['n_absent'] / pl['n_not_hit'], 1)}%",
+             "share of never-hit proteins excluded by the catalogue-co-occurrence restriction"),
+        ]
+
+        # Found by a fresh-review pass: these raw numbers already feed already-checked
+        # derived figures above (the Q1/Q5 quintile means feed q5_minus_q1_lengthstd; the median
+        # protein lengths feed the C2 AUC) but were never themselves checked, so they could drift
+        # silently even with every ratio above still passing.
+        bml = bb["bin_means_lengthstd"]
+        c2 = ab["C2_protein_length_control"]
+        c3 = ab["C3_placebo"]
+        checks += [
+            (f"{bml['Q1']:.2f}", "Q1 quintile mean, length-standardized detection breadth"),
+            (f"{bml['Q5']:.2f}", "Q5 quintile mean, length-standardized detection breadth"),
+            (f"{int(c2['hit_median_aa'])}", "median protein length, hit canonical proteins"),
+            (f"{int(c2['nothit_median_aa'])}", "median protein length, never-hit canonical proteins"),
+            (f"{c3['draws_ge_observed']} of {c3['n_draws']}", "placebo draws reaching the observed gap"),
+        ]
+
     # --- R3 inference (blocker 5): the z is GONE; RR + clustered CI replace it ---
     checks += [
         (f"{r3['overlapping_in_normal']:,}", "canonical-overlapping also in normal export"),
@@ -233,8 +360,25 @@ def main():
         (f"{r3['pct_comparator_in_normal']}%", "comparator normal-export rate"),
         (f"{r3['pct_of_whole_catalogue']}%", "share of the whole catalogue that is both"),
         (f"{r3['rr_length_standardized']}", "length-standardized risk ratio"),
+        (f"{r3['rr_crude']}", "crude (non-length-standardized) risk ratio, now shown in Fig 3a's crude-vs-standardized caveat"),
         (f"[{r3['ci95'][0]}, {r3['ci95'][1]}]", "gene-clustered bootstrap 95% CI"),
         (f"{r3['n_clusters']:,}", "source-gene clusters resampled"),
+        (f"{r3['bootstrap_B']:,}", "bootstrap iterations B"),
+    ]
+
+    # --- R3 additions found by a fresh-review pass: the "both"/mixed stratum RR and the
+    # per-length RR range were computed and printed by consequence_robust.py all along, but never
+    # persisted to the artifact or checked here. ---
+    rrl = r3["rr_by_length"]
+    checks += [
+        (f"{r3['rr_by_stratum']['mixed']}×", "risk ratio, 'both'-labels stratum (R1's source-ambiguous 546)"),
+        (f"{min(rrl.values())}", "R3 per-length risk-ratio range, low end"),
+        (f"{max(rrl.values())}", "R3 per-length risk-ratio range, high end"),
+        (f"{r3['n_tissue_clusters']}", "tissue clusters resampled (second robustness axis)"),
+        (f"[{r3['ci95_tissue_clustered'][0]}, {r3['ci95_tissue_clustered'][1]}]",
+         "tissue-clustered bootstrap 95% CI"),
+        (f"{r3['n_eff_tissue_clusters']}", "effective tissue-cluster count (Herfindahl) -- the "
+         "honesty caveat on the CI above must not silently drop if this number changes"),
     ]
 
     # --- R2 detection-bias test (was an untested hypothesis; now measured) ---
@@ -246,6 +390,69 @@ def main():
         (f"{bias['ribo_catalogue_rr']}×", "ribosomal enrichment in the catalogue"),
         (f"{bias['ribo_library_rr']}×", "ribosomal enrichment in the library (the control)"),
         (f"{bias['ribo_excess']}×", "excess of catalogue over library"),
+        # Found by a fresh-review pass: the Translnc-inclusive sensitivity numbers (the
+        # ones actually reported as PRIMARY in the manuscript's Prediction 2) were computed and printed
+        # but never guarded at all -- only the nuORFdb-only baseline above was checked.
+        (f"{bias['ribo_translnc_inclusive']['humanonly']['excess']}×",
+         "ribosomal excess, Translnc-inclusive human-only (PRIMARY)"),
+        (f"{bias['ribo_translnc_inclusive']['wholefile']['excess']}×",
+         "ribosomal excess, Translnc-inclusive whole-file (diagnostic)"),
+        # Found by a fresh-review pass: the raw shares behind the two ratios above
+        # (mean-types and ribosomal enrichment) were printed and used but never themselves checked.
+        (f"{bias['pct_ge2_overlapping']}%", "share detected in >=2 cancer types, overlapping"),
+        (f"{bias['pct_ge2_comparator']}%", "share detected in >=2 cancer types, comparator"),
+        (f"{bias['ribo_pct_overlapping']}%", "raw ribosomal-ORF share, catalogue overlapping"),
+        (f"{bias['ribo_pct_comparator']}%", "raw ribosomal-ORF share, catalogue non-overlapping"),
+    ]
+
+    # --- P2 pseudogene-contamination check (external-review-prompted): is the ribosomal
+    # excess an artifact of ribosomal-NAMED PSEUDOGENES (e.g. RPS3AP12) riding inside the RPL*/RPS*/
+    # MRPL*/MRPS* prefix test, rather than true protein-coding ribosomal genes? Split with the same
+    # authoritative NCBI gene_group pseudogene->parent registry used for S1. If either sub-excess were
+    # missing or <=1x for the true-gene split, the manuscript's claim that this is not contamination
+    # would not hold -- fail loudly rather than let a stale number sit uncontradicted.
+    if p2split["excess"]["true_gene"] is None or p2split["excess"]["true_gene"] <= 1:
+        sys.exit("FATAL: P2's true-ribosomal-gene excess is missing or <=1x -- the manuscript's "
+                  "'not pseudogene contamination' claim is not supported by the artifact.")
+    checks += [
+        (f"{p2split['catalogue_rr']['true_gene']:.2f}×", "P2 pseudogene split: catalogue RR, true ribosomal genes"),
+        (f"{p2split['library_rr']['true_gene']:.2f}×", "P2 pseudogene split: library RR, true ribosomal genes"),
+        (f"{p2split['excess']['true_gene']:.2f}×", "P2 pseudogene split: excess, true ribosomal genes"),
+        (f"{p2split['catalogue_rr']['pseudogene']:.2f}×", "P2 pseudogene split: catalogue RR, ribosomal-named pseudogenes"),
+        (f"{p2split['library_rr']['pseudogene']:.2f}×", "P2 pseudogene split: library RR, ribosomal-named pseudogenes"),
+        (f"{p2split['excess']['pseudogene']:.2f}×", "P2 pseudogene split: excess, ribosomal-named pseudogenes"),
+    ]
+
+    # --- R4 (found in a second-round review pass, corroborated independently by two
+    # separate external reviewers): 245,870 is NOT a cancer+normal peptide-level union. IEAtlas's own
+    # Methods give HLA-I/HLA-II percentages (60.60%/41.90% bound-share; 37.16%/50.76% immunogenic-share
+    # of 54,017/51,015 epitopes) from which HLA-I + HLA-II totals reconstruct to ~145,363 + ~100,502 =
+    # 245,865, matching 245,870 to within percentage-rounding -- i.e. 245,870 is a CLASS-summed total.
+    # The naive algebraic residual (174,465 + 94,375 - 245,870 = 22,970) is arithmetically correct but
+    # was misreported as "sequences shared between the exports" in an earlier draft -- that claim is
+    # now withdrawn, because the TRUE shared count is directly measured elsewhere in this paper (R3):
+    # 22,003 + 6,976 = 28,979, which the residual understates by ~6,000. Guard both numbers so neither
+    # can silently regress, and guard that the residual and the true measured overlap stay DIFFERENT
+    # (if they ever matched, the "second unit mismatch" claim above would no longer hold). ---
+    naive_residual = 174_465 + 94_375 - 245_870
+    if naive_residual != 22_970:
+        sys.exit(f"FATAL: 174,465 + 94,375 - 245,870 = {naive_residual:,}, not 22,970. IEAtlas's "
+                 "reported totals changed -- re-check the R4 unit-mismatch argument before shipping it.")
+    true_overlap = r3["overlapping_in_normal"] + r3["comparator_in_normal"]
+    if true_overlap != 28_979:
+        sys.exit(f"FATAL: r3 overlapping_in_normal + comparator_in_normal = {true_overlap:,}, not "
+                 "28,979 -- re-derive the R4 unit-mismatch numbers before shipping them.")
+    if naive_residual == true_overlap:
+        sys.exit("FATAL: the naive algebraic residual now EQUALS the directly-measured overlap -- the "
+                  "manuscript's claim that they diverge (proving 245,870 is not a tissue-level union) "
+                  "no longer holds; re-derive before shipping.")
+    hla_i_total = round(54_017 / 0.3716)
+    hla_ii_total = round(51_015 / 0.5076)
+    checks += [
+        (f"{naive_residual:,}", "the naive (and wrong) cancer/normal residual, 174,465+94,375-245,870"),
+        (f"{true_overlap:,}", "the TRUE, directly-measured cancer/normal overlap (22,003+6,976)"),
+        (f"{hla_i_total:,}", "reconstructed HLA-I epitope total (54,017 / 0.3716)"),
+        (f"{hla_ii_total:,}", "reconstructed HLA-II epitope total (51,015 / 0.5076)"),
     ]
 
     # --- R1 class strata (blocker 3): must PARTITION, and the paper must say so ---
@@ -277,6 +484,10 @@ def main():
         for k, v in strata.items():
             facts[k] = (sum(selfmap[p] for p in v), len(v),
                         100 * sum(selfmap[p] for p in v) / len(v))
+        # Found by a fresh-review pass: the "both" stratum's rate (only its count was
+        # checked), and the "1,801 sequences map to more than one gene" claim (no artifact anywhere
+        # in the repo) -- both computable from the same `genes` dict already built above.
+        n_multi_gene = sum(1 for q, gs in genes.items() if q in selfmap and len(gs) > 1)
         checks += [
             (f"{facts['pseudogene-only'][1]:,}", "pseudogene-only n"),
             (f"{facts['non-pseudogene-only'][1]:,}", "non-pseudogene-only n"),
@@ -284,6 +495,9 @@ def main():
             (f"{facts['pseudogene-only'][2]:.1f}%", "pseudogene-only overlap rate"),
             (f"{facts['non-pseudogene-only'][2]:.1f}%", "non-pseudogene-only rate (= the "
                                                         "no-pseudogene counterfactual)"),
+            (f"{facts['mixed'][2]:.1f}%", "'both'-labels stratum overlap rate"),
+            (f"{n_multi_gene:,}", "sequences mapping to more than one gene"),
+            (f"{100*n_multi_gene/facts['ieatlas'][1]:.1f}%", "share mapping to more than one gene"),
         ]
     else:
         skipped.append("R1 class strata — need data/external/atlases/ (large public files, not "
@@ -300,7 +514,22 @@ def main():
 
     text = open(MS, encoding="utf-8").read()
     bad = [f"{lab}: manuscript does not contain {needle!r}"
-           for needle, lab in checks if needle not in text]
+           for needle, lab in checks if not re.search(flex(needle), text)]
+
+    # The P2 pseudogene-split excess numbers (3.47x / 2.16x) each appear TWICE in the manuscript
+    # (Prediction 2 discussion + the "detection-bias test" Methods paragraph). A bare presence check
+    # (above) is satisfied if only ONE of the two copies is correct -- confirmed by deliberately
+    # corrupting one copy and observing the guard still pass. Checking occurrence COUNT, not just
+    # presence, is what actually catches a copy left stale after the other is edited -- exactly the
+    # "a presence-check cannot catch a contradictory number added alongside a correct one" failure mode
+    # this project has hit before (the five stale ORF-class counts, round 2).
+    for label, val in (("true-ribosomal-gene excess (3.47x)", p2split["excess"]["true_gene"]),
+                       ("ribosomal-named-pseudogene excess (2.16x)", p2split["excess"]["pseudogene"])):
+        needle = f"{val:.2f}×"
+        n = len(re.findall(flex(needle), text))
+        if n < 2:
+            bad.append(f"P2 pseudogene split: {label} appears {n} time(s) in the manuscript, expected "
+                       "2 (main text + Methods) -- one copy may be stale")
 
     # A disclaimer SECTION is a block, not a line -- its bullets do not each repeat "we do not
     # claim". Excise it, then check what remains. Anything asserted OUTSIDE it is a regression.
@@ -313,10 +542,17 @@ def main():
         r"|withdraw|invalid|was wrong|earlier draft|no fold-change|not a lower bound|not monotone"
         # naming what was withdrawn, in a script header or a correction notice
         r"|do not say|never say|used to (make|say|open)|no longer|correction|error #"
-        r"|never valid|be deleted|refuse|must not|cross-unit|not a bound",
+        r"|never valid|be deleted|refuse|must not|cross-unit|not a bound"
+        # GENERAL disclaiming construction ("...not an 'internal control'", "not a X") -- found in a
+        # fresh-review pass hardening this guard's flex() whitespace-tolerance: "not a
+        # lower bound"/"not a bound" above were each added as one-off exemptions for exactly this
+        # pattern; generalize it once rather than adding a new narrow phrase every time a script
+        # names a banned term in order to reject it (the same "ban the stem, not the phrasing"
+        # lesson this project applies to BANNED, applied to the allow-side of the guard instead).
+        r"|not an? [\"'‘“]",
         re.I)
     for b in BANNED:
-        for m in re.finditer(re.escape(b), body, re.I):
+        for m in re.finditer(flex(b), body, re.I):
             a = body.rfind("\n", 0, m.start()) + 1
             z = body.find("\n", m.end())
             line = body[a: z if z > 0 else len(body)]
@@ -325,7 +561,7 @@ def main():
             bad.append(f"RETRACTED PHRASE ASSERTED: {b!r} -> …{line.strip()[:70]}…")
 
     for cite, why in REQUIRED:
-        if cite not in text:
+        if not re.search(flex(cite), text):
             bad.append(f"MISSING REQUIRED: {cite!r} -- {why}")
 
     # --- the SUPPLEMENT was never verified at all. It carries numbers, so it can drift. ---
@@ -348,15 +584,36 @@ def main():
             (f"{dw['null_mean_pct']}%", "S1 null-D null mean (permissive decoys)"),
             (f"{ds['observed_pct']}%", "S1 null-D observed rate (STRONG paralog decoys)"),
             (f"{ds['null_mean_pct']}%", "S1 null-D null mean (STRONG paralog decoys)"),
+            # The 62 = 36 + 1 + 25 accounting gap and the 36 -> 35 gene-level shortfall (found by two
+            # independent fresh-review passes): both fields already existed in the artifact
+            # and were simply never checked here.
+            (f"{cv['distinct_pseudogene_symbols']}", "S1 distinct pseudogene symbols"),
+            (f"{len(cv['symbols_resolved_but_no_curated_parent'])}", "S1 symbols resolved but no curated parent"),
+            (f"{len(cv['symbols_absent_from_all_registries'])}", "S1 symbols absent from every registry"),
+            (f"{ar['gene_level_pseudogenes']}", "S1 gene-level testable pseudogenes (36 resolved -> 35 testable)"),
+            (f"{ar['gene_level_with_parent_hit']}", "S1 gene-level pseudogenes with a parent hit"),
+        ]
+        # Null B's restricted-permutable-subset result (found by a fresh-review pass:
+        # this was computed and sitting in the artifact but the supplement called it "DEGENERATE"
+        # alongside Null C, which is genuinely degenerate for a different reason -- Null B is merely
+        # SMALL (n=5), and its real, non-vacuous result was going unreported).
+        nb = p["nulls"]["B_hgnc_family"]["permutable_subset"]
+        supp_checks += [
+            (f"{nb['observed']}/{nb['n']}", "S1 null-B restricted-subset observed/n"),
+            (f"{nb['observed_pct']}%", "S1 null-B restricted-subset observed rate"),
+            (f"{nb['null_mean']}", "S1 null-B restricted-subset null mean"),
         ]
         for needle, lab in supp_checks:
-            if needle not in supp:
+            if not re.search(flex(needle), supp):
                 bad.append(f"{lab}: supplement does not contain {needle!r}")
-        # Nulls B and C are DEGENERATE. Quoting their p-values as evidence would be dishonest --
-        # null C's p = 1.0 arises because the parents are pairwise 9-mer-disjoint, which is the
-        # ANSWER to the exchangeability objection, not a failed test.
+        # Null C is DEGENERATE (parents pairwise 9-mer-disjoint -- the family-respecting shuffle is a
+        # true identity, p=1.0 vacuously). Null B is NOT degenerate -- it is a small-n restricted test
+        # that does run and must be reported, not folded into C's dismissal.
         if "DEGENERATE" not in supp.upper():
-            bad.append("S1 must disclose that nulls B and C are DEGENERATE, not quote them")
+            bad.append("S1 must disclose that null C is DEGENERATE, not quote its p-value as evidence")
+        if p["nulls"]["B_hgnc_family"]["n_permutable_items"] == 0:
+            bad.append("S1's Null B is now ALSO degenerate (0 permutable items) -- the supplement's "
+                       "claim that it is a real, small-n test no longer holds; revert to the old framing.")
         checks += supp_checks
 
     # --- The ban swept ONLY the manuscript. That is the hole that let ERROR #18 live on in
@@ -390,7 +647,7 @@ def main():
             continue
         lines = txt.split("\n")
         for b in BANNED:
-            for m in re.finditer(re.escape(b), txt, re.I):
+            for m in re.finditer(flex(b), txt, re.I):
                 ln = txt.count("\n", 0, m.start())
                 # A retraction notice is a BLOCK -- "ALL RETRACTED IN REVIEW:" heads a bullet list,
                 # and the bullets do not each repeat the word. Check a window, not one line.

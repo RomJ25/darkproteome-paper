@@ -15,6 +15,9 @@ TOOL = os.path.join(ROOT, "src", "darkproteome", "class_decoy_ledger.py")
 FIXTURE = os.path.join(HERE, "sample_mokapot_psms.tsv")
 MULT_FIXTURE = os.path.join(HERE, "sample_mokapot_psms_multiplicity.tsv")
 
+sys.path.insert(0, os.path.join(ROOT, "src", "darkproteome"))
+from class_decoy_ledger import classify  # noqa: E402
+
 # At alpha=0.01 (accept q<=0.01): rows c1-c3,d1,n1-n3,d2,v1 accepted; r1-r3 rejected.
 EXPECTED_CLASS = {
     "canonical":    (3, 1),   # (T_class, D_class)
@@ -76,6 +79,38 @@ def main():
     test_multiplicity()
     test_validation()
     test_emit_diagfdr_by_class()
+    test_multiprotein_classification_order_independence()
+
+
+def test_multiprotein_classification_order_independence():
+    """Regression for the external-review finding: classify() used to hand a whole
+    ';'-joined multi-protein accession to the single-accession heuristic, so list order decided
+    the class. Both orderings of the reviewer's own example must now agree, and agree as
+    'canonical' (a peptide explainable by any canonical protein is never non-canonical)."""
+    fails = []
+    a = "sp|P01111|RAS_HUMAN;1546T_frame2_orf17"
+    b = "1546T_frame2_orf17;sp|P01111|RAS_HUMAN"
+    ca, cb = classify(a, None), classify(b, None)
+    if ca != cb:
+        fails.append(f"  order-dependence survives: {a!r} -> {ca}, {b!r} -> {cb}")
+    if ca != "canonical":
+        fails.append(f"  expected 'canonical' (canonical-leaning precedence), got {ca!r}")
+
+    # variant beats noncanonical when no canonical member is present.
+    c = classify("1546T_frame2_orf17;ENSP00000123456-Mut", None)
+    if c != "variant":
+        fails.append(f"  noncanonical;variant: expected 'variant', got {c!r}")
+
+    # a single (unjoined) accession is unaffected -- same behavior as before this fix.
+    if classify("sp|P01111|RAS_HUMAN", None) != "canonical":
+        fails.append("  single canonical accession regressed")
+    if classify("1546T_frame2_orf17", None) != "noncanonical":
+        fails.append("  single noncanonical accession regressed")
+
+    if fails:
+        print("FAIL — multi-protein classification:\n" + "\n".join(fails)); sys.exit(1)
+    print("PASS — multi-protein ';'-joined accessions classify order-independently "
+          "(canonical > variant > noncanonical precedence); single accessions unaffected.")
 
 
 def test_validation():

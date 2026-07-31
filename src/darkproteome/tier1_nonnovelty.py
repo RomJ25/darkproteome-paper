@@ -13,10 +13,21 @@ Two floors per cohort:
     (113.084 Da) and indistinguishable on MS. (We collapse ONLY I/L -- on the
     Orbitrap these studies used, K/Q is mass-resolvable, so we do NOT over-collapse.)
 
-Empirically, careful PRIMARY studies (Raja ovarian; HCC) come back ~0% -- they already
-exclude canonical matches -- while the catalog-wide rate is 54.4%, driven by AGGREGATOR
-atlases (IEAtlas/CPDB). So this floor indicts sloppy aggregator DATABASES; primary studies
-still require the manuscript's budget bound to rule out a subtler per-study FDR failure.
+CORRECTED (this claim was WRONG for HCC and stale -- see FINDINGS_METHODS.md /
+methods_audit.py). Raja ovarian DOES come back ~0% (5/2979 = 0.2%) because its Methods describe
+an explicit canonical-exclusion step. HCC / Camarena-Alba does NOT: its own search combined
+Swiss-Prot/TrEMBL+isoforms WITH the ncORF library (same structure as IEAtlas), and its stated
+"only uniquely matching peptides" criterion is IN TENSION with the observed rate, not a
+canonical-exclusion rule. HCC comes back 290/659 = 44.0% overall, concentrated exactly where the
+coding-adjacency mechanism predicts: pseudogene-ORF 213/369 = 57.7% (near-identical to IEAtlas's
+pseudogene-only 59.4%), lncRNA-ORF 1/187 = 0.5% (near-identical to Translnc's library-level
+0.6%). The "other" class (76/103 = 73.8%) is NOT comparable -- it includes source-labelled
+protein_coding genes nominated as TSAs, which are expected to be canonical by definition, not a
+cryptic-ORF claim. So the catalog-wide 54.4% is not purely an AGGREGATOR-vs-PRIMARY split: the
+same class-dependent mechanism (coding-adjacent ORFs high, lncRNA loci low) that explains
+IEAtlas's atlas-level rate also explains HCC's primary-study rate, within its non-coding-derived
+classes. Primary studies still require the manuscript's budget bound to rule out a subtler
+per-study FDR failure -- that conclusion is unaffected.
 
     python3 src/darkproteome/tier1_nonnovelty.py
 

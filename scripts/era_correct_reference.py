@@ -130,6 +130,11 @@ def main():
         print(f"\n  pseudogene-ORF epitopes, era-correct: "
               f"{len(ps & o):,}/{len(ps):,} = {100*len(ps & o)/len(ps):.1f}%")
 
+    lost_only = o - n   # matched Swiss-Prot 2022_01 but NOT the modern reference -- the two releases
+                        # are not simply nested (entries retired/merged/resequenced), a fact this
+                        # script always computed and printed but never persisted (fresh-review
+                        # pass). Reconciles exactly against the two headline counts:
+                        # len(only_new) - len(lost_only) == overlap_modern - overlap_2022_01.
     art = os.path.join(REPO, "data", "derived_era_reference.json")
     json.dump({
         "n_peptides": len(peps),
@@ -139,6 +144,7 @@ def main():
         "pct_modern": round(100 * len(n) / len(peps), 1),
         "retrospective_only": len(only_new),
         "retrospective_pct_of_overlap": round(100 * len(only_new) / len(n), 2),
+        "lost_only": len(lost_only),
         "shift_pp": round(delta, 1),
     }, open(art, "w"), indent=2)
     print(f"\n  wrote {os.path.relpath(art, REPO)}")

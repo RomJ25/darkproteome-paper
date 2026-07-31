@@ -7,8 +7,20 @@
   "length_strata_tested": 18,
   "length_strata_holding": 18,
   "ribo_catalogue_rr": 2.51,
-  "ribo_library_rr": 0.91,
-  "ribo_excess": 2.77,
+  "ribo_library_rr": 0.69,
+  "ribo_excess": 3.66,
   "ribo_pct_overlapping": 2.89,
-  "ribo_pct_comparator": 1.15
+  "ribo_pct_comparator": 1.15,
+  "ribo_translnc_inclusive": {
+    "wholefile": {
+      "n_translnc_peptides": 583840,
+      "library_rr": 1.36,
+      "excess": 1.85
+    },
+    "humanonly": {
+      "n_translnc_peptides": 408935,
+      "library_rr": 1.07,
+      "excess": 2.34
+    }
+  }
 }

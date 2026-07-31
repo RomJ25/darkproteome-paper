@@ -42,7 +42,24 @@ def sha256(path):
 
 def classify(accession, class_map):
     """De-decoyed accession -> class label. Default heuristic matches the manuscript's
-    convention (UniProt = canonical; ENSP*/-Mut = variant; everything else = non-canonical)."""
+    convention (UniProt = canonical; ENSP*/-Mut = variant; everything else = non-canonical).
+
+    mokapot/Percolator/MaxQuant emit ';'-joined multi-protein accessions for a peptide shared
+    across proteins. Until this classified on the raw joined string, so class was
+    decided by which protein a search engine happened to list first -- 'X;sp|P1|FOO' and
+    'sp|P1|FOO;X' disagreed. Now every ';'/','-separated member is classified and the most
+    canonical-leaning label wins (canonical > variant > noncanonical > other), so a peptide
+    explainable by any canonical protein is never counted as non-canonical evidence -- the same
+    parsimony this project applies everywhere else to shared/ambiguous peptides."""
+    parts = [p.strip() for p in re.split(r"[;,]", accession) if p.strip()] or [accession]
+    labels = {_classify_one(p, class_map) for p in parts}
+    for precedence in ("canonical", "variant", "noncanonical"):
+        if precedence in labels:
+            return precedence
+    return "other"
+
+
+def _classify_one(accession, class_map):
     if class_map:
         for pat, cls in class_map:
             if pat in accession or re.search(pat, accession):

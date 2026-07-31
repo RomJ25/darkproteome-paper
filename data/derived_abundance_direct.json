@@ -34,7 +34,23 @@
       "median_hit_ppm": 0.872,
       "median_nothit_ppm": 0.086,
       "fold": 10.14,
-      "auc": 0.679
+      "auc": 0.679,
+      "n_reachable": 3480,
+      "n_absent": 3562,
+      "median_reachable_ppm": 0.236,
+      "median_absent_ppm": 0.042,
+      "fold_reachability_restricted": 3.69,
+      "auc_reachability_restricted": 0.601,
+      "fold_fully_unreachable_alone": 20.76,
+      "auc_fully_unreachable_alone": 0.755,
+      "n_lib_reachable": 3912,
+      "n_lib_unreachable": 3130,
+      "median_lib_reachable_ppm": 0.1,
+      "median_lib_unreachable_ppm": 0.07,
+      "fold_library_content_restricted": 8.72,
+      "auc_library_content_restricted": 0.667,
+      "library_kmers_k": 9,
+      "library_kmers_n": 11934337
     }
   },
   "B_abundance_predicts_breadth": {
@@ -312,7 +328,8 @@
         "auc": 0.555
       }
     },
-    "survives": true
+    "survives": true,
+    "auc_length_hit_vs_reachable": 0.555
   },
   "C3_placebo": {
     "n_draws": 200,

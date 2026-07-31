@@ -140,7 +140,75 @@
     "ceiling_pct": 47.6,
     "ceiling_attained_at_m": 7501870,
     "floor_pct": null,
-    "floor_note": "no positive floor exists: h/(u+m) -> 0 as m grows without bound",
+    "floor_note": "no positive lower bound derivable from the sources we hold: h/(u+m) -> 0 as m grows without bound",
     "combined_rate_determined": false
+  },
+  "human_only_variant": {
+    "note": "TransLnc's lncRNA_peptide_AA_seq.fasta mixes human and mouse headers. This variant filters to human-annotated entries only (looks_human_translnc) and is the more defensible number for a human immunopeptidome library; the whole-file numbers above are retained as the diagnostic showing why species-filtering matters, not replaced.",
+    "translnc_kmers": 3728231,
+    "translnc_canonical": 32096,
+    "translnc_pct": 0.86,
+    "union_kmers": 11934337,
+    "union_canonical": 2902793,
+    "union_pct": 24.32,
+    "ceiling_pct": 53.54,
+    "ceiling_attained_at_m": 7506468,
+    "rows": [
+      {
+        "label": "0  (RPFdb adds nothing new)",
+        "m": 0,
+        "lo_pct": 24.32,
+        "hi_pct": 24.32
+      },
+      {
+        "label": "0.10 x u",
+        "m": 1193433,
+        "lo_pct": 22.11,
+        "hi_pct": 31.2
+      },
+      {
+        "label": "0.25 x u",
+        "m": 2983584,
+        "lo_pct": 19.46,
+        "hi_pct": 39.46
+      },
+      {
+        "label": "0.50 x u",
+        "m": 5967168,
+        "lo_pct": 16.22,
+        "hi_pct": 49.55
+      },
+      {
+        "label": "= headroom  <<< MAX peaks here",
+        "m": 7506468,
+        "lo_pct": 14.93,
+        "hi_pct": 53.54
+      },
+      {
+        "label": "1.00 x u",
+        "m": 11934337,
+        "lo_pct": 12.16,
+        "hi_pct": 43.61
+      },
+      {
+        "label": "2.00 x u",
+        "m": 23868674,
+        "lo_pct": 8.11,
+        "hi_pct": 29.07
+      },
+      {
+        "label": "5.00 x u",
+        "m": 59671685,
+        "lo_pct": 4.05,
+        "hi_pct": 14.54
+      },
+      {
+        "label": "10.0 x u",
+        "m": 119343370,
+        "lo_pct": 2.21,
+        "hi_pct": 7.93
+      }
+    ],
+    "union_pct_era_correct": 24.29
   }
 }

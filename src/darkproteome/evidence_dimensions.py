@@ -1,52 +1,51 @@
-"""Evidence DIMENSIONS: the reporting-and-adjudicability matrix.
+"""Evidence DIMENSIONS — the reporting-and-adjudicability matrix. THE authoritative scorer.
 
-The auditor scores a published claim on six evidence dimensions, and never as a single pass/fail
-survivor count. A joint pass/fail across dimensions the reported record cannot even decide is a
-measurement of the scorer, not of the claims.
+Supersedes `axes.py`, which is now a hard-failing stub. The four "independent axes"
+were a pass/fail survivor funnel, and that framing produced two defects of the same shape — a
+scorer deciding something the record never spoke to:
+
+  1. STRUCTURAL ZERO. `source_orf` could strict-pass only via a periodicity % or a protein-level
+     FDR. Neither is populated on ANY of 307,318 rows, so no claim COULD pass, so "0 of 306,844
+     pass all four axes" was true before any datum was read. Withdrawn.
+  2. UNASSAYED READ AS FAILED. `score_immunogenicity` returned **fail** for `MS-presented`. An
+     MS-presented peptide with no T-cell assay is not a negative immunogenicity result — it is
+     NOT ASSAYED. That inflated "adjudicable" from 4 to 307,278. Withdrawn.
+
+Both are the same error: **absence of evidence recorded as evidence of absence.** The matrix
+below cannot express that error, because "the record does not say" is a first-class state.
 
 
 THE REPORTING LADDER (per claim i, per dimension k)
 ---------------------------------------------------
-A study can do excellent science and still fail the claim-linked reusability level. That level is
-this audit's subject, so the ladder is the unit of analysis. The rungs are CUMULATIVE -- rung k
-counts claims that clear rungs 1..k:
+A study can do excellent science and still fail the claim-linked reusability level. That is this
+paper's subject, so the ladder is the unit of analysis:
 
   asserted             the experiment/analysis is named for this claim
   claim_linked         an individual result travels WITH the claim (not just a study-level method)
-  quantitative         that result is a value a prespecified criterion can be applied to
+  quantitative         that result is a number a prespecified criterion can be applied to
   modality_appropriate the measurement answers the endpoint actually being claimed
-  adjudicable          all of the above -> the criterion can be applied independently
+  adjudicable          all of the above -> we can independently apply the criterion
 
-  outcome  (meaningful only when adjudicable)
+  outcome  (only meaningful when adjudicable)
       supports | contradicts | indirect | not-adjudicable
 
-Two rules govern every dimension, and violating either manufactures results:
-
-  A ZERO IS NOT A FINDING UNTIL THE RECORD COULD HAVE SAID OTHERWISE.
-      A structural zero (no claim reports the field the criterion needs, so none CAN clear it) and
-      an empirical zero (claims report it, the criterion applies, none clear it) look identical in
-      a survivor count and mean opposite things. `adjudicable` separates them.
-
-  ABSENCE OF EVIDENCE IS NEVER EVIDENCE OF ABSENCE.
-      A peptide observed by MS with no T-cell assay is NOT a negative immunogenicity result: it is
-      unassayed. A ligand length outside the HLA-I window is not a contradiction: no source here
-      states the MHC class, and 13-25mers are ordinary HLA-II ligands. Both are `not-adjudicable`.
-
-`adjudicable` is deliberately NOT named `A`. Source-attribution resolution -- whether the reported
-record leaves only the nominated source compatible, i.e. O_i(R,E) = {u_i*} -- is a different
-object: a record can carry excellent claim-linked translation evidence for the nominated ORF while
-a canonical source remains perfectly compatible. It is computed from sequence-compatibility,
-elsewhere, and never from this module.
+`adjudicable` is DELIBERATELY NOT NAMED `A`. The reviewer's `A_i` is source-attribution
+resolution — whether the reported record leaves only the nominated source compatible, i.e.
+`𝒪_i(R,E) = {u_i*}`. That is a different object: a record can carry excellent claim-linked
+translation evidence for the nominated ORF (adjudicable = 1) while a canonical source remains
+perfectly compatible (`A_i` = 0). Conversely sequence uniqueness can collapse `𝒪_i` while
+translation evidence is entirely absent. Conflating them was the error in the first replacement
+table. `A_i` is computed elsewhere, from sequence-compatibility, and never from this module.
 
 
 WHY SIX DIMENSIONS AND NOT FOUR
 -------------------------------
-Presentation, allele restriction and search-error reconstructibility are separate questions, and
-conjoining them hides coverage collapses. A single "HLA presentation" test requiring an eluted
-ligand AND an assigned allele reports one verdict for two very different facts: elution is
-asserted almost everywhere, while the allele the peptide was restricted to is reported for a tiny
-minority. The conjunction reads as good coverage; the split shows the truth.
+The old `hla_presentation` axis required an eluted ligand AND an assigned allele AND a plausible
+length, then reported one verdict. That let "274/275 pass" be read as "the field reports
+presentation nearly perfectly" — when in truth presentation is asserted almost everywhere and the
+ALLELE is reported for 275 of 307,318 claims. A conjunction hid a coverage collapse. Split.
 """
+
 DIMENSIONS = [
     "source_translation",         # is the nominated ORF translated?
     "hla_elution",                # was the peptide observed on HLA by MS?
@@ -113,18 +112,13 @@ def _rung(asserted=False, claim_linked=False, quantitative=False,
 # ---------------------------------------------------------------------------------------
 # 1. source_translation
 # ---------------------------------------------------------------------------------------
-# Three levels that must be kept apart:
-#   (a) translation ASSERTED, and QUANTIFIED AT THE STUDY LEVEL. The audited sources DO report
-#       thresholds -- a RibORF score cutoff, an average read periodicity, a PSM-level FDR. It is
-#       simply WRONG to say "the field does not report translation statistics"; it reports them for
-#       the STUDY.
-#   (b) CLAIM-LINKED quantitative support -- the individual ncORF's own score, the individual
-#       peptide's own q-value. This is what a reader would need to re-adjudicate ONE claim, and it
-#       is what is not published.
-#   (c) translation biologically absent -- NOT ASSESSED, and not assessable from a reported record.
-# Collapsing (a) into (b) mischaracterises what the authors did, and that error is fatal to an audit.
-# The ladder encodes the distinction: `asserted` passes, `claim_linked` fails for the statistic, so
-# `quantitative` and `adjudicable` are 0.
+# Three levels the paper must keep apart, and used to collapse into one:
+#   (a) translation ASSERTED per claim        -- sometimes (HCC ships a binary RibORF YES/NO)
+#   (b) QUANTITATIVE support sufficient to
+#       independently apply the criterion     -- ZERO of 307,318
+#   (c) translation biologically absent       -- NOT ASSESSED, and not assessable here
+# Saying "the field does not report translation evidence" conflates (a) with (b). It reports it
+# as an assertion and withholds the statistic.
 
 def source_translation(row):
     ev = _txt(row.get("evidence_types"))
@@ -152,9 +146,9 @@ def source_translation(row):
 # ---------------------------------------------------------------------------------------
 # 2. hla_elution   |   3. allele_restriction
 # ---------------------------------------------------------------------------------------
-# Kept apart deliberately. Conjoining them lets near-universal ELUTION mask the near-total absence
-# of ALLELE assignment: the largest cancer-epitope atlas in the corpus ships four columns
-# (Sequence, Length, ORF_ID, tissue) and no allele at all.
+# Split apart on the reviewer's instruction. The old conjunction let near-universal ELUTION mask
+# the near-total absence of ALLELE assignment: 275 of 307,318. IEAtlas -- 293,222 rows, 95% of the
+# corpus -- ships four columns (Sequence, Length, ORF_ID, tissue) and no allele at all.
 
 def hla_elution(row):
     ev = _txt(row.get("evidence_types"))
@@ -194,7 +188,7 @@ def allele_restriction(row):
 # ---------------------------------------------------------------------------------------
 # Zero strict-passes here is NOT "these claims are biologically non-specific". It is "no claim
 # carries modality-appropriate, claim-linked evidence of absence from the NORMAL LIGANDOME".
-# Three states, kept distinct:
+# The three states the reviewer requires, kept distinct:
 #   modality-appropriate + claim-linked  -> adjudicable
 #   indirect / study-level only          -> RNA evidence, or a ligandome used only as an
 #                                           inclusion criterion (cannot be re-derived per claim)
@@ -216,9 +210,9 @@ def normal_presentation(row):
     ligandome = modality in LIGANDOME_MODALITIES
     # The criterion here is CATEGORICAL -- "does the record state this peptide was, or was not,
     # found in the queried normal tissue?" -- so a structured per-claim verdict IS the value the
-    # criterion applies to. It must NOT be hardcoded False on the grounds that the underlying
-    # FPKM/TPM is unavailable: that would make the dimension un-adjudicable by construction, i.e.
-    # a structural zero introduced by the scorer itself.
+    # criterion applies to. (An earlier draft hardcoded quantitative=False on the grounds that we
+    # never hold the underlying FPKM. That made the dimension un-adjudicable BY CONSTRUCTION --
+    # a fresh structural zero, and the conformance guard caught it on its first run.)
     quantitative = claim_linked
     outcome = NOT_ADJ
     if result == RESULT_ABSENT:
@@ -229,8 +223,8 @@ def normal_presentation(row):
 
 
 def normal_presentation_state(row):
-    """`0 adjudicable` means NO claim carries modality-appropriate, claim-linked evidence of
-    absence from the normal ligandome — NOT that the claims are biologically non-specific."""
+    """The reviewer's three states. `0 adjudicable` means NONE of these claims carries
+    modality-appropriate claim-linked evidence — NOT that they are biologically non-specific."""
     modality = _txt(row.get("tumor_specificity_modality"))
     scope = _txt(row.get("tumor_specificity_scope"))
     result = _txt(row.get("tumor_specificity_result"))
@@ -246,13 +240,14 @@ def normal_presentation_state(row):
 # ---------------------------------------------------------------------------------------
 # 5. human_tcell_assay
 # ---------------------------------------------------------------------------------------
-# `MS-presented` must NEVER score as a failure. A peptide observed by MS with no T-cell assay is
-# not a negative immunogenicity result -- it was never assayed. Nearly the whole corpus is
-# MS-presented, so treating that as a decided failure would report adjudicability for essentially
-# every claim while the number carrying an actual human T-cell result is two.
+# THE WORST DEFECT IN THE OLD SCORER. It returned `fail` for `MS-presented` -- treating a claim
+# that was never assayed as an empirical immunogenicity FAILURE. 307,274 of 307,318 rows are
+# MS-presented. Adjudicability was therefore reported as 307,278 when the true number of claims
+# carrying a human T-cell result is 2.
 #
-# Note the fourth state, which no binary could express: a cohort may ASSAY a peptide and publish
-# the per-peptide result only inside a figure. Assay asserted; result not claim-linked.
+# Note the fourth state, which the corpus really contains and which no binary could express:
+# the ovarian cohort ASSAYED 40 peptides and published the result only inside a figure. Assay
+# asserted, result not claim-linked. That is the paper's thesis in one row.
 
 def human_tcell_assay(row):
     level = _txt(row.get("validation_level"))
@@ -289,7 +284,8 @@ def human_tcell_state(row):
 # ---------------------------------------------------------------------------------------
 # 6. class_fdr_reconstructible
 # ---------------------------------------------------------------------------------------
-# Search-error reconstructibility is its own dimension, not a footnote to presentation.
+# Separated out on the reviewer's instruction: search-error reconstructibility is its own
+# dimension, not a footnote to presentation.
 #
 # A class-specific FDR needs the per-class ACCEPTED DECOY count D_N. HCC's sheet S26 -- the only
 # table in the entire corpus reporting per-PSM statistics -- carries a `target_decoy` column and
@@ -338,11 +334,14 @@ def matrix(rows):
     THE RUNGS ARE CUMULATIVE: rung k counts claims that clear rungs 1..k. A ladder that is not
     nested is not a ladder, and drawing one as a figure actively misleads.
 
-    Counting each flag independently breaks this: "not a mouse assay" is trivially true of every
-    claim never assayed at all, so an independently-counted `modality_appropriate` rung RISES above
-    the `claim_linked` rung below it. Drawn as a heatmap that puts a reassuring dark column exactly
-    where the evidence is absent. Cumulative counts can only decrease, so a figure built from them
-    cannot show a rise where the record is silent.
+    The first version counted each flag independently, and the rendered figure showed it:
+    `human_tcell_assay` read  asserted 44 -> claim_linked 4 -> quantitative 4 ->
+    modality_appropriate 307,316 -- JUMPING BACK UP, because "not a mouse assay" is trivially
+    true of every claim that was never assayed at all. A reader scanning left to right would have
+    seen a reassuring dark column exactly where the evidence is absent. Cumulative counts can only
+    decrease, so the figure cannot tell that lie.
+
+    Caught by rendering the figure and looking at it -- not by reading the code that made it.
     """
     out = {k: {r: 0 for r in RUNGS} for k in DIMENSIONS}
     for k in DIMENSIONS:

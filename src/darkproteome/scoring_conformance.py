@@ -1,6 +1,6 @@
 """Guard: ONE scorer, and no field may mean two things.
 
-The 2026-07-12 external review found three defects that were all the same defect -- a value was
+The external review found three defects that were all the same defect -- a value was
 derived in one place and consumed in another that meant something different by it:
 
   * `reference_model.py` scored `present(reported_fdr)` -- the field is POPULATED -- and its
@@ -37,7 +37,7 @@ EVIDENCE_FIELDS = {
     "tumor_specificity_scope", "validation_level",
 }
 
-# Columns retired on 2026-07-12 because each meant two things. They must not come back.
+# Columns retired on because each meant two things. They must not come back.
 RETIRED_COLUMNS = {"min_peptide_len", "tumor_specificity_basis"}
 
 # May read evidence fields for a legitimate reason that is NOT scoring.
@@ -193,7 +193,7 @@ def check_bar_is_satisfiable():
 
 
 def check_unassayed_is_never_failure():
-    """THE 2026-07-13 INVARIANT. Absence of evidence must never be recorded as evidence of absence.
+    """THE INVARIANT. Absence of evidence must never be recorded as evidence of absence.
 
     The old scorer returned `fail` for `MS-presented` on the immunogenicity axis -- scoring a claim
     that NOBODY EVER ASSAYED as an empirical immunogenicity failure. 307,274 of 307,318 rows are
@@ -277,7 +277,7 @@ def main():
     print("    SUPPORTS on every testable dimension -- the bar is satisfiable, so a zero on the")
     print("    real corpus is a finding about the claims, not an artifact of the scorer")
     print("  - UNASSAYED IS NEVER FAILURE: an MS-presented peptide with no T-cell assay comes out")
-    print("    NOT ADJUDICABLE, never as an empirical negative (the 2026-07-13 reviewer catch)")
+    print("    NOT ADJUDICABLE, never as an empirical negative (the reviewer catch)")
     print("  - LADDER IS MONOTONE: rungs are cumulative, so a figure drawn from them cannot show")
     print("    a rise where the evidence is absent")
     return 0

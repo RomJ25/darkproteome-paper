@@ -31,10 +31,21 @@ P2  ABUNDANT-CLASS ENRICHMENT. Ribosomal proteins (RPL*/RPS*) are the textbook a
     CONFOUND -- AND THIS ONE IS FATAL IF UNCHECKED: the enrichment could be pure LIBRARY COMPOSITION.
     If nuORFdb's ribosomal-gene ORFs are simply more canonical-overlapping to begin with, we would
     see this enrichment with NO detection bias whatever, because it was in the search space already.
-    CONTROL: measure the SAME enrichment in the library itself, over (ORF, 9-mer) candidate-epitope
-    pairs -- the null world where nothing has been detected. Detection bias is the EXCESS of the
-    catalogue's enrichment over the library's. If they agree, P2 measures composition, not detection,
-    and we say so.
+    CONTROL: measure the SAME enrichment in the library itself, over DISTINCT 9-mers -- the null world
+    where nothing has been detected. Detection bias is the EXCESS of the catalogue's enrichment over
+    the library's. If they agree, P2 measures composition, not detection, and we say so.
+
+    CORRECTION (round-4 review). This used to measure the library side over raw (ORF,
+    9-mer) OCCURRENCE PAIRS: every sliding window in every ORF counted separately, so a 9-mer repeated
+    across N near-duplicate ORFs (ribosomal paralogs are exactly this) was counted N times. That is a
+    DIFFERENT unit than the rest of the paper's library measurements (library_union.py's 34.1%/20.2%
+    are over DISTINCT 9-mers, deduplicated globally) -- a reviewer pointed out that a ratio of ratios is
+    dimensionless but not thereby unit-matched, and this was the concrete case of it. Recomputed over
+    distinct 9-mers (a 9-mer counts once no matter how many ORFs contain it; "ribosomal" means it occurs
+    in >=1 ribosomal-gene ORF): the library-side rate is 0.69x, not 0.91x -- STRONGER depletion, not
+    weaker. The excess (2.51 / 0.69 = 3.65x) is therefore larger under the matched unit, not smaller.
+    The qualitative conclusion survives the correction; the old 0.91x/2.77x numbers do not, and are
+    retracted.
 
 We can fail this. If the length-stratified effect vanishes, or the catalogue's ribosomal enrichment
 merely reproduces the library's, the hypothesis does not survive and it comes OUT of the manuscript.
@@ -58,6 +69,7 @@ EXT = os.path.join(REPO, "data", "external")
 IE = os.path.join(EXT, "atlases", "IEAtlas_Epitopes_In_Cancer_Tissues.txt")
 NUORF = os.path.join(EXT, "nuorfdb", "PA_nuORFdb_v1.2_protein.fasta")
 SPROT = os.path.join(EXT, "swissprot_human.fasta")
+TRANSLNC = os.path.join(EXT, "translnc", "lncRNA_peptide_AA_seq.fasta")
 SCORED = os.path.join(REPO, "data", "claim_catalog_scored.csv")
 csv.field_size_limit(10_000_000)
 K = 9
@@ -66,6 +78,33 @@ K = 9
 def is_ribosomal(g):
     g = (g or "").upper()
     return g.startswith(("RPL", "RPS", "MRPL", "MRPS"))
+
+
+_TRANSLNC_NONHUMAN_WGS_PREFIXES = ("AABR07", "CAAA01")
+# Found by an independent, blind, from-scratch re-derivation of this whole computation (a
+# round-5 check): the ALL-CAPS-means-human heuristic below also passes GenBank WGS-scaffold accessions,
+# which are uppercase by GenBank convention regardless of species and are NOT HGNC gene symbols. Of the
+# three distinct WGS-style prefixes present in this file, each was checked directly against its NCBI
+# nuccore record: AABR07* (13,048 records) = Rattus norvegicus (rat), CAAA01* (3 records) = Mus musculus
+# (mouse) -- both wrongly kept as "human" by the old heuristic -- but AUXG01* (53 records) is genuinely
+# Homo sapiens (a human WGS scaffold, not a curated gene symbol, but still human) and must NOT be
+# excluded. A blanket "exclude anything WGS-shaped" rule would itself be wrong here; only the two
+# confirmed non-human prefixes are excluded.
+
+def looks_human_translnc(header):
+    """data/external/translnc/lncRNA_peptide_AA_seq.fasta is MULTI-SPECIES (found in a
+    fresh-review pass) -- 435,173 human (ALL-CAPS gene-symbol convention, e.g. PAX8-AS1-...) headers
+    followed by 148,667 mouse-convention headers (Tug1-..., Gm10619-..., RIKEN clone IDs). A header
+    is 'human' iff the portion before its '-<digits>-<digits>aa' transcript/length marker contains no
+    lowercase letters AND is not one of the confirmed-non-human WGS-scaffold prefixes (see
+    _TRANSLNC_NONHUMAN_WGS_PREFIXES above). is_ribosomal(full_header) is provably equivalent to parsing
+    the gene symbol first, since the gene symbol is always a strict prefix and is_ribosomal is a pure
+    prefix test -- so no separate gene-token parser is needed for either function."""
+    m = re.match(r"^(.*?)-\d+-\d+aa", header)
+    prefix = m.group(1) if m else header
+    if any(c.islower() for c in prefix):
+        return False
+    return not prefix.startswith(_TRANSLNC_NONHUMAN_WGS_PREFIXES)
 
 
 def two_prop(k1, n1, k2, n2):
@@ -195,7 +234,12 @@ def main():
             canon.add(s[i:i + K])
     print(f"    canonical distinct {K}-mers: {len(canon):,}")
 
-    lib = {(True, True): 0, (True, False): 0, (False, True): 0, (False, False): 0}
+    # DISTINCT 9-mers, matching library_union.py's unit exactly -- NOT raw (ORF, 9-mer) occurrence
+    # pairs. A 9-mer repeated across N near-duplicate ORFs (ribosomal paralogs are exactly this)
+    # counts ONCE, same as a repeated catalogue peptide counts once. "Ribosomal" is set membership:
+    # a 9-mer is ribosomal-associated iff it occurs in >=1 ribosomal-gene ORF (non-exclusive; a
+    # kmer shared with a non-ribosomal ORF too is a small fraction -- see round-4 findings).
+    ribo_kmers, nonribo_kmers = set(), set()
     n_orf = 0
     for h, s in fasta(NUORF):
         if len(s) < K:
@@ -203,14 +247,19 @@ def main():
         n_orf += 1
         m = re.search(r"GN=(\S+)", h)
         rib = is_ribosomal(m.group(1) if m else "")
+        target = ribo_kmers if rib else nonribo_kmers
         for i in range(len(s) - K + 1):
-            lib[(s[i:i + K] in canon, rib)] += 1
-    n_ov = lib[(True, True)] + lib[(True, False)]
-    n_no = lib[(False, True)] + lib[(False, False)]
-    l1, l2, l_rr, l_z = two_prop(lib[(True, True)], n_ov, lib[(False, True)], n_no)
-    print(f"    scanned {n_orf:,} nuORFdb ORFs -> {n_ov + n_no:,} (ORF, {K}-mer) candidate epitopes")
-    print(f"    canonical-overlapping      {lib[(True, True)]:>8,}/{n_ov:<9,} = {100*l1:6.3f}%")
-    print(f"    NON-overlapping            {lib[(False, True)]:>8,}/{n_no:<9,} = {100*l2:6.3f}%")
+            target.add(s[i:i + K])
+    all_kmers = ribo_kmers | nonribo_kmers
+    canon_kmers = all_kmers & canon
+    noncanon_kmers = all_kmers - canon
+    ov_ribo = sum(1 for k in canon_kmers if k in ribo_kmers)
+    no_ribo = sum(1 for k in noncanon_kmers if k in ribo_kmers)
+    l1, l2, l_rr, l_z = two_prop(ov_ribo, len(canon_kmers), no_ribo, len(noncanon_kmers))
+    print(f"    scanned {n_orf:,} nuORFdb ORFs -> {len(all_kmers):,} distinct {K}-mers "
+          f"({len(ribo_kmers):,} ribosomal-associated)")
+    print(f"    canonical-overlapping      {ov_ribo:>8,}/{len(canon_kmers):<9,} = {100*l1:6.3f}%")
+    print(f"    NON-overlapping            {no_ribo:>8,}/{len(noncanon_kmers):<9,} = {100*l2:6.3f}%")
     print(f"    risk ratio {l_rr:.2f}x   (z = {l_z:,.0f})   <-- LIBRARY-COMPOSITION baseline")
 
     excess = c_rr / l_rr if l_rr else float("inf")
@@ -223,6 +272,47 @@ def main():
     else:
         print("  => P2 REFUTED as evidence of DETECTION bias: the catalogue's enrichment is already")
         print("     present in the library. It measures composition, not detection. Report it as such.")
+
+    # ---------------------------------------------------------------- Translnc-inclusive sensitivity
+    # SCOPE, found in a fresh-review pass: the library baseline above is nuORFdb ALONE,
+    # but IEAtlas's catalogue is drawn from all three of its integrated sources (nuORFdb + RPFdb +
+    # Translnc). This was disclosed once in the Methods but never checked against the library this
+    # paper already holds -- Translnc, whose union with nuORFdb was already computed for the headline
+    # ambiguity rate (library_union.py: 34.1% -> 20.2%). Report both bounds here too, not just there.
+    print("\n" + "=" * 84)
+    print("TRANSLNC-INCLUSIVE SENSITIVITY (nuORFdb U Translnc, two variants)")
+    print("=" * 84)
+    translnc_variants = {}
+    for key, human_only, label in (
+        ("wholefile", False, "WHOLE Translnc file (matches library_union.py's own no-filter precedent)"),
+        ("humanonly", True, "HUMAN-ONLY Translnc block (the more defensible choice for a human "
+                             "immunopeptidome library)"),
+    ):
+        rk, nrk = set(ribo_kmers), set(nonribo_kmers)
+        n_tl = 0
+        for h, s in fasta(TRANSLNC):
+            if len(s) < K:
+                continue
+            if human_only and not looks_human_translnc(h):
+                continue
+            n_tl += 1
+            target = rk if is_ribosomal(h) else nrk
+            for i in range(len(s) - K + 1):
+                target.add(s[i:i + K])
+        all_k = rk | nrk
+        canon_k = all_k & canon
+        noncanon_k = all_k - canon
+        ov_r = sum(1 for k in canon_k if k in rk)
+        no_r = sum(1 for k in noncanon_k if k in rk)
+        tl1, tl2, tl_rr, tl_z = two_prop(ov_r, len(canon_k), no_r, len(noncanon_k))
+        tl_excess = c_rr / tl_rr if tl_rr else float("inf")
+        print(f"  {label} ({n_tl:,} peptides folded in):")
+        print(f"    library RR {tl_rr:.2f}x   excess = {c_rr:.2f} / {tl_rr:.2f} = {tl_excess:.2f}x")
+        translnc_variants[key] = {
+            "n_translnc_peptides": n_tl, "library_rr": round(tl_rr, 2), "excess": round(tl_excess, 2),
+        }
+    print("\n  Both variants reported side by side, same as the 34.1%/20.2%/47.6% headline library")
+    print("  numbers -- neither replaces the nuORFdb-only baseline above.")
 
     art = os.path.join(REPO, "data", "derived_detection_bias.json")
     json.dump({
@@ -237,6 +327,7 @@ def main():
         "ribo_excess": round(excess, 2),
         "ribo_pct_overlapping": round(100 * c1, 2),
         "ribo_pct_comparator": round(100 * c2, 2),
+        "ribo_translnc_inclusive": translnc_variants,
     }, open(art, "w"), indent=2)
     print(f"\n  wrote {os.path.relpath(art, REPO)}")
 
@@ -246,10 +337,11 @@ def main():
     print("=" * 92)
     if p1_ok and p2_ok:
         print("""
-  Both predictions survive their controls. The catalogued overlap rate (56.3%) exceeding the
-  library's latent ambiguity (34.1%) is CONSISTENT WITH detection bias: canonically-encoded peptides
-  are detected across more cancer types at every peptide length, and the catalogue is enriched for
-  the abundant housekeeping class BEYOND that class's share of the search space.
+  Both predictions survive their controls -- WITHOUT comparing the catalogue's 56.3% to the
+  library's 34.1% as levels (ERROR #18; do not resurrect that comparison here). Canonically-encoded
+  peptides are detected across more cancer types at every peptide length (P1, within-catalogue), and
+  the catalogue's ribosomal enrichment (2.51x) is an excess OVER the library's own composition
+  baseline (P2, a dimensionless ratio of ratios) -- BEYOND that class's share of the search space.
 
   THIS IS CORROBORATION, NOT PROOF, AND THE PAPER MUST SAY SO. Breadth of detection is a PROXY for
   abundance, not a measurement of it. A direct test needs protein-abundance data (PaxDb) and is not

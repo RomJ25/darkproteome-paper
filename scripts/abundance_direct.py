@@ -63,6 +63,7 @@ import csv
 import json
 import math
 import os
+import re
 import statistics as st
 import sys
 from collections import defaultdict
@@ -76,7 +77,55 @@ PAX_V5 = os.path.join(EXT, "paxdb", "9606-WHOLE_ORGANISM-integrated-v5.0.txt")
 LINKS = os.path.join(EXT, "paxdb", "paxdb-uniprot-links-v6.1.tsv")
 SCORED = os.path.join(REPO, "data", "claim_catalog_scored.csv")
 ART = os.path.join(REPO, "data", "derived_abundance_direct.json")
+NUORFDB = os.path.join(EXT, "nuorfdb", "PA_nuORFdb_v1.2_protein.fasta")
+TRANSLNC = os.path.join(EXT, "translnc", "lncRNA_peptide_AA_seq.fasta")
+LIBK = 9
 csv.field_size_limit(10_000_000)
+
+
+_TRANSLNC_NONHUMAN_WGS_PREFIXES = ("AABR07", "CAAA01")
+# Found by an independent, blind, from-scratch re-derivation of this whole computation (a
+# round-5 check): confirmed via direct NCBI nuccore lookup that AABR07*/CAAA01* WGS-scaffold
+# accessions are rat/mouse respectively (wrongly passing the old all-caps-means-human heuristic),
+# while a third WGS-style prefix, AUXG01*, is genuinely human and must NOT be excluded. Same fix
+# duplicated in library_union.py / abundance_bias.py per this folder's no-cross-import convention.
+
+def looks_human_translnc(header):
+    """Same species filter as abundance_bias.py -- lncRNA_peptide_AA_seq.fasta mixes human
+    (ALL-CAPS symbol convention) and mouse (Capitalized, e.g. Tug1-...) headers, plus a handful of
+    non-human WGS-scaffold accessions that pass the all-caps test (see
+    _TRANSLNC_NONHUMAN_WGS_PREFIXES above)."""
+    m = re.match(r"^(.*?)-\d+-\d+aa", header)
+    prefix = m.group(1) if m else header
+    if any(c.islower() for c in prefix):
+        return False
+    return not prefix.startswith(_TRANSLNC_NONHUMAN_WGS_PREFIXES)
+
+
+def library_kmers(k=LIBK):
+    """Distinct k-mers of nuORFdb v1.2 UNION Translnc (human-only entries) -- the same
+    human-only-filtered integrated library used for the R2 headline union (library_union.py /
+    abundance_bias.py). RPFdb v2.0 is not held and is not part of this set, exactly as elsewhere
+    in this project; a protein 'library-unreachable' under this set may still be reachable via
+    RPFdb, which this script cannot see any more than the rest of the paper can."""
+    out = set()
+    for path, filt in ((NUORFDB, None), (TRANSLNC, looks_human_translnc)):
+        name, seq = None, []
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                if line.startswith(">"):
+                    if name is not None and (filt is None or filt(name)):
+                        s = "".join(seq).upper()
+                        for i in range(len(s) - k + 1):
+                            out.add(s[i:i + k])
+                    name, seq = line[1:].strip(), []
+                else:
+                    seq.append(line.strip())
+        if name is not None and (filt is None or filt(name)):
+            s = "".join(seq).upper()
+            for i in range(len(s) - k + 1):
+                out.add(s[i:i + k])
+    return out
 
 B = 2000
 SEED = 20260713
@@ -475,12 +524,91 @@ def main():
     a_prot = auc(hit_ab, nohit_ab)
     print(f"    fold {st.median(hit_ab)/st.median(nohit_ab):.2f}x   AUC {a_prot:.3f}   "
           f"(0.5 = no shift)")
+
+    # SELECTION-BIAS CHECK (found in a fresh-review pass): "never hit" above is every
+    # PaxDb-joined canonical protein minus the hit ones, with NO restriction to a candidate-reachable
+    # universe -- it includes proteins whose gene never appears anywhere in the 174,465-peptide
+    # catalogue, i.e. genes the search had no chance of ever hitting for reasons unrelated to this
+    # protein's own abundance. Split "never hit" by whether its gene is reachable (present somewhere
+    # in the catalogue's own source-gene labels, just not on this specific protein) vs. entirely
+    # absent, and report the reachability-restricted fold alongside the unrestricted one -- the same
+    # "report both" treatment already given to the library-ambiguity numbers.
+    src_labels = {g for g in src_gene.values() if g}
+    reachable_ab, absent_ab = [], []
+    for i in ab:
+        if i in hit_idx:
+            continue
+        g = prots[i][2]
+        (reachable_ab if (g and g in src_labels) else absent_ab).append(ab[i])
+    assert len(reachable_ab) + len(absent_ab) == len(nohit_ab)
+    fold_reach = st.median(hit_ab) / st.median(reachable_ab)
+    auc_reach = auc(hit_ab, reachable_ab)
+    # The fully-unreachable-alone comparison (fold quoted in the manuscript as 20.76x) had its fold
+    # computed ad hoc but never its AUC -- found in a fresh-review pass: the manuscript
+    # quoted "AUC 0.755" with no corresponding computation anywhere in this script or its JSON.
+    fold_absent = st.median(hit_ab) / st.median(absent_ab)
+    auc_absent = auc(hit_ab, absent_ab)
+    print(f"\n    SELECTION-BIAS CHECK -- 'never hit' split by gene reachability:")
+    print(f"      never-hit, gene reachable elsewhere   : {len(reachable_ab):>7,}  "
+          f"median {st.median(reachable_ab):>10,.3f} ppm")
+    print(f"      never-hit, gene absent from catalogue : {len(absent_ab):>7,}  "
+          f"median {st.median(absent_ab):>10,.3f} ppm")
+    print(f"      REACHABILITY-RESTRICTED fold {fold_reach:.2f}x   AUC {auc_reach:.3f}   "
+          f"(unrestricted was {st.median(hit_ab)/st.median(nohit_ab):.2f}x / {a_prot:.3f})")
+    print(f"      fully-unreachable-ALONE fold {fold_absent:.2f}x   AUC {auc_absent:.3f}")
+
+    # LIBRARY-CONTENT reachability (found in a fresh-review pass): the check above defines
+    # "reachable" by whether the gene happens to appear ELSEWHERE in the already-detected 174,465-row
+    # catalogue -- which is a property of the OUTPUT, not the search SPACE. A protein whose gene is
+    # absent from the catalogue could still have been a candidate the search never happened to surface
+    # for unrelated reasons. The more principled test: does the reconstructed ncORF library (nuORFdb +
+    # Translnc human-only, the same union used for the R2 headline) contain ANY 9-mer overlapping this
+    # protein at all -- i.e. could the search have proposed an ncORF candidate compatible with it,
+    # independent of what the catalogue actually contains? RPFdb v2.0 is not held, so a protein called
+    # "library-unreachable" here may still be reachable through it; this is a lower bound on reachability,
+    # not a proof of unreachability, exactly the same caveat R2 already carries for the union rate.
+    print(f"\n    LIBRARY-CONTENT reachability (does the search space share >=1 9-mer with the protein,")
+    print(f"    regardless of what the catalogue actually surfaced -- nuORFdb U Translnc human-only):")
+    LIB = library_kmers()
+    print(f"      library distinct {LIBK}-mers (nuORFdb U Translnc, human-only): {len(LIB):,}")
+
+    def has_lib_kmer(seq):
+        return any(seq[i:i + LIBK] in LIB for i in range(len(seq) - LIBK + 1))
+
+    libreach_ab, libunreach_ab = [], []
+    for i in ab:
+        if i in hit_idx:
+            continue
+        (libreach_ab if has_lib_kmer(prots[i][3]) else libunreach_ab).append(ab[i])
+    assert len(libreach_ab) + len(libunreach_ab) == len(nohit_ab)
+    fold_libreach = st.median(hit_ab) / st.median(libreach_ab) if libreach_ab else float("nan")
+    auc_libreach = auc(hit_ab, libreach_ab) if libreach_ab else float("nan")
+    print(f"      never-hit, protein shares a library 9-mer   : {len(libreach_ab):>7,}  "
+          f"median {(st.median(libreach_ab) if libreach_ab else float('nan')):>10,.3f} ppm")
+    print(f"      never-hit, protein shares NO library 9-mer  : {len(libunreach_ab):>7,}  "
+          f"median {(st.median(libunreach_ab) if libunreach_ab else float('nan')):>10,.3f} ppm")
+    print(f"      LIBRARY-CONTENT-RESTRICTED fold {fold_libreach:.2f}x   AUC {auc_libreach:.3f}")
+
     A["protein_level"] = {
         "n_hit": len(hit_ab), "n_not_hit": len(nohit_ab),
         "median_hit_ppm": round(st.median(hit_ab), 3),
         "median_nothit_ppm": round(st.median(nohit_ab), 3),
         "fold": round(st.median(hit_ab) / st.median(nohit_ab), 2),
         "auc": round(a_prot, 3),
+        "n_reachable": len(reachable_ab), "n_absent": len(absent_ab),
+        "median_reachable_ppm": round(st.median(reachable_ab), 3),
+        "median_absent_ppm": round(st.median(absent_ab), 3),
+        "fold_reachability_restricted": round(fold_reach, 2),
+        "auc_reachability_restricted": round(auc_reach, 3),
+        "fold_fully_unreachable_alone": round(fold_absent, 2),
+        "auc_fully_unreachable_alone": round(auc_absent, 3),
+        "n_lib_reachable": len(libreach_ab), "n_lib_unreachable": len(libunreach_ab),
+        "median_lib_reachable_ppm": round(st.median(libreach_ab), 3) if libreach_ab else None,
+        "median_lib_unreachable_ppm": round(st.median(libunreach_ab), 3) if libunreach_ab else None,
+        "fold_library_content_restricted": round(fold_libreach, 2) if libreach_ab else None,
+        "auc_library_content_restricted": round(auc_libreach, 3) if libreach_ab else None,
+        "library_kmers_k": LIBK,
+        "library_kmers_n": len(LIB),
     }
     a_ok = A["ab_max"]["auc_vs_background"] > 0.5 and a_prot > 0.5
 
@@ -603,6 +731,10 @@ def main():
     nl = [len(prots[i][3]) for i in ab if i not in hit_idx]
     a_len = auc(hl, nl)
     rho_la = rank_corr([(len(prots[i][3]), ab[i]) for i in ab])
+    # Same reachability restriction as Test A above, applied here for consistency: recompute the
+    # length-AUC against only the gene-reachable "never hit" subset, not the full unrestricted one.
+    nl_reach = [len(prots[i][3]) for i in ab if i not in hit_idx and prots[i][2] in src_labels]
+    a_len_reach = auc(hl, nl_reach)
     print(f"  The confound is REAL: hit proteins are longer -- median {st.median(hl):,.0f} aa vs "
           f"{st.median(nl):,.0f} aa (AUC {a_len:.3f}).")
     print(f"  And across the background, protein length correlates with abundance at rho = {rho_la:+.3f}.")
@@ -723,6 +855,7 @@ def main():
             "deciles_tested": len(aucs), "deciles_auc_above_half": sum(1 for a in aucs if a > 0.5),
             "mean_auc_within_deciles": round(st.mean(aucs), 3), "per_decile": per_plen,
             "survives": c2_ok,
+            "auc_length_hit_vs_reachable": round(a_len_reach, 3),
         },
         "C3_placebo": {"n_draws": len(null), "placebo_median": round(n_med, 3),
                        "placebo_p975": round(n_hi, 3), "observed": obs,

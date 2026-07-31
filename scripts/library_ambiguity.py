@@ -42,6 +42,7 @@ result is informative whichever direction it goes.
 
     python3 scripts/library_ambiguity.py
 """
+import json
 import os
 import random
 import sys
@@ -123,6 +124,28 @@ def main():
     print()
     for name, n_orf, n_s, n_k, hit, pct, note in results:
         print(f"  {name:<34} {note}")
+
+    # Persist so these numbers are guarded (verify_manuscript.py), not hardcoded literals. Until
+    # now this script printed only -- the GENCODE Ribo-seq 1.0-2.4% range had NO artifact anywhere
+    # in the repo (found in a fresh-review pass). nuORFdb's own pct/kmers are also
+    # written here for a self-contained record, even though derived_library_union.json already
+    # carries the same nuORFdb figures independently (a second script computing the same number is
+    # itself a form of corroboration, not redundancy to be removed).
+    by_name = {name: {"n_orf": n_orf, "distinct_kmers": n_k, "canonical_kmers": hit,
+                       "pct": round(pct, 1)}
+               for name, n_orf, n_s, n_k, hit, pct, note in results}
+    art = os.path.join(REPO, "data", "derived_library_ambiguity.json")
+    json.dump({
+        "k": K,
+        "by_library": by_name,
+        "gencode_phase1": by_name.get("GENCODE Ribo-seq ORFs (phase 1)"),
+        "gencode_phase2": by_name.get("GENCODE Ribo-seq ORFs (phase 2)"),
+        "gencode_range_lo_pct": round(min(v["pct"] for k, v in by_name.items()
+                                          if k.startswith("GENCODE")), 1),
+        "gencode_range_hi_pct": round(max(v["pct"] for k, v in by_name.items()
+                                          if k.startswith("GENCODE")), 1),
+    }, open(art, "w"), indent=2)
+    print(f"\nwrote {os.path.relpath(art, REPO)}")
 
     # Whole-ORF containment: the strongest form of the problem.
     print("\n" + "=" * 94)

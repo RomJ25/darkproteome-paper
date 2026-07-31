@@ -63,6 +63,7 @@ CONVENTIONS (identical to library_ambiguity.py, deliberately):
 import gzip
 import json
 import os
+import re
 import sys
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -101,6 +102,49 @@ def read_fasta(path):
             else:
                 cur.append(line.strip())
     if cur:
+        seqs.append("".join(cur).upper())
+    return seqs
+
+
+_TRANSLNC_NONHUMAN_WGS_PREFIXES = ("AABR07", "CAAA01")
+# Found by an independent, blind, from-scratch re-derivation of this whole computation (a
+# round-5 check): the ALL-CAPS-means-human heuristic below also passes GenBank WGS-scaffold accessions,
+# which are uppercase by GenBank convention regardless of species and are NOT HGNC gene symbols. Of the
+# three distinct WGS-style prefixes present in this file, each was checked directly against its NCBI
+# nuccore record: AABR07* (13,048 records) = Rattus norvegicus (rat), CAAA01* (3 records) = Mus musculus
+# (mouse) -- both wrongly kept as "human" by the old heuristic -- but AUXG01* (53 records) is genuinely
+# Homo sapiens (a human WGS scaffold, not a curated gene symbol, but still human) and must NOT be
+# excluded. A blanket "exclude anything WGS-shaped" rule would itself be wrong here; only the two
+# confirmed non-human prefixes are excluded.
+
+def looks_human_translnc(header):
+    """lncRNA_peptide_AA_seq.fasta is MULTI-SPECIES (found in a fresh-review pass): 435,173
+    human (ALL-CAPS gene-symbol convention) headers followed by 148,667 mouse-convention headers
+    (Tug1-..., Gm10619-..., RIKEN clone IDs). A header is 'human' iff the portion before its
+    '-<digits>-<digits>aa' transcript/length marker contains no lowercase letters AND is not one of the
+    confirmed-non-human WGS-scaffold prefixes (see _TRANSLNC_NONHUMAN_WGS_PREFIXES above). Identical
+    filter to abundance_bias.py's looks_human_translnc, duplicated here per this folder's no-cross-import
+    convention (each escalation script is self-contained)."""
+    m = re.match(r"^(.*?)-\d+-\d+aa", header)
+    prefix = m.group(1) if m else header
+    if any(c.islower() for c in prefix):
+        return False
+    return not prefix.startswith(_TRANSLNC_NONHUMAN_WGS_PREFIXES)
+
+
+def read_fasta_translnc_human_only(path):
+    """TransLnc, filtered to human-annotated entries only (see looks_human_translnc)."""
+    seqs, cur, keep = [], [], False
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            if line.startswith(">"):
+                if keep and cur:
+                    seqs.append("".join(cur).upper())
+                keep = looks_human_translnc(line[1:].strip())
+                cur = []
+            elif keep:
+                cur.append(line.strip())
+    if keep and cur:
         seqs.append("".join(cur).upper())
     return seqs
 
@@ -230,6 +274,21 @@ def main():
     print(f"    shared       : {len(both):,} {K}-mers occur in BOTH libraries "
           f"({pct(len(both), len(NU) + len(TL) - len(both)):.1f}% of their union)\n", flush=True)
 
+    # HUMAN-ONLY TransLnc variant (found in a fresh-review pass): the whole-file TL set
+    # above mixes ~148,667 mouse-convention entries into a human-immunopeptidome library calculation.
+    # Mouse 9-mers cannot legitimately enlarge the denominator of a rate scored against a HUMAN
+    # canonical reference -- they dilute it with sequences the human search space never contained.
+    # This is the more defensible number for the headline; the whole-file number is retained
+    # alongside it as the diagnostic showing why species-filtering matters, not silently replaced.
+    tl_pep_human = read_fasta_translnc_human_only(TRANSLNC)
+    TL_H = kmers_of(tl_pep_human)
+    print(f"    TransLnc, HUMAN-ONLY entries : {len(tl_pep_human):,} peptides -> "
+          f"{len(TL_H):,} distinct {K}-mers  (of {len(TL):,} whole-file)", flush=True)
+    del tl_pep_human
+    both_h = NU & TL_H
+    print(f"    shared (human-only)          : {len(both_h):,} {K}-mers in both "
+          f"({pct(len(both_h), len(NU) + len(TL_H) - len(both_h)):.1f}% of their union)\n", flush=True)
+
     # k-mers containing a non-standard residue can never match canonical and would deflate the rates.
     # Count them so the reader can see the effect is nil rather than take our word for it.
     nu_bad = sum(1 for km in NU if not set(km) <= STD_AA)
@@ -250,6 +309,32 @@ def main():
         print()
 
     primary = results[0]
+
+    # ---- human-only TransLnc variant, against the primary (modern) reference ------------------
+    print("=" * 96)
+    print("HUMAN-ONLY TransLnc VARIANT -- the more defensible number, reported alongside whole-file")
+    print("=" * 96)
+    human_result = measure(primary["reference"] + " [TransLnc human-only]",
+                            refs[0][1], NU, TL_H, both_h)
+    print(f"    nuORFdb alone                          {human_result['nuorfdb']['pct']:>6.1f}%"
+          f"  (unchanged: same nuORFdb set)")
+    print(f"    TransLnc, human-only entries            {human_result['translnc']['pct']:>6.1f}%"
+          f"  (whole-file was {primary['translnc']['pct']:.1f}%)")
+    print(f"    nuORFdb U TransLnc(human-only)           {human_result['union']['pct']:>6.1f}%"
+          f"  (whole-file union was {primary['union']['pct']:.1f}%)")
+    rows_h, headroom_h, m_star_h, ceiling_h = interval_table(
+        human_result["union"]["kmers"], human_result["union"]["canonical"], human_result["canonical_kmers"])
+    print(f"    3-source ceiling, human-only union       {ceiling_h:>6.1f}%"
+          f"  (whole-file ceiling is computed below, for comparison)")
+    print()
+
+    # Found by a fresh-review pass: the manuscript claims this human-only union rate is
+    # "unchanged" when re-scored against Swiss-Prot 2022_01, but that was never actually computed --
+    # only the whole-file union was checked against both references. Compute it for real.
+    human_result_era = measure(refs[1][0] + " [TransLnc human-only]", refs[1][1], NU, TL_H, both_h)
+    print(f"    (era-correct 2022_01) nuORFdb U TransLnc(human-only)  "
+          f"{human_result_era['union']['pct']:>6.1f}%")
+    print()
 
     # ---- pipeline validation gate -------------------------------------------------------------
     nu_pct = primary["nuorfdb"]["pct"]
@@ -351,6 +436,9 @@ def main():
   The union rate {primary['union']['pct']:.1f}% is the combined rate ONLY in the m = 0 corner -- i.e. only if RPFdb v2.0
   contributed no {K}-mer that nuORFdb and TransLnc had not already contributed. We have no evidence for
   that and do not assume it.
+
+  HUMAN-ONLY COMPARISON: under the human-only-filtered TransLnc union, the same ceiling is {ceiling_h:.1f}%
+  (vs {ceiling:.1f}% whole-file) -- the human-only number is the one to report as primary.
 """)
 
     # ---- what remains unknown -----------------------------------------------------------------
@@ -415,8 +503,25 @@ def main():
             "ceiling_pct": round(ceiling, 2),
             "ceiling_attained_at_m": m_star,
             "floor_pct": None,
-            "floor_note": "no positive floor exists: h/(u+m) -> 0 as m grows without bound",
+            "floor_note": "no positive lower bound derivable from the sources we hold: h/(u+m) -> 0 as m grows without bound",
             "combined_rate_determined": False,
+        },
+        "human_only_variant": {
+            "note": ("TransLnc's lncRNA_peptide_AA_seq.fasta mixes human and mouse headers. This "
+                     "variant filters to human-annotated entries only (looks_human_translnc) and is "
+                     "the more defensible number for a human immunopeptidome library; the whole-file "
+                     "numbers above are retained as the diagnostic showing why species-filtering "
+                     "matters, not replaced."),
+            "translnc_kmers": len(TL_H),
+            "translnc_canonical": human_result["translnc"]["canonical"],
+            "translnc_pct": human_result["translnc"]["pct"],
+            "union_kmers": human_result["union"]["kmers"],
+            "union_canonical": human_result["union"]["canonical"],
+            "union_pct": human_result["union"]["pct"],
+            "ceiling_pct": round(ceiling_h, 2),
+            "ceiling_attained_at_m": m_star_h,
+            "rows": rows_h,
+            "union_pct_era_correct": human_result_era["union"]["pct"],
         },
     }
     json.dump(payload, open(ART, "w"), indent=2)
