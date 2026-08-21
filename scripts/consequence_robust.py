@@ -7,17 +7,21 @@ trials. They are not. They are clustered by source gene/ORF, gene family, datase
 HLA allele and pipeline. The z is enormous mostly because a heavily structured catalogue was counted
 as 174,465 independent experiments.
 
-There is also a real confounder: PEPTIDE LENGTH. Short peptides both match the canonical proteome
-more readily and recur more often across datasets, so length alone could manufacture the contrast.
+There are also two measured detection-opportunity confounders: PEPTIDE LENGTH and CANCER-DETECTION
+BREADTH. Short peptides match the canonical proteome more readily and recur more often across
+datasets; peptides already found in many cancer types also have more opportunity to recur in the
+normal export.
 
 WHAT THIS DOES INSTEAD
   1. Reports the rate at EACH peptide length -- no pooling.
   2. Reports a LENGTH-STANDARDIZED risk ratio (direct standardization to the catalogue's own length
      distribution), so the comparison is not a length artifact.
-  3. Stratifies by ORF class, using MUTUALLY EXCLUSIVE strata. (The previous class split did not
+  3. Repeats direct standardization jointly by length and cancer-detection breadth, with breadth
+     coarsened to 1, 2, 3, 4 and 5+ cancer types; exact breadth is retained as a sensitivity check.
+  4. Stratifies by ORF class, using MUTUALLY EXCLUSIVE strata. (The previous class split did not
      partition: 546 peptides carry both a pseudogene and a non-pseudogene ORF label, because a
      peptide may map to several ORF_IDs. Presenting them as complements double-counted those 546.)
-  4. Replaces the z-test with a GENE-CLUSTERED BOOTSTRAP: resample source genes with replacement,
+  5. Replaces the z-test with a GENE-CLUSTERED BOOTSTRAP: resample source genes with replacement,
      recompute the length-standardized RR, and report a percentile CI. The unit of resampling is the
      cluster, so the CI respects the dependence the z-test ignored.
 
@@ -92,7 +96,9 @@ def load():
         b = any(not PSEUDO.match(g) for g in gs)
         ts = tissues.get(q) or {"?"}
         rows.append({
-            "pep": q, "len": len(q), "x": selfmap[q], "y": 1 if q in normal else 0,
+            "pep": q, "len": len(q), "breadth": len(tissues.get(q, set())),
+            "breadth_bin": min(len(tissues.get(q, set())), 5),
+            "x": selfmap[q], "y": 1 if q in normal else 0,
             "clust": min(gs), "tissue_clust": min(ts), "cls": "pseudogene-only" if a and not b
                                      else ("non-pseudogene-only" if b and not a else "mixed"),
         })
@@ -115,6 +121,25 @@ def std_rr(rows, weights):
         p1 += w * k1 / n1
         p0 += w * k0 / n0
     return (p1 / p0) if p0 else float("nan"), p1, p0
+
+
+def std_rr_joint(rows, key):
+    """Direct standardization on common-support strata, normalized to their pooled distribution."""
+    cells = defaultdict(lambda: [[0, 0], [0, 0]])
+    for r in rows:
+        arm = 1 if r["x"] else 0
+        cells[key(r)][arm][0] += r["y"]
+        cells[key(r)][arm][1] += 1
+    common = {k: v for k, v in cells.items() if v[0][1] and v[1][1]}
+    common_n = sum(v[0][1] + v[1][1] for v in common.values())
+    if not common_n:
+        return float("nan"), float("nan"), float("nan"), 0, 0
+    p0 = p1 = 0.0
+    for v in common.values():
+        w = (v[0][1] + v[1][1]) / common_n
+        p0 += w * v[0][0] / v[0][1]
+        p1 += w * v[1][0] / v[1][1]
+    return (p1 / p0) if p0 else float("nan"), p1, p0, common_n, len(common)
 
 
 def main():
@@ -172,6 +197,19 @@ def main():
     print(f"  LENGTH-STANDARDIZED RR         : {rr:.2f}x   (crude was "
           f"{(ck/len(ov))/(nk/len(nov)):.2f}x)")
 
+    # ---- 2b. length + detection-breadth standardization ----------------------------
+    rr_lb, p1_lb, p0_lb, n_lb, cells_lb = std_rr_joint(
+        rows, lambda r: (r["len"], r["breadth_bin"]))
+    rr_lbe, p1_lbe, p0_lbe, n_lbe, cells_lbe = std_rr_joint(
+        rows, lambda r: (r["len"], r["breadth"]))
+    print("\n" + "=" * 84)
+    print("2b. LENGTH + CANCER-DETECTION-BREADTH STANDARDIZATION")
+    print("=" * 84)
+    print(f"  coarsened breadth (1,2,3,4,5+), common-support n={n_lb:,}, cells={cells_lb}")
+    print(f"    standardized rates: {100*p1_lb:.1f}% vs {100*p0_lb:.1f}%; RR={rr_lb:.2f}x")
+    print(f"  exact breadth sensitivity, common-support n={n_lbe:,}, cells={cells_lbe}")
+    print(f"    standardized rates: {100*p1_lbe:.1f}% vs {100*p0_lbe:.1f}%; RR={rr_lbe:.2f}x")
+
     # ---- 3. by ORF class, mutually exclusive ---------------------------------------
     print("\n" + "=" * 84)
     print("3. BY ORF CLASS -- mutually exclusive strata (these partition; the old split did not)")
@@ -199,6 +237,7 @@ def main():
     clusters = list(byc.values())
     rng = RNG(SEED)
     boot = []
+    boot_lb = []
     for _ in range(B):
         samp = []
         for _ in range(len(clusters)):
@@ -206,6 +245,9 @@ def main():
         v, _, _ = std_rr(samp, weights)
         if v == v:
             boot.append(v)
+        v_lb, _, _, _, _ = std_rr_joint(samp, lambda r: (r["len"], r["breadth_bin"]))
+        if v_lb == v_lb:
+            boot_lb.append(v_lb)
     boot.sort()
     lo = boot[int(0.025 * len(boot))]
     hi = boot[int(0.975 * len(boot)) - 1]
@@ -214,6 +256,11 @@ def main():
     valid = lo > 1.0
     print(f"\n  => CI {'EXCLUDES' if valid else 'INCLUDES'} 1.0. The association is "
           f"{'established under clustered inference' if valid else 'NOT established'}.")
+
+    boot_lb.sort()
+    lo_lb = boot_lb[int(0.025 * len(boot_lb))]
+    hi_lb = boot_lb[int(0.975 * len(boot_lb)) - 1]
+    print(f"  length+breadth-standardized RR = {rr_lb:.2f}x   95% CI [{lo_lb:.2f}, {hi_lb:.2f}]")
 
     # ---- 4b. tissue-clustered bootstrap (additional robustness axis) ---------------
     # The manuscript names tissue among the dependence structures ("clustered by source gene,
@@ -269,6 +316,23 @@ def main():
         "rr_crude": round((ck / len(ov)) / (nk / len(nov)), 2),
         "rr_length_standardized": round(rr, 2),
         "ci95": [round(lo, 2), round(hi, 2)], "bootstrap_B": len(boot), "seed": SEED,
+        "detection_breadth_adjustment": {
+            "breadth_definition": "number of distinct IEAtlas cancer-type labels per peptide",
+            "primary_breadth_bins": ["1", "2", "3", "4", "5+"],
+            "common_support_n": n_lb,
+            "common_support_cells": cells_lb,
+            "standardized_pct_overlapping": round(100 * p1_lb, 1),
+            "standardized_pct_comparator": round(100 * p0_lb, 1),
+            "rr_length_breadth_standardized": round(rr_lb, 2),
+            "ci95_gene_clustered": [round(lo_lb, 2), round(hi_lb, 2)],
+            "exact_breadth_sensitivity": {
+                "common_support_n": n_lbe,
+                "common_support_cells": cells_lbe,
+                "standardized_pct_overlapping": round(100 * p1_lbe, 1),
+                "standardized_pct_comparator": round(100 * p0_lbe, 1),
+                "rr": round(rr_lbe, 2),
+            },
+        },
         "rr_by_stratum": stratum_rr,
         "rr_by_length": rr_by_length,
         "n_tissue_clusters": len(tclusters),
@@ -282,13 +346,14 @@ def main():
     print("=" * 84)
     if valid:
         print(f"""
-  The association survives the correct inference. It is not a length artifact ({rr:.2f}x after direct
-  standardization, vs {(ck/len(ov))/(nk/len(nov)):.2f}x crude), it holds within every ORF-class
+  The association attenuates but survives the measured detection-opportunity adjustment
+  ({rr_lb:.2f}x after joint length+breadth standardization, vs {rr:.2f}x length-only and
+  {(ck/len(ov))/(nk/len(nov)):.2f}x crude), it holds within every ORF-class
   stratum, and a bootstrap that resamples SOURCE GENES -- respecting the clustering the z-test
   ignored -- gives 95% CI [{lo:.2f}, {hi:.2f}].
 
   The z = 74 must still be DELETED. It was never valid, and being directionally right does not
-  rescue it. Report the length-standardized RR with the clustered CI.
+  rescue it. Report the length+breadth-standardized RR with the clustered CI as primary.
 
   INTERPRETATION, bounded: this is "consistent with, but not specific to, greater detectability or
   expression of canonical-compatible sequences." It is NOT proof of canonical origin. And the

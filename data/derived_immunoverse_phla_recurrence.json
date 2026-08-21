@@ -1,0 +1,747 @@
+{
+  "analysis_author": "Rom Jan",
+  "estimand": {
+    "phla_layer": "published predicted HLA binders (SB/WB), not direct allele-specific evidence",
+    "primary_comparison": "sequence recurrence divided by recurrence of the most widespread predicted peptide-HLA pairing",
+    "sequence_recurrence_unit": "distinct published sample/condition labels per peptide"
+  },
+  "generated_by": "src/darkproteome/immunoverse_phla_recurrence.py",
+  "limitations": [
+    "Sample/condition labels are not normalized to independent patients or studies.",
+    "HLA annotations are binding predictions, not direct allele-specific immunoprecipitation.",
+    "The analysis does not identify the malignant or nonmalignant presenting cell.",
+    "The analysis does not estimate T-cell recognition, safety, or therapeutic efficacy.",
+    "Duplicate peptide rows are unioned across source annotations before recurrence is counted."
+  ],
+  "result": {
+    "audit": {
+      "mapping_keys_absent_from_samples_field": 0,
+      "no_predicted_hla_sentinel_entries": 5340,
+      "sample_condition_entries_with_empty_hla_list": 477,
+      "sample_conditions_missing_mapping_key": 0,
+      "source_rows": 17741
+    },
+    "binder_class_entry_counts": {
+      "NO_PREDICTED_HLA_SENTINEL": 5340,
+      "SB": 24176,
+      "WB": 13630
+    },
+    "recurrent_peptides_n_ge_2_sample_conditions": 4821,
+    "sensitivities": {
+      "strong_or_weak_predicted_binder": {
+        "all_peptides": {
+          "fraction_denominator_note": "Fraction and ratio summaries exclude peptides with no predicted HLA under this sensitivity; their count is reported separately.",
+          "fraction_with_max_predicted_phla_fraction_at_most_half": 0.214433906343,
+          "fraction_with_max_predicted_phla_fraction_below_one": 0.463248369887,
+          "fraction_with_one_predicted_hla_covering_every_sample_condition": 0.536751630113,
+          "maximum_sequence_recurrence_sample_conditions": 67,
+          "median_max_predicted_phla_fraction": 1.0,
+          "median_sequence_recurrence_sample_conditions": 2.0,
+          "median_sequence_to_predicted_phla_ratio": 1.0,
+          "p90_sequence_to_predicted_phla_ratio": 2.0,
+          "peptide_count": 7770,
+          "peptides_with_any_predicted_hla": 6748,
+          "peptides_with_at_least_one_unannotated_sample_condition": 3475,
+          "peptides_without_any_predicted_hla": 1022
+        },
+        "ranking": {
+          "cutoff_sequence_recurrence_sample_conditions": 7,
+          "peptides_above_cutoff": 944,
+          "peptides_tied_at_cutoff": 240,
+          "requested_top_n": 1000,
+          "selected_count": 1000,
+          "tie_break_rule": "descending sequence recurrence, then peptide string ascending",
+          "tie_complete_count": 1184
+        },
+        "recurrent_peptides_n_ge_2": {
+          "fraction_denominator_note": "Fraction and ratio summaries exclude peptides with no predicted HLA under this sensitivity; their count is reported separately.",
+          "fraction_with_max_predicted_phla_fraction_at_most_half": 0.311450710288,
+          "fraction_with_max_predicted_phla_fraction_below_one": 0.672836848902,
+          "fraction_with_one_predicted_hla_covering_every_sample_condition": 0.327163151098,
+          "maximum_sequence_recurrence_sample_conditions": 67,
+          "median_max_predicted_phla_fraction": 0.714285714286,
+          "median_sequence_recurrence_sample_conditions": 4.0,
+          "median_sequence_to_predicted_phla_ratio": 1.4,
+          "p90_sequence_to_predicted_phla_ratio": 2.5,
+          "peptide_count": 4821,
+          "peptides_with_any_predicted_hla": 4646,
+          "peptides_with_at_least_one_unannotated_sample_condition": 2628,
+          "peptides_without_any_predicted_hla": 175
+        },
+        "tie_complete_at_top_n_cutoff": {
+          "fraction_denominator_note": "Fraction and ratio summaries exclude peptides with no predicted HLA under this sensitivity; their count is reported separately.",
+          "fraction_with_max_predicted_phla_fraction_at_most_half": 0.274725274725,
+          "fraction_with_max_predicted_phla_fraction_below_one": 0.926458157227,
+          "fraction_with_one_predicted_hla_covering_every_sample_condition": 0.073541842773,
+          "maximum_sequence_recurrence_sample_conditions": 67,
+          "median_max_predicted_phla_fraction": 0.666666666667,
+          "median_sequence_recurrence_sample_conditions": 10.0,
+          "median_sequence_to_predicted_phla_ratio": 1.5,
+          "p90_sequence_to_predicted_phla_ratio": 2.666666666667,
+          "peptide_count": 1184,
+          "peptides_with_any_predicted_hla": 1183,
+          "peptides_with_at_least_one_unannotated_sample_condition": 998,
+          "peptides_without_any_predicted_hla": 1
+        },
+        "top_examples": [
+          {
+            "candidate_predicted_hla_allele_count": 4,
+            "max_predicted_phla_fraction": 0.43283582089552236,
+            "max_predicted_phla_recurrence_sample_conditions": 29,
+            "peptide": "RVKERDFFLK",
+            "predicted_hla_annotated_sample_fraction": 0.8507462686567164,
+            "sample_conditions_without_predicted_hla": 10,
+            "sequence_recurrence_sample_conditions": 67,
+            "sequence_to_predicted_phla_ratio": 2.310344827586207,
+            "single_predicted_hla_sample_fraction": 0.8059701492537313,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 14,
+            "max_predicted_phla_fraction": 0.84375,
+            "max_predicted_phla_recurrence_sample_conditions": 54,
+            "peptide": "RVEEAIHPV",
+            "predicted_hla_annotated_sample_fraction": 0.90625,
+            "sample_conditions_without_predicted_hla": 6,
+            "sequence_recurrence_sample_conditions": 64,
+            "sequence_to_predicted_phla_ratio": 1.1851851851851851,
+            "single_predicted_hla_sample_fraction": 0.421875,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 6,
+            "max_predicted_phla_fraction": 0.4807692307692308,
+            "max_predicted_phla_recurrence_sample_conditions": 25,
+            "peptide": "RTNNILLPR",
+            "predicted_hla_annotated_sample_fraction": 0.8269230769230769,
+            "sample_conditions_without_predicted_hla": 9,
+            "sequence_recurrence_sample_conditions": 52,
+            "sequence_to_predicted_phla_ratio": 2.08,
+            "single_predicted_hla_sample_fraction": 0.7115384615384616,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 4,
+            "max_predicted_phla_fraction": 0.46,
+            "max_predicted_phla_recurrence_sample_conditions": 23,
+            "peptide": "APRGDGVQVSA",
+            "predicted_hla_annotated_sample_fraction": 0.8,
+            "sample_conditions_without_predicted_hla": 10,
+            "sequence_recurrence_sample_conditions": 50,
+            "sequence_to_predicted_phla_ratio": 2.1739130434782608,
+            "single_predicted_hla_sample_fraction": 0.78,
+            "top_predicted_hla_alleles": [
+              "HLA-B*07:02"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 4,
+            "max_predicted_phla_fraction": 0.5106382978723404,
+            "max_predicted_phla_recurrence_sample_conditions": 24,
+            "peptide": "RSFADSYRQWK",
+            "predicted_hla_annotated_sample_fraction": 0.8723404255319149,
+            "sample_conditions_without_predicted_hla": 6,
+            "sequence_recurrence_sample_conditions": 47,
+            "sequence_to_predicted_phla_ratio": 1.9583333333333333,
+            "single_predicted_hla_sample_fraction": 0.8085106382978723,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 12,
+            "max_predicted_phla_fraction": 0.6,
+            "max_predicted_phla_recurrence_sample_conditions": 27,
+            "peptide": "GQLSDLVVV",
+            "predicted_hla_annotated_sample_fraction": 0.9333333333333333,
+            "sample_conditions_without_predicted_hla": 3,
+            "sequence_recurrence_sample_conditions": 45,
+            "sequence_to_predicted_phla_ratio": 1.6666666666666667,
+            "single_predicted_hla_sample_fraction": 0.7333333333333333,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 2,
+            "max_predicted_phla_fraction": 0.6666666666666666,
+            "max_predicted_phla_recurrence_sample_conditions": 30,
+            "peptide": "IILDQSLILMK",
+            "predicted_hla_annotated_sample_fraction": 0.8,
+            "sample_conditions_without_predicted_hla": 9,
+            "sequence_recurrence_sample_conditions": 45,
+            "sequence_to_predicted_phla_ratio": 1.5,
+            "single_predicted_hla_sample_fraction": 0.8,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 6,
+            "max_predicted_phla_fraction": 0.5581395348837209,
+            "max_predicted_phla_recurrence_sample_conditions": 24,
+            "peptide": "QILKVFIMK",
+            "predicted_hla_annotated_sample_fraction": 0.8604651162790697,
+            "sample_conditions_without_predicted_hla": 6,
+            "sequence_recurrence_sample_conditions": 43,
+            "sequence_to_predicted_phla_ratio": 1.7916666666666667,
+            "single_predicted_hla_sample_fraction": 0.6976744186046512,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 3,
+            "max_predicted_phla_fraction": 0.5853658536585366,
+            "max_predicted_phla_recurrence_sample_conditions": 24,
+            "peptide": "KSLAAELLVLK",
+            "predicted_hla_annotated_sample_fraction": 0.7560975609756098,
+            "sample_conditions_without_predicted_hla": 10,
+            "sequence_recurrence_sample_conditions": 41,
+            "sequence_to_predicted_phla_ratio": 1.7083333333333333,
+            "single_predicted_hla_sample_fraction": 0.7317073170731707,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 19,
+            "max_predicted_phla_fraction": 0.425,
+            "max_predicted_phla_recurrence_sample_conditions": 17,
+            "peptide": "SPILTSSTL",
+            "predicted_hla_annotated_sample_fraction": 0.8,
+            "sample_conditions_without_predicted_hla": 8,
+            "sequence_recurrence_sample_conditions": 40,
+            "sequence_to_predicted_phla_ratio": 2.3529411764705883,
+            "single_predicted_hla_sample_fraction": 0.325,
+            "top_predicted_hla_alleles": [
+              "HLA-C*03:04"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 15,
+            "max_predicted_phla_fraction": 0.7692307692307693,
+            "max_predicted_phla_recurrence_sample_conditions": 30,
+            "peptide": "ALPEVQKQV",
+            "predicted_hla_annotated_sample_fraction": 0.9230769230769231,
+            "sample_conditions_without_predicted_hla": 3,
+            "sequence_recurrence_sample_conditions": 39,
+            "sequence_to_predicted_phla_ratio": 1.3,
+            "single_predicted_hla_sample_fraction": 0.1282051282051282,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 3,
+            "max_predicted_phla_fraction": 0.4444444444444444,
+            "max_predicted_phla_recurrence_sample_conditions": 16,
+            "peptide": "ALAVIPIPK",
+            "predicted_hla_annotated_sample_fraction": 0.7777777777777778,
+            "sample_conditions_without_predicted_hla": 8,
+            "sequence_recurrence_sample_conditions": 36,
+            "sequence_to_predicted_phla_ratio": 2.25,
+            "single_predicted_hla_sample_fraction": 0.7222222222222222,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 4,
+            "max_predicted_phla_fraction": 0.8611111111111112,
+            "max_predicted_phla_recurrence_sample_conditions": 31,
+            "peptide": "GLARDAVPV",
+            "predicted_hla_annotated_sample_fraction": 0.9166666666666666,
+            "sample_conditions_without_predicted_hla": 3,
+            "sequence_recurrence_sample_conditions": 36,
+            "sequence_to_predicted_phla_ratio": 1.1612903225806452,
+            "single_predicted_hla_sample_fraction": 0.8611111111111112,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 6,
+            "max_predicted_phla_fraction": 0.7777777777777778,
+            "max_predicted_phla_recurrence_sample_conditions": 28,
+            "peptide": "GLGAVALGV",
+            "predicted_hla_annotated_sample_fraction": 0.8888888888888888,
+            "sample_conditions_without_predicted_hla": 4,
+            "sequence_recurrence_sample_conditions": 36,
+            "sequence_to_predicted_phla_ratio": 1.2857142857142858,
+            "single_predicted_hla_sample_fraction": 0.8055555555555556,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 8,
+            "max_predicted_phla_fraction": 0.7777777777777778,
+            "max_predicted_phla_recurrence_sample_conditions": 28,
+            "peptide": "KLAPQLRGA",
+            "predicted_hla_annotated_sample_fraction": 0.9444444444444444,
+            "sample_conditions_without_predicted_hla": 2,
+            "sequence_recurrence_sample_conditions": 36,
+            "sequence_to_predicted_phla_ratio": 1.2857142857142858,
+            "single_predicted_hla_sample_fraction": 0.8055555555555556,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 3,
+            "max_predicted_phla_fraction": 0.5277777777777778,
+            "max_predicted_phla_recurrence_sample_conditions": 19,
+            "peptide": "VVYIQSSINK",
+            "predicted_hla_annotated_sample_fraction": 0.8333333333333334,
+            "sample_conditions_without_predicted_hla": 6,
+            "sequence_recurrence_sample_conditions": 36,
+            "sequence_to_predicted_phla_ratio": 1.894736842105263,
+            "single_predicted_hla_sample_fraction": 0.7777777777777778,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 6,
+            "max_predicted_phla_fraction": 0.8,
+            "max_predicted_phla_recurrence_sample_conditions": 28,
+            "peptide": "ATDHHLPFPR",
+            "predicted_hla_annotated_sample_fraction": 0.8857142857142857,
+            "sample_conditions_without_predicted_hla": 4,
+            "sequence_recurrence_sample_conditions": 35,
+            "sequence_to_predicted_phla_ratio": 1.25,
+            "single_predicted_hla_sample_fraction": 0.6,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 7,
+            "max_predicted_phla_fraction": 0.37142857142857144,
+            "max_predicted_phla_recurrence_sample_conditions": 13,
+            "peptide": "AVVRRLLPR",
+            "predicted_hla_annotated_sample_fraction": 0.8571428571428571,
+            "sample_conditions_without_predicted_hla": 5,
+            "sequence_recurrence_sample_conditions": 35,
+            "sequence_to_predicted_phla_ratio": 2.6923076923076925,
+            "single_predicted_hla_sample_fraction": 0.6571428571428571,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 3,
+            "max_predicted_phla_fraction": 0.7428571428571429,
+            "max_predicted_phla_recurrence_sample_conditions": 26,
+            "peptide": "RLQAVGSLLEK",
+            "predicted_hla_annotated_sample_fraction": 0.8,
+            "sample_conditions_without_predicted_hla": 7,
+            "sequence_recurrence_sample_conditions": 35,
+            "sequence_to_predicted_phla_ratio": 1.3461538461538463,
+            "single_predicted_hla_sample_fraction": 0.7428571428571429,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 5,
+            "max_predicted_phla_fraction": 0.5714285714285714,
+            "max_predicted_phla_recurrence_sample_conditions": 20,
+            "peptide": "TVAGGAWTYK",
+            "predicted_hla_annotated_sample_fraction": 0.8,
+            "sample_conditions_without_predicted_hla": 7,
+            "sequence_recurrence_sample_conditions": 35,
+            "sequence_to_predicted_phla_ratio": 1.75,
+            "single_predicted_hla_sample_fraction": 0.6,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          }
+        ],
+        "top_n_by_sequence_recurrence": {
+          "fraction_denominator_note": "Fraction and ratio summaries exclude peptides with no predicted HLA under this sensitivity; their count is reported separately.",
+          "fraction_with_max_predicted_phla_fraction_at_most_half": 0.276,
+          "fraction_with_max_predicted_phla_fraction_below_one": 0.935,
+          "fraction_with_one_predicted_hla_covering_every_sample_condition": 0.065,
+          "maximum_sequence_recurrence_sample_conditions": 67,
+          "median_max_predicted_phla_fraction": 0.666666666667,
+          "median_sequence_recurrence_sample_conditions": 11.0,
+          "median_sequence_to_predicted_phla_ratio": 1.5,
+          "p90_sequence_to_predicted_phla_ratio": 2.666666666667,
+          "peptide_count": 1000,
+          "peptides_with_any_predicted_hla": 1000,
+          "peptides_with_at_least_one_unannotated_sample_condition": 855,
+          "peptides_without_any_predicted_hla": 0
+        }
+      },
+      "strong_predicted_binder_only": {
+        "all_peptides": {
+          "fraction_denominator_note": "Fraction and ratio summaries exclude peptides with no predicted HLA under this sensitivity; their count is reported separately.",
+          "fraction_with_max_predicted_phla_fraction_at_most_half": 0.247895944912,
+          "fraction_with_max_predicted_phla_fraction_below_one": 0.511285386381,
+          "fraction_with_one_predicted_hla_covering_every_sample_condition": 0.488714613619,
+          "maximum_sequence_recurrence_sample_conditions": 67,
+          "median_max_predicted_phla_fraction": 0.888888888889,
+          "median_sequence_recurrence_sample_conditions": 2.0,
+          "median_sequence_to_predicted_phla_ratio": 1.125,
+          "p90_sequence_to_predicted_phla_ratio": 2.5,
+          "peptide_count": 7770,
+          "peptides_with_any_predicted_hla": 5228,
+          "peptides_with_at_least_one_unannotated_sample_condition": 4756,
+          "peptides_without_any_predicted_hla": 2542
+        },
+        "ranking": {
+          "cutoff_sequence_recurrence_sample_conditions": 7,
+          "peptides_above_cutoff": 944,
+          "peptides_tied_at_cutoff": 240,
+          "requested_top_n": 1000,
+          "selected_count": 1000,
+          "tie_break_rule": "descending sequence recurrence, then peptide string ascending",
+          "tie_complete_count": 1184
+        },
+        "recurrent_peptides_n_ge_2": {
+          "fraction_denominator_note": "Fraction and ratio summaries exclude peptides with no predicted HLA under this sensitivity; their count is reported separately.",
+          "fraction_with_max_predicted_phla_fraction_at_most_half": 0.338028169014,
+          "fraction_with_max_predicted_phla_fraction_below_one": 0.697183098592,
+          "fraction_with_one_predicted_hla_covering_every_sample_condition": 0.302816901408,
+          "maximum_sequence_recurrence_sample_conditions": 67,
+          "median_max_predicted_phla_fraction": 0.666666666667,
+          "median_sequence_recurrence_sample_conditions": 4.0,
+          "median_sequence_to_predicted_phla_ratio": 1.5,
+          "p90_sequence_to_predicted_phla_ratio": 3.0,
+          "peptide_count": 4821,
+          "peptides_with_any_predicted_hla": 3834,
+          "peptides_with_at_least_one_unannotated_sample_condition": 3201,
+          "peptides_without_any_predicted_hla": 987
+        },
+        "tie_complete_at_top_n_cutoff": {
+          "fraction_denominator_note": "Fraction and ratio summaries exclude peptides with no predicted HLA under this sensitivity; their count is reported separately.",
+          "fraction_with_max_predicted_phla_fraction_at_most_half": 0.323666978485,
+          "fraction_with_max_predicted_phla_fraction_below_one": 0.931711880262,
+          "fraction_with_one_predicted_hla_covering_every_sample_condition": 0.068288119738,
+          "maximum_sequence_recurrence_sample_conditions": 67,
+          "median_max_predicted_phla_fraction": 0.636363636364,
+          "median_sequence_recurrence_sample_conditions": 10.0,
+          "median_sequence_to_predicted_phla_ratio": 1.571428571429,
+          "p90_sequence_to_predicted_phla_ratio": 3.5,
+          "peptide_count": 1184,
+          "peptides_with_any_predicted_hla": 1069,
+          "peptides_with_at_least_one_unannotated_sample_condition": 1036,
+          "peptides_without_any_predicted_hla": 115
+        },
+        "top_examples": [
+          {
+            "candidate_predicted_hla_allele_count": 4,
+            "max_predicted_phla_fraction": 0.43283582089552236,
+            "max_predicted_phla_recurrence_sample_conditions": 29,
+            "peptide": "RVKERDFFLK",
+            "predicted_hla_annotated_sample_fraction": 0.8507462686567164,
+            "sample_conditions_without_predicted_hla": 10,
+            "sequence_recurrence_sample_conditions": 67,
+            "sequence_to_predicted_phla_ratio": 2.310344827586207,
+            "single_predicted_hla_sample_fraction": 0.8059701492537313,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 5,
+            "max_predicted_phla_fraction": 0.84375,
+            "max_predicted_phla_recurrence_sample_conditions": 54,
+            "peptide": "RVEEAIHPV",
+            "predicted_hla_annotated_sample_fraction": 0.90625,
+            "sample_conditions_without_predicted_hla": 6,
+            "sequence_recurrence_sample_conditions": 64,
+            "sequence_to_predicted_phla_ratio": 1.1851851851851851,
+            "single_predicted_hla_sample_fraction": 0.8125,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 4,
+            "max_predicted_phla_fraction": 0.4807692307692308,
+            "max_predicted_phla_recurrence_sample_conditions": 25,
+            "peptide": "RTNNILLPR",
+            "predicted_hla_annotated_sample_fraction": 0.8269230769230769,
+            "sample_conditions_without_predicted_hla": 9,
+            "sequence_recurrence_sample_conditions": 52,
+            "sequence_to_predicted_phla_ratio": 2.08,
+            "single_predicted_hla_sample_fraction": 0.8076923076923077,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 4,
+            "max_predicted_phla_fraction": 0.46,
+            "max_predicted_phla_recurrence_sample_conditions": 23,
+            "peptide": "APRGDGVQVSA",
+            "predicted_hla_annotated_sample_fraction": 0.8,
+            "sample_conditions_without_predicted_hla": 10,
+            "sequence_recurrence_sample_conditions": 50,
+            "sequence_to_predicted_phla_ratio": 2.1739130434782608,
+            "single_predicted_hla_sample_fraction": 0.78,
+            "top_predicted_hla_alleles": [
+              "HLA-B*07:02"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 2,
+            "max_predicted_phla_fraction": 0.3404255319148936,
+            "max_predicted_phla_recurrence_sample_conditions": 16,
+            "peptide": "RSFADSYRQWK",
+            "predicted_hla_annotated_sample_fraction": 0.3404255319148936,
+            "sample_conditions_without_predicted_hla": 31,
+            "sequence_recurrence_sample_conditions": 47,
+            "sequence_to_predicted_phla_ratio": 2.9375,
+            "single_predicted_hla_sample_fraction": 0.3191489361702128,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 5,
+            "max_predicted_phla_fraction": 0.6,
+            "max_predicted_phla_recurrence_sample_conditions": 27,
+            "peptide": "GQLSDLVVV",
+            "predicted_hla_annotated_sample_fraction": 0.8666666666666667,
+            "sample_conditions_without_predicted_hla": 6,
+            "sequence_recurrence_sample_conditions": 45,
+            "sequence_to_predicted_phla_ratio": 1.6666666666666667,
+            "single_predicted_hla_sample_fraction": 0.7555555555555555,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 0,
+            "max_predicted_phla_fraction": 0.0,
+            "max_predicted_phla_recurrence_sample_conditions": 0,
+            "peptide": "IILDQSLILMK",
+            "predicted_hla_annotated_sample_fraction": 0.0,
+            "sample_conditions_without_predicted_hla": 45,
+            "sequence_recurrence_sample_conditions": 45,
+            "sequence_to_predicted_phla_ratio": null,
+            "single_predicted_hla_sample_fraction": 0.0,
+            "top_predicted_hla_alleles": []
+          },
+          {
+            "candidate_predicted_hla_allele_count": 2,
+            "max_predicted_phla_fraction": 0.5581395348837209,
+            "max_predicted_phla_recurrence_sample_conditions": 24,
+            "peptide": "QILKVFIMK",
+            "predicted_hla_annotated_sample_fraction": 0.8604651162790697,
+            "sample_conditions_without_predicted_hla": 6,
+            "sequence_recurrence_sample_conditions": 43,
+            "sequence_to_predicted_phla_ratio": 1.7916666666666667,
+            "single_predicted_hla_sample_fraction": 0.8604651162790697,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 1,
+            "max_predicted_phla_fraction": 0.17073170731707318,
+            "max_predicted_phla_recurrence_sample_conditions": 7,
+            "peptide": "KSLAAELLVLK",
+            "predicted_hla_annotated_sample_fraction": 0.17073170731707318,
+            "sample_conditions_without_predicted_hla": 34,
+            "sequence_recurrence_sample_conditions": 41,
+            "sequence_to_predicted_phla_ratio": 5.857142857142857,
+            "single_predicted_hla_sample_fraction": 0.17073170731707318,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 11,
+            "max_predicted_phla_fraction": 0.1,
+            "max_predicted_phla_recurrence_sample_conditions": 4,
+            "peptide": "SPILTSSTL",
+            "predicted_hla_annotated_sample_fraction": 0.45,
+            "sample_conditions_without_predicted_hla": 22,
+            "sequence_recurrence_sample_conditions": 40,
+            "sequence_to_predicted_phla_ratio": 10.0,
+            "single_predicted_hla_sample_fraction": 0.375,
+            "top_predicted_hla_alleles": [
+              "HLA-B*35:03"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 6,
+            "max_predicted_phla_fraction": 0.7692307692307693,
+            "max_predicted_phla_recurrence_sample_conditions": 30,
+            "peptide": "ALPEVQKQV",
+            "predicted_hla_annotated_sample_fraction": 0.8974358974358975,
+            "sample_conditions_without_predicted_hla": 4,
+            "sequence_recurrence_sample_conditions": 39,
+            "sequence_to_predicted_phla_ratio": 1.3,
+            "single_predicted_hla_sample_fraction": 0.6923076923076923,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 3,
+            "max_predicted_phla_fraction": 0.4444444444444444,
+            "max_predicted_phla_recurrence_sample_conditions": 16,
+            "peptide": "ALAVIPIPK",
+            "predicted_hla_annotated_sample_fraction": 0.7777777777777778,
+            "sample_conditions_without_predicted_hla": 8,
+            "sequence_recurrence_sample_conditions": 36,
+            "sequence_to_predicted_phla_ratio": 2.25,
+            "single_predicted_hla_sample_fraction": 0.7222222222222222,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 4,
+            "max_predicted_phla_fraction": 0.8611111111111112,
+            "max_predicted_phla_recurrence_sample_conditions": 31,
+            "peptide": "GLARDAVPV",
+            "predicted_hla_annotated_sample_fraction": 0.9166666666666666,
+            "sample_conditions_without_predicted_hla": 3,
+            "sequence_recurrence_sample_conditions": 36,
+            "sequence_to_predicted_phla_ratio": 1.1612903225806452,
+            "single_predicted_hla_sample_fraction": 0.8611111111111112,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 2,
+            "max_predicted_phla_fraction": 0.7777777777777778,
+            "max_predicted_phla_recurrence_sample_conditions": 28,
+            "peptide": "GLGAVALGV",
+            "predicted_hla_annotated_sample_fraction": 0.8055555555555556,
+            "sample_conditions_without_predicted_hla": 7,
+            "sequence_recurrence_sample_conditions": 36,
+            "sequence_to_predicted_phla_ratio": 1.2857142857142858,
+            "single_predicted_hla_sample_fraction": 0.8055555555555556,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 6,
+            "max_predicted_phla_fraction": 0.7777777777777778,
+            "max_predicted_phla_recurrence_sample_conditions": 28,
+            "peptide": "KLAPQLRGA",
+            "predicted_hla_annotated_sample_fraction": 0.9444444444444444,
+            "sample_conditions_without_predicted_hla": 2,
+            "sequence_recurrence_sample_conditions": 36,
+            "sequence_to_predicted_phla_ratio": 1.2857142857142858,
+            "single_predicted_hla_sample_fraction": 0.8888888888888888,
+            "top_predicted_hla_alleles": [
+              "HLA-A*02:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 2,
+            "max_predicted_phla_fraction": 0.5277777777777778,
+            "max_predicted_phla_recurrence_sample_conditions": 19,
+            "peptide": "VVYIQSSINK",
+            "predicted_hla_annotated_sample_fraction": 0.8333333333333334,
+            "sample_conditions_without_predicted_hla": 6,
+            "sequence_recurrence_sample_conditions": 36,
+            "sequence_to_predicted_phla_ratio": 1.894736842105263,
+            "single_predicted_hla_sample_fraction": 0.8333333333333334,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 2,
+            "max_predicted_phla_fraction": 0.8,
+            "max_predicted_phla_recurrence_sample_conditions": 28,
+            "peptide": "ATDHHLPFPR",
+            "predicted_hla_annotated_sample_fraction": 0.8,
+            "sample_conditions_without_predicted_hla": 7,
+            "sequence_recurrence_sample_conditions": 35,
+            "sequence_to_predicted_phla_ratio": 1.25,
+            "single_predicted_hla_sample_fraction": 0.7428571428571429,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 4,
+            "max_predicted_phla_fraction": 0.37142857142857144,
+            "max_predicted_phla_recurrence_sample_conditions": 13,
+            "peptide": "AVVRRLLPR",
+            "predicted_hla_annotated_sample_fraction": 0.6,
+            "sample_conditions_without_predicted_hla": 14,
+            "sequence_recurrence_sample_conditions": 35,
+            "sequence_to_predicted_phla_ratio": 2.6923076923076925,
+            "single_predicted_hla_sample_fraction": 0.5142857142857142,
+            "top_predicted_hla_alleles": [
+              "HLA-A*11:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 2,
+            "max_predicted_phla_fraction": 0.7428571428571429,
+            "max_predicted_phla_recurrence_sample_conditions": 26,
+            "peptide": "RLQAVGSLLEK",
+            "predicted_hla_annotated_sample_fraction": 0.8,
+            "sample_conditions_without_predicted_hla": 7,
+            "sequence_recurrence_sample_conditions": 35,
+            "sequence_to_predicted_phla_ratio": 1.3461538461538463,
+            "single_predicted_hla_sample_fraction": 0.7714285714285715,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          },
+          {
+            "candidate_predicted_hla_allele_count": 3,
+            "max_predicted_phla_fraction": 0.5714285714285714,
+            "max_predicted_phla_recurrence_sample_conditions": 20,
+            "peptide": "TVAGGAWTYK",
+            "predicted_hla_annotated_sample_fraction": 0.8,
+            "sample_conditions_without_predicted_hla": 7,
+            "sequence_recurrence_sample_conditions": 35,
+            "sequence_to_predicted_phla_ratio": 1.75,
+            "single_predicted_hla_sample_fraction": 0.6571428571428571,
+            "top_predicted_hla_alleles": [
+              "HLA-A*03:01"
+            ]
+          }
+        ],
+        "top_n_by_sequence_recurrence": {
+          "fraction_denominator_note": "Fraction and ratio summaries exclude peptides with no predicted HLA under this sensitivity; their count is reported separately.",
+          "fraction_with_max_predicted_phla_fraction_at_most_half": 0.320920043812,
+          "fraction_with_max_predicted_phla_fraction_below_one": 0.938663745893,
+          "fraction_with_one_predicted_hla_covering_every_sample_condition": 0.061336254107,
+          "maximum_sequence_recurrence_sample_conditions": 67,
+          "median_max_predicted_phla_fraction": 0.636363636364,
+          "median_sequence_recurrence_sample_conditions": 11.0,
+          "median_sequence_to_predicted_phla_ratio": 1.571428571429,
+          "p90_sequence_to_predicted_phla_ratio": 3.333333333333,
+          "peptide_count": 1000,
+          "peptides_with_any_predicted_hla": 913,
+          "peptides_with_at_least_one_unannotated_sample_condition": 883,
+          "peptides_without_any_predicted_hla": 87
+        }
+      }
+    },
+    "unique_peptide_sequences": 7770,
+    "unique_sample_condition_labels": 451
+  },
+  "schema_version": 1,
+  "source": {
+    "path": "data/external/immunoverse/media-7_table_s7.xlsx",
+    "sha256": "d7ea303458278c32249ee495f67d81cb8571ccb2c5b62cab87763e47072fa8b4",
+    "sheet": "ORF_antigen",
+    "size_bytes": 4365404,
+    "source_row_count": 17741
+  }
+}

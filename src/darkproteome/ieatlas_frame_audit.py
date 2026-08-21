@@ -1,4 +1,4 @@
-"""IEAtlas canonical-self MECHANISM audit — what the 56.3% lead finding actually is.
+"""IEAtlas same-gene mapping-topology audit.
 
 The lead measurement (tier1_nonnovelty.py / reference_model.py): 56.3% of IEAtlas's
 "non-canonical" cancer epitopes (98,193 / 174,465) are EXACT substrings of the canonical
@@ -7,22 +7,18 @@ human proteome (SwissProt) -> MS-unfalsifiable as non-canonical. IEAtlas (Cai et
 pseudogene / UTR), so a canonical-substring hit is a sequence-non-novelty finding, not a
 database that merely contains canonical peptides on purpose.
 
-This script answers the obvious next question a referee asks: WHY are they canonical
-substrings? Each IEAtlas epitope is annotated to an ORF named `GENE_NNaa` (e.g.
+This script asks where the exact canonical mapping sits relative to the atlas annotation.
+Each IEAtlas epitope is annotated to an ORF named `GENE_NNaa` (e.g.
 `RBM47_223aa`). We map that gene to its OWN SwissProt canonical protein and test whether the
-epitope is a substring of it. The split is decisive:
+epitope is a substring of it. The result is descriptive mapping topology:
 
   * canonical-self group  -> ~89% annotated to a CODING gene, and ~89% of the epitopes are
-    substrings of THEIR OWN gene's canonical protein  => in-frame alternative ORFs of coding
-    genes, whose product is identical to the canonical protein over the epitope.
-  * NOT-canonical-self group -> a similar fraction are coding genes, but ~0% are substrings of
-    their own gene's canonical protein => genuinely out-of-frame / distinct sequence.
+    substrings of THEIR OWN annotated gene's canonical protein.
+  * NOT-canonical-self group -> 0% are canonical substrings anywhere, by definition, so its own-gene
+    percentage is necessarily 0%. This is a definitional comparator, not a negative control.
 
-That 0% in the not-self group is the INTERNAL NEGATIVE CONTROL: the substring test does not
-spuriously match an epitope to its own gene, so the ~89% in the self group is real, not an
-artifact. It also refutes the strongest reviewer dismissal ("short peptides hit random
-canonical proteins by chance"): they don't hit random proteins — they hit the canonical
-protein of the very gene they are annotated to.
+Same-gene sequence identity does not establish reading frame, genomic coordinates, or transcript of
+origin. Those require sequence-to-genome/ORF coordinate mapping and are deliberately not inferred here.
 
     python3 src/darkproteome/ieatlas_frame_audit.py
 
@@ -117,7 +113,7 @@ def main():
                         examples[is_self].append((s, r.get("orf_id_or_locus"), g))
 
     n_all = tot[True] + tot[False]
-    print(f"\n=== IEAtlas frame-mechanism audit (N={n_all:,} unique epitopes) ===")
+    print(f"\n=== IEAtlas same-gene mapping-topology audit (N={n_all:,} unique epitopes) ===")
     print(f"  canonical-self: {tot[True]:,} = {100*tot[True]/n_all:.1f}%   "
           f"(reproduces the 56.3% lead)\n")
     print(f"  {'group':<22}{'n':>10}{'ORF gene coding':>18}{'in OWN gene canon':>20}")
@@ -125,12 +121,10 @@ def main():
         n = tot[k]
         print(f"  {lab:<22}{n:>10,}{100*cod[k]/n:>16.1f}%{100*inown[k]/n:>18.1f}%")
 
-    print("\n  >>> INTERNAL NEGATIVE CONTROL: the NOT-canonical-self group is "
-          f"{100*inown[False]/tot[False]:.1f}% in-own-gene")
-    print("      (== 0 by construction if the substring test is honest) -> the "
-          f"{100*inown[True]/tot[True]:.1f}% in the self group is REAL,")
-    print("      and these epitopes hit the canonical protein of THEIR OWN annotated gene,")
-    print("      not random proteins -> in-frame alternative ORFs of coding genes.")
+    print("\n  The NOT-canonical-self group's 0% is definitional, not a negative control:")
+    print("  that group contains no Swiss-Prot substring matches anywhere. The informative")
+    print(f"  result is that {100*inown[True]/tot[True]:.1f}% of exact-compatible peptides match")
+    print("  the canonical protein of their own annotated gene. No reading frame is inferred.")
 
     print("\n  examples (canonical-self, epitope == substring of own gene's canonical protein):")
     for s, orfid, g in examples[True]:

@@ -16,6 +16,32 @@
   ],
   "bootstrap_B": 2000,
   "seed": 20260713,
+  "detection_breadth_adjustment": {
+    "breadth_definition": "number of distinct IEAtlas cancer-type labels per peptide",
+    "primary_breadth_bins": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5+"
+    ],
+    "common_support_n": 174413,
+    "common_support_cells": 75,
+    "standardized_pct_overlapping": 20.1,
+    "standardized_pct_comparator": 11.7,
+    "rr_length_breadth_standardized": 1.72,
+    "ci95_gene_clustered": [
+      1.66,
+      1.8
+    ],
+    "exact_breadth_sensitivity": {
+      "common_support_n": 174335,
+      "common_support_cells": 110,
+      "standardized_pct_overlapping": 20.1,
+      "standardized_pct_comparator": 11.7,
+      "rr": 1.72
+    }
+  },
   "rr_by_stratum": {
     "pseudogene-only": 2.39,
     "non-pseudogene-only": 2.4,

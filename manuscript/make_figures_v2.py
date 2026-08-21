@@ -11,7 +11,8 @@ detection material (R3):
                           robustness panel (era-correct reference / length standardization / class)
   F2  the consequence  -- normal-tissue presentation, with the catalogue's own canonical-incompatible
                           sequences as a WITHIN-RESOURCE COMPARATOR (not a control), reported with
-                          the length-standardized risk ratio and its gene-clustered CI
+                          the length- and cancer-detection-breadth-standardized risk ratio and its
+                          gene-clustered CI
   F3  the library      -- latent canonical ambiguity of the ncORF libraries (does not compose)
   F4  the detection effect -- ribosomal-ORF enrichment and abundance-predicts-breadth, tested against
                           the library so the library alone cannot account for it
@@ -49,6 +50,9 @@ BIAS = json.load(open(os.path.join(REPO, "data", "derived_detection_bias.json"))
 ERA = json.load(open(os.path.join(REPO, "data", "derived_era_reference.json")))
 UNI = json.load(open(os.path.join(REPO, "data", "derived_library_union.json")))
 ABD = json.load(open(os.path.join(REPO, "data", "derived_abundance_direct.json")))
+R1LEN = json.load(open(os.path.join(REPO, "data", "derived_r1_length_strata.json")))
+IL = json.load(open(os.path.join(REPO, "data", "derived_ieatlas_il_equivalence.json")))
+GEN = json.load(open(os.path.join(REPO, "data", "derived_cross_study_generalization.json")))
 _UREF = next(r for r in UNI["by_reference"] if r["reference"] == UNI["primary_reference"])
 
 plt.rcParams.update({"savefig.dpi": 300, "font.size": 9, "axes.spines.top": False,
@@ -134,19 +138,30 @@ a.text(0.0, -0.28, "Published rates for four other catalogues (1.4–5%, Bedran 
                    "plotted: different pipeline, so a ratio against them is not a measurement.",
        transform=a.transAxes, ha="left", fontsize=6.2, color="#666")
 
-# robustness panel -- every bar is a different way of trying to make 56.3% go away
-rob = [("as reported\n(reference R)", 56.3, RED),
-       (f"era-correct\n(Swiss-Prot 2022_01)", ERA["pct_2022_01"], BLUE),
-       ("length-\nstandardized", 56.3, BLUE),
-       ("if NO pseudogene\nORFs at all", 55.8, BLUE)]
-b.bar(range(4), [x[1] for x in rob], color=[x[2] for x in rob], alpha=.9)
-for i, (_l, v, _c) in enumerate(rob):
-    b.text(i, v + 1.2, f"{v}%", ha="center", fontsize=7.5)
+# robustness panel -- every bar is a different way of trying to make 56.3% go away.
+# The by-length check is a RANGE across 18 strata (46.2-65.2%), not a single value -- an earlier
+# version hardcoded it to the crude 56.3%, which is what "length-standardized" produces by
+# construction (a population reweighted to its own length distribution reproduces its own crude
+# rate) and is not an independent check at all. Fixed to plot the actual per-length range from
+# derived_r1_length_strata.json, matching Table 1 in the manuscript text.
+_headline_pct = round(100 * R3["n_overlapping"] / R3["n_total"], 1)
+rob = [("as reported\n(reference R)", _headline_pct, _headline_pct, RED),
+       ("I/L-equivalent\n(MS sensitivity)", IL["pct_il_equivalent_compatible"],
+        IL["pct_il_equivalent_compatible"], BLUE),
+       ("era-correct\n(Swiss-Prot 2022_01)", ERA["pct_2022_01"], ERA["pct_2022_01"], BLUE),
+       ("by length\n(18 strata)", R1LEN["range_lo_pct"], R1LEN["range_hi_pct"], BLUE)]
+for i, (_l, lo, hi, c) in enumerate(rob):
+    if lo == hi:
+        b.bar(i, hi, color=c, alpha=.9)
+        b.text(i, hi + 1.2, f"{hi}%", ha="center", fontsize=7.5)
+    else:
+        b.bar(i, hi - lo, bottom=lo, color=c, alpha=.9)
+        b.text(i, hi + 1.2, f"{lo}–{hi}%", ha="center", fontsize=7.5)
 b.set_xticks(range(4))
 b.set_xticklabels([x[0] for x in rob], fontsize=6.6)
 b.set_ylim(0, 68)
 b.set_ylabel("canonical-sequence overlap (%)")
-b.set_title("(b) Stable across all three robustness checks", loc="left", fontsize=9)
+b.set_title("(b) Stable across measurement and reference checks", loc="left", fontsize=9)
 b.text(0.5, -0.30, f"only {ERA['retrospective_only']} sequences ({ERA['retrospective_pct_of_overlap']}%"
                    " of the overlap set) are matches\na February-2022 analyst could not have made",
        transform=b.transAxes, ha="center", fontsize=6.2, color="#666")
@@ -261,6 +276,7 @@ save(fig, "f4_detection")
 
 # ------------------------------------------------- F2: the consequence, correctly inferred
 cancer = epitopes(os.path.join(ATL, "IEAtlas_Epitopes_In_Cancer_Tissues.txt"))
+adj = R3["detection_breadth_adjustment"]
 p1 = R3["pct_overlapping_in_normal"]
 p2 = R3["pct_comparator_in_normal"]
 kov, knov = R3["overlapping_in_normal"], R3["comparator_in_normal"]
@@ -275,13 +291,14 @@ for i, (v, k, n) in enumerate(((p1, kov, nov_n), (p2, knov, nnov_n))):
 a.set_ylabel("also in IEAtlas's OWN\nnormal-tissue export (%)")  # one line overruns the canvas
 a.set_ylim(0, 29)
 a.tick_params(axis="x", labelsize=7)
-a.set_title(f"(a) Risk ratio {R3['rr_length_standardized']}× "
-            f"[{R3['ci95'][0]}, {R3['ci95'][1]}]", loc="left", fontsize=9)
-a.text(0.5, -0.52, "length-standardized; 95% CI from a bootstrap resampling\n"
+a.set_title(f"(a) Adjusted risk ratio {adj['rr_length_breadth_standardized']:.2f}× "
+            f"[{adj['ci95_gene_clustered'][0]:.2f}, {adj['ci95_gene_clustered'][1]:.2f}]",
+            loc="left", fontsize=9)
+a.text(0.5, -0.52, "standardized by length and cancer-detection breadth; 95% CI from\n"
                    f"{R3['n_clusters']:,} source-gene clusters (the observations are clustered,\n"
                    "so a two-proportion z-test would not be valid). Dividing the two bars above\n"
-                   f"directly gives the CRUDE ratio ({R3['rr_crude']}×) — not this figure's\n"
-                   "(length-standardized) RR.",
+                   f"directly gives the crude ratio ({R3['rr_crude']}×), not the adjusted estimate.\n"
+                   f"Length-only standardization gives {R3['rr_length_standardized']}×.",
        transform=a.transAxes, ha="center", fontsize=6.0, color="#666")
 
 both = kov

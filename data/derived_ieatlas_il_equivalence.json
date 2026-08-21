@@ -1,0 +1,12 @@
+{
+  "reference": "Swiss-Prot reviewed human reference R used by claim_catalog_scored.csv",
+  "rule": "replace both I and L by J before substring matching",
+  "n_total": 174465,
+  "n_exact_compatible": 98193,
+  "pct_exact_compatible": 56.3,
+  "n_il_equivalent_compatible": 98546,
+  "pct_il_equivalent_compatible": 56.5,
+  "n_additional_il_equivalent": 353,
+  "delta_percentage_points": 0.2,
+  "interpretation": "Nested sensitivity analysis for sequence compatibility under routine MS measurement; it does not identify the source locus."
+}

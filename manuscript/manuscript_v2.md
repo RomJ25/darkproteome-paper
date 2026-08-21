@@ -1,5 +1,7 @@
 # Extensive canonical-sequence overlap and unresolved source attribution in a public non‑canonical HLA-peptide atlas
 
+**Rom Jan**
+
 *Every number is regenerated from the analysis artifacts by `verify_manuscript.py`, which fails the
 build on drift. Every quotation from a primary Methods section has been verified in the fetched full
 text.*
@@ -11,13 +13,14 @@ text.*
 > **Known.** A peptide matching a canonical protein does not identify a non-canonical source and should
 > be **excluded** before being called non-canonical (**Bedran et al. 2023**; **Aggarwal et al. 2022** —
 > full quotations in the Introduction); the underlying protein-inference problem is textbook
-> (**Nesvizhskii & Aebersold 2005**); a pooled FDR under-controls a minority class, so class-specific
-> FDR is required (**Woo et al. 2014**; Zhang & Bassani-Sternberg 2023; **pXg**, Choi & Paek 2024).
+> (**Nesvizhskii & Aebersold 2005**); pooled target–decoy competition can distribute errors unevenly
+> across classes, requiring group-aware assessment and control (**Woo et al. 2014**; **Group-walk**,
+> Freestone et al. 2022; Zhang & Bassani-Sternberg 2023; **pXg**, Choi & Paek 2024).
 >
 > **Our contribution is empirical:** an audit of whether a major public resource satisfies these
 > principles, a measurement of the sequence ambiguity latent in its peptide catalogue and in one of
-> its source libraries, a within-resource test of the consequence, and a concrete reporting field
-> that would fix it. Aggarwal et al. state that the problem is *not quantified* and that *no specific
+> its source libraries, a within-resource test of the consequence, and an atlas-level implementation
+> of existing MIAIPE/mzIdentML provenance fields. Aggarwal et al. state that the problem is *not quantified* and that *no specific
 > databases are criticised by name*; Bedran et al., who did quantify, did not include IEAtlas.
 
 ---
@@ -44,8 +47,9 @@ distinct 9-mers against **1.0–2.4%** for GENCODE Ribo-seq ORFs — but does no
 rate: the exclusion step does.
 
 The consequence is observable inside the resource: canonical-compatible sequences appear in IEAtlas's
-**own** normal-tissue export at **22.4%** versus **9.1%** for canonical-incompatible ones (risk ratio
-**2.42×**, gene-clustered bootstrap **95% CI [2.32, 2.52]**); **22,003 sequences (12.6% of the
+**own** normal-tissue export at **22.4%** versus **9.1%** for canonical-incompatible ones; after joint
+standardization by peptide length and cancer-detection breadth, the risk ratio is **1.72×**
+(gene-clustered bootstrap **95% CI [1.66, 1.80]**). **22,003 sequences (12.6% of the
 catalogue)** are both canonical-compatible and already in that export — consistent with, but not
 specific to, greater detectability, and warranting normal-presentation review before treatment as a
 tumour-restricted target.
@@ -53,7 +57,13 @@ tumour-restricted target.
 Separately and additively, IEAtlas's pooled 5% PSM-level FDR cannot be resolved to a class-specific
 estimate for its non-canonical subset without class-resolved target–decoy counts, which it does not
 publish. We propose retaining shared sequences with an explicit source-compatibility annotation instead
-of treating them as uniquely non-canonical.
+of treating them as uniquely non-canonical, and losslessly propagating established MIAIPE/mzIdentML
+provenance into atlas exports. In a separate raw-linked ImmunoVerse pilot, two recurrent peptide
+sequences had current accepted scan evidence in every catalogue-listed cell-line context, yet those
+contexts shared no reported HLA allele; sequence recurrence therefore did not represent recurrence of
+one peptide–HLA allomorph. Together, these results show that spectrum-assignment confidence, source
+attribution and target recurrence are distinct estimands: confidence at one level does not
+automatically survive atlas aggregation.
 
 ---
 
@@ -87,12 +97,29 @@ specifically: a peptide is classified as ncORF-derived only if it maps (≥8 aa;
 mappings for canonical, ≤10 distinct ncORF mappings for ncORF-derived) to a ncORF and not a canonical
 protein — its own criteria, which the paper itself describes as *"less strict than those used by
 PeptideAtlas to avoid mapping canonical protein derived peptides to ncORFs"* (Deutsch et al. 2026):
-PeptideAtlas's own production scheme is stricter still, and exists for exactly this purpose. The
-underlying rationale presupposes the search process does not do this on its own, exactly as Bedran's
+PeptideAtlas's own production scheme is stricter still, and exists for exactly this purpose. BamQuery
+(Ruiz Cuevas et al. 2023) applies a related default at the tool level rather than the atlas level:
+its best-guess biotype calls a peptide canonical whenever at least one in-frame canonical region can
+explain it, a rule its own authors show can override likelihood evidence pointing the other way for
+a real fraction of the peptides it calls canonical. The underlying rationale presupposes the search
+process does not do this on its own, exactly as Bedran's
 own explicit mismatch threshold does. We call this a **sequence-exclusivity criterion**. It is published
 and recommended; we do not assert it is a universal rule binding every atlas. An atlas may
 legitimately retain shared observations — provided it labels them as source-ambiguous rather than as
 sequence-unique ncORF products. That distinction is the subject of this paper.
+
+The reporting remedy is also prior art. MIAIPE already recommends documenting the searched database
+and decoy strategy, stating whether peptide mappings are unique, reporting every possible source
+protein for ambiguous mappings, and depositing processed identification results (Lill et al. 2018).
+mzIdentML can represent a peptide's multiple database-sequence mappings, decoy status and protein
+ambiguity groups (Vizcaíno et al. 2017), but this capacity goes unused by default: every standard
+Philosopher report writer (PSM, ion, peptide, protein, MetaMSstats) excludes decoy rows entirely
+unless decoy-inclusion is explicitly requested (`lib/rep/psm.go`; the CLI flag itself defaults to
+false, `cmd/report.go`) — so the per-class decoy count exists nowhere but a discarded run-log line,
+at any stage of one widely-used pipeline's own standard output, by default. Our standards
+contribution is therefore not a new minimum-information vocabulary. It is to quantify what is lost
+when established search evidence is collapsed during atlas aggregation, and to specify an atlas-level
+provenance-retention profile.
 
 A parallel and additive standard governs statistical confidence: a pooled target–decoy threshold
 under-controls a minority class, so class-specific FDR estimation is required (Woo et al. 2014, who
@@ -128,18 +155,26 @@ an atlas row.
 
 **98,193 of 174,465 unique cancer-catalogued sequences (56.3%)** are canonical-compatible (**Figure 1**).
 
-![Figure 1. Left: the canonical-overlap rate under one pipeline, one reference and one peptide unit, against two catalogues that apply an explicit exclusion rule versus IEAtlas, which does not describe one. Right: the three robustness checks -- era-correct reference, per-length strata, ORF-class composition -- the overlap is stable across all three.](figures_v2/f1_measurement.png)
+![Figure 1. Left: the canonical-overlap rate under one pipeline, one reference and one peptide unit, against two catalogues that apply an explicit exclusion rule versus IEAtlas, which does not describe one. Right: I/L-equivalent matching, the era-correct reference and per-length strata; the overlap is stable across these measurement and reference checks.](figures_v2/f1_measurement.png)
 
-Three checks establish that this is not an artifact of how we measured it.
+Four checks establish that this is not an artifact of how we measured it.
 
 | robustness check | result |
 |---|---:|
 | headline, reference *R* (current reviewed human proteome) | **56.3%** (98,193 / 174,465) |
+| **I/L-equivalent** (nested MS-equivalence sensitivity) | **56.5%** (98,546 / 174,465; +353 sequences) |
 | **era-correct**: Swiss-Prot **2022_01**, a plausible candidate for the release IEAtlas searched | **56.2%** (97,999 / 174,465) |
 | **by length** (18 strata, 8–25 aa, each *n* ≥ 30) | **46.2%–65.2%** — high throughout, not one band |
 | **class composition**: if the atlas contained no pseudogene ORFs at all | **55.8%** |
 
-**Table 1.** Three robustness checks against the headline 56.3% overlap rate: none moves it materially.
+**Table 1.** Four robustness checks against the headline 56.3% overlap rate: none moves it materially.
+
+The I/L row is a measurement-equivalence sensitivity analysis, not a redefinition of the primary
+estimand. Because routine tandem MS generally cannot distinguish leucine from isoleucine, both residues
+were replaced by one symbol before matching, following the sensitivity convention used by Bedran et al.
+(2023). This adds only **353 sequences (0.2 percentage points)**.
+We retain the literal exact-string result as the headline because it is simplest and directly auditable;
+if anything, it is slightly conservative with respect to routine MS distinguishability.
 
 The era check settles the anachronism question empirically. Sequence novelty is
 reference-relative, so an overlap we score today might reflect a canonical protein that entered the
@@ -305,7 +340,7 @@ the same catalogue as a **within-resource comparator** (**Figure 2**).
 **Table 4.** Canonical-compatible sequences are reported in IEAtlas's own normal-tissue export at more than
 twice the rate of canonical-incompatible ones.
 
-![Figure 2. (a) The length-standardized risk ratio for co-occurrence in IEAtlas's own normal-tissue export, canonical-compatible versus canonical-incompatible cancer-catalogued sequences, with its gene-clustered bootstrap interval. (b) The 22,003 canonical-compatible sequences already in the normal-tissue export, as a share of the whole cancer catalogue -- their co-occurrence in both of IEAtlas's own exports needs no external reference, though canonical-compatibility itself (R1) is assigned using Swiss-Prot.](figures_v2/f2_consequence.png)
+![Figure 2. (a) The length- and cancer-detection-breadth-standardized risk ratio for co-occurrence in IEAtlas's own normal-tissue export, canonical-compatible versus canonical-incompatible cancer-catalogued sequences, with its gene-clustered bootstrap interval. (b) The 22,003 canonical-compatible sequences already in the normal-tissue export, as a share of the whole cancer catalogue — their co-occurrence in both of IEAtlas's own exports needs no external reference, though canonical-compatibility itself (R1) is assigned using Swiss-Prot.](figures_v2/f2_consequence.png)
 
 Estimating the association, and naming what it can and cannot account for. These 174,465
 sequences are *not* independent Bernoulli
@@ -320,6 +355,10 @@ acknowledged, not modeled. Accordingly:
   peptide lengths (8–25 aa).
 - **Length-standardized** (direct standardization to the catalogue's own length distribution) the risk
   ratio is **2.42×** — essentially the crude 2.45×, so length is not driving it.
+- **Length- and cancer-detection-breadth-standardized** (breadth bins 1, 2, 3, 4 and 5+ cancer
+  types; common-support *n* = 174,413), the risk ratio attenuates to **1.72×**; gene-clustered
+  bootstrap **95% CI [1.66, 1.80]**. Exact, unbinned breadth gives the same 1.72×. Thus measured
+  generic detection opportunity explains part, but not all, of the association.
 - **Gene-clustered bootstrap** (resampling 22,765 source-gene clusters with replacement, *B* = 2,000):
   **95% CI [2.32, 2.52]**.
 - **Tissue-clustered bootstrap** (a second, independent clustering axis: resampling 15 cancer-type
@@ -333,11 +372,10 @@ acknowledged, not modeled. Accordingly:
   (non-pseudogene-only), 1.75× (both, n = 546 — the smaller, source-ambiguous-within-the-atlas
   subgroup).
 
-A further, unresolved possibility is that canonical-compatible sequences' own greater breadth of
-detection (R3, Prediction 1: detected across more cancer types on average) is itself part of why they
-recur more often in the normal-tissue export, independent of any true normal-tissue expression — a
-detection-opportunity effect, not restricted to abundance. We have not isolated this from the
-association reported here.
+A further unresolved possibility is residual detection opportunity not captured by length and cancer
+breadth — including study/run opportunity, source-gene abundance, donor, allele and pipeline. The
+adjusted result is therefore an association after two measured standardizations, not a causal estimate
+of canonical origin or normal-tissue expression.
 
 A two-proportion *z*-test is not valid for this contrast — it would treat a heavily structured
 catalogue as 174,465 independent experiments, and being directionally right would not rescue it. The
@@ -359,6 +397,17 @@ Accordingly we say a sequence is **reported in**, or **co-listed in**, the norma
 that it was independently *observed* or *presented* there — and the practical conclusion (normal-presentation
 review before treating it as tumour-restricted) is unchanged either way: a transferred identification
 still means the resource itself asserts the peptide's presence in that normal sample.
+
+**Staged external benign-tissue recurrence.** We also cross-referenced the cancer catalogue against
+the 37 benign processed peptide tables deposited for PXD038782 (Hoenisch Gravel et al. 2023).
+**15,171** IEAtlas cancer sequences recur in those tables; **15,170** are exact
+canonical-compatible. Of these recurrences, **6,244** are absent from IEAtlas's own normal export,
+while 7,035 recur across at least two deposited tissue labels. This is external sequence-list
+corroboration outside the two IEAtlas exports, but it is deliberately not called direct validation:
+PXD038782 is a partial submission, its deposited tables come from a canonical-proteome PEAKS DB
+search rather than joint canonical/ncORF competition, and the available metadata do not support
+donor-allele matching or USI-level verification. The result establishes benign processed-table
+recurrence of the sequence, not its source locus or target-safety consequence.
 
 **What this means, bounded.** This is **consistent with, but not specific to**, greater detectability
 or expression of canonical-compatible sequences. It does not show that any individual sequence is
@@ -390,7 +439,7 @@ sampling**; **Figure 3**):
 **Table 5.** Latent canonical ambiguity (9-mer canonical-compatibility) of each ncORF library, measured
 under one pipeline.
 
-![Figure 3. Latent canonical ambiguity differs enormously between ncORF libraries and does not compose -- nuORFdb union Translnc (human-only) falls below nuORFdb alone.](figures_v2/f3_library.png)
+![Figure 3. Latent canonical ambiguity differs enormously between ncORF libraries and does not compose — nuORFdb union Translnc (human-only) falls below nuORFdb alone.](figures_v2/f3_library.png)
 
 Both libraries were measured by us, under one pipeline, so the contrast *is* a controlled one:
 **ncORF libraries differ by 14–34× in latent canonical ambiguity.** Whole-ORF containment is low
@@ -482,7 +531,7 @@ abundant, ubiquitous protein should be over-detected in an immunopeptidome relat
 search space. Both tests below are internal to a single space or are ratios of ratios, so neither
 requires a cross-unit subtraction.
 
-![Figure 4. (a) Ribosomal-ORF enrichment among canonical-compatible sequences, in the library that was searched versus in the resulting catalogue -- an excess over the human-only library baseline that is not robust to library-composition choice (see text). (b) Abundance predicts detection breadth, weakly -- the Q1-to-Q5 quintile trend after length standardization, with its gene-clustered bootstrap interval.](figures_v2/f4_detection.png)
+![Figure 4. (a) Ribosomal-ORF enrichment among canonical-compatible sequences, in the library that was searched versus in the resulting catalogue — an excess over the human-only library baseline that is not robust to library-composition choice (see text). (b) Abundance predicts detection breadth, weakly — the Q1-to-Q5 quintile trend after length standardization, with its gene-clustered bootstrap interval.](figures_v2/f4_detection.png)
 
 **Prediction 1 — breadth of detection.** A peptide of an abundant, ubiquitous protein should be
 detected across more of IEAtlas's 15 cancer types. Canonical-compatible sequences are seen in a mean
@@ -605,10 +654,13 @@ sequence, never the locus.
 
 ### R4. The additive statistical problem, and the remedy the field already demonstrated
 
-The phenomenon is not novel (Woo et al. 2014 measured it empirically; Choi & Paek 2024). The
-closed-form bound below is this paper's own elementary derivation, checked directly against Woo et
-al. 2014, which does not contain it. Stated here because it is *additive* to R1–R3, and
-because IEAtlas reports nothing that would allow it to be assessed.
+The phenomenon is not novel (Woo et al. 2014 measured it empirically; Choi & Paek 2024). Nor is the
+bound's general form: a worst-case interval on one unidentified component of a convex mixture is the
+same structure as Manski's classical partial-identification bounds (Manski 1989). We checked
+directly and confirmed that the closed-form instantiation for class-conditional FDR below is not
+already available, verified against Woo et al. 2014, which does not contain it. Stated
+here because it is *additive* to R1–R3, and because IEAtlas reports nothing that would allow it to
+be assessed.
 
 From a reported pooled FDR *q* and class fraction *f*, the class-specific FDR is only
 **set-identified**. (The Supplement derives this exactly for the *realized* false-discovery
@@ -662,6 +714,12 @@ probabilities or entrapment measurements could also do so — and *D_N* does not
 class-specific false-discovery proportion. It is simply the cheapest sufficient object, and one the
 pipeline already computes.
 
+Reconstructibility is not statistical control. The ledger is a necessary audit object, but naïvely
+running target–decoy competition independently inside each class does not by itself guarantee control
+of the combined error criterion. Group-walk was developed for precisely this setting and supplies a
+rigorous group-aware procedure (Freestone et al. 2022). We therefore recommend the ledger for
+auditability and a grouped procedure, or an empirically validated class-specific protocol, for control.
+
 The field has demonstrated the remedy, and its cost. Ouspenskaia et al. searched a combined
 annotated-ORF/nuORF database and reported that a 1% global FDR gave *"4.6% overall, and as high as 14%
 for 3′ dORFs"* among nuORF peptides; group-based filtering *"removed 24% of nuORF peptides overall, and
@@ -689,21 +747,49 @@ sequence is correctly identified*. FDR concerns whether the spectrum was assigne
 sequence; canonical overlap concerns whether that correctly-identified sequence determines a source.
 They are different objects.
 
-A minimal standard addresses both.
+#### Aggregation changes the recurrence estimand
 
-**(a) Per peptide — an exclusivity flag and all compatible source loci.** State whether the sequence is
+The same projection problem appears on a second axis: **a recurrent peptide sequence is not
+necessarily a recurrent peptide–HLA target**. We tested this in a separate, frozen audit of the
+2025-07-07 ImmunoVerse supplementary tables (Li et al. 2025), chosen because its current repository
+also publishes scan-level outputs that make a bounded reconstruction possible. Table S7's 451 used
+biological labels all joined exactly to Table S3, which contains 47 published source-study identifiers.
+Among the 1,000 most sequence-recurrent peptides, the median recurrence fell from **11
+sample/condition labels to 7 source studies**. Even after conservatively bounding the six labels that
+map to more than one study, the median ratio of sequence-study recurrence to recurrence of the best
+predicted peptide–HLA was **1.25×**, and **72.2%** of ratios exceeded one (Supplement S3).
+
+A current raw-linked DLBC subset then supplied a direct worked example. Two sequences,
+`AEGPDHHSL` and `VPHTRPVSL`, had at least one current `Identified = +` scan in every cell line listed
+for that sequence in the historical catalogue. The reported HLA genotypes of those cell lines had an
+empty intersection. Conditional on the published genotypes, one fixed peptide–HLA allomorph therefore
+cannot explain the recurrence across all listed contexts: **the sequence recurs; one molecular target
+does not**. This is a two-peptide demonstration, not a prevalence estimate, and it does not assign the
+presenting allele within any sample.
+
+ImmunoVerse is a positive provenance-recovery example, not an allegation of irretrievable evidence
+loss: its current release publishes MaxQuant, rescoring and consolidated scan outputs separately from
+the peptide catalogue. In a BLCA positive-control subset, all **16 / 16** historical sequences and all
+**18 / 18** scan rows implied by the catalogue's PSM counts were recovered exactly. The point is that
+the catalogue row alone does not carry the joins; the separately published evidence chain allows them
+to be rebuilt.
+
+An atlas-level provenance-retention profile addresses both.
+
+**(a) Per peptide — an exclusivity flag and all compatible source loci.** Consistent with MIAIPE and
+mzIdentML, state whether the sequence is
 unique to the nominated ncORF within the searched space, and if not, list every compatible source. This
 preserves the peptide *and* the ambiguity, rather than discarding either, and it is strictly more
 informative than the exclusion rule it generalises.
 
-*This requires one additional reporting field.* A remedy that demanded a long list of loci per peptide would be glib, so we measured
-the list. Across the 97,999 catalogued sequences that match the canonical half of IEAtlas's own search
+This is primarily a retention problem, not a request for a new exotic data structure: search outputs
+can already preserve the mappings. A remedy that demanded an impractical long list of loci per peptide
+would nevertheless be glib, so we measured the list. Across the 97,999 catalogued sequences that match the canonical half of IEAtlas's own search
 database, the **median number of compatible canonical genes is 1**; **93.1% are compatible with exactly
 one** canonical gene and **98.0% with at most two** (maximum 22). The label is, for the large majority
-of ambiguous sequences, **a single gene symbol** — one column, not a redesign. And as §1 showed, a
-concatenated search already computes it: MaxQuant's `peptides.txt` lists every database entry
-containing each peptide. The remedy asks resources to **publish a column their own pipelines already
-produce**.
+of ambiguous sequences, **a single gene symbol**. And as §1 showed, a concatenated search already
+computes it: MaxQuant's `peptides.txt` lists every database entry containing each peptide. The remedy
+asks resources to preserve mappings their own pipelines already produce.
 
 **(b) Per class — a class-decoy ledger.** Accepted target and decoy counts per class, the class
 definitions, the thresholding stage, and the formula used — enough to reconstruct the class-specific
@@ -736,6 +822,29 @@ identity is symmetric: MS identifies the sequence, never the locus, so this anal
 specific ncORF antigen to be non-real. Distinguishing among these mechanisms for any individual entry
 requires the original search outputs and peptide-level provenance.
 
+The unifying issue is therefore not merely label accuracy but **whether a confidence statement
+survives a change of unit**. PSM filtering controls a spectrum-assignment estimand under its stated
+procedure. Alternative-mapping removal, sequence deduplication, source-label projection and recurrence
+counting then create source, catalogue and target-recurrence claims. Those downstream claims do not
+inherit PSM-level calibration automatically. Our data establish two concrete failures of automatic
+inheritance—source attribution in IEAtlas and one-pHLA recurrence in the bounded ImmunoVerse example—
+while R4 establishes that IEAtlas's public output does not permit the class-specific error behaviour
+to be reconstructed. We do **not** show that atlas aggregation empirically increased IEAtlas's FDR;
+that question requires class-resolved target/decoy data or a valid entrapment experiment.
+
+A prospective falsification test follows directly from this distinction. TIPs, published during this
+revision, learns a sample-specific transposable-element target database from de novo sequence tags and
+reports stringent FDR control (Wu et al. 2026). In the pinned public implementation, TE target entries
+are selected using spectra from the sample before reversed search decoys are appended. That ordering
+creates a testable calibration question: do targets and decoys experience equivalent effective
+selection opportunity through the complete pipeline? It is **not** evidence that TIPs's reported FDR
+is inflated or that any reported candidate is false. We therefore preregistered a within-condition,
+held-out benchmark using metadata-validated 0D5P biological units, together with entrapments introduced
+before database selection. Same-data versus independently learned database yield is a transfer endpoint,
+not an FDP estimate; any error-calibration claim requires an entrapment estimator whose assumptions pass
+a prespecified simulation gate (Wen et al. 2025). Until that benchmark runs, TIPs is a motivation and
+falsification target, not evidence of a confidence-propagation failure.
+
 Where the ambiguity comes from, and where the remedy belongs. A third of nuORFdb's peptide space is
 canonical by sequence. We cannot say what the corresponding figure is for IEAtlas's full integrated
 library, and we do not claim the library *quantitatively explains* 56.3%. But a library that publishes
@@ -758,7 +867,10 @@ We looked for a confirmed instance of this and, on direct verification, did not 
 (2025)'s PepQueryMHC, for example, maps candidate peptides directly against translated RNA-seq reads and
 independently filters them against the Human Protein Atlas; it cites IEAtlas's peptide counts only for
 scale, and cross-checks that its own top candidates are absent from IEAtlas's normal-tissue export as
-one more piece of corroborating evidence — not as the source of its canonical/non-canonical calls. We
+one more piece of corroborating evidence — not as the source of its canonical/non-canonical calls.
+BamQuery (Ruiz Cuevas et al. 2023) makes a related choice more generally: independent of which
+catalogue a candidate peptide comes from, it assigns origin from RNA-seq expression directly rather
+than inheriting a source label. We
 are not aware of a confirmed instance of a downstream group reusing an ncORF catalogue's source labels
 without an independent check of its own, which is reassuring but does not make the underlying risk
 hypothetical: a catalogue that does not flag source ambiguity still requires every downstream user to
@@ -905,12 +1017,24 @@ IEAtlas's cancer and normal exports are compared as unique sequences. The canoni
 the same catalogue are a **within-resource comparator**, not a control: they do not control abundance,
 detectability, HLA coverage or study composition. Inference uses a **gene-clustered bootstrap** —
 source-gene clusters resampled with replacement, *B* = 2,000, seed 20260713 — of the
-**length-standardized** risk ratio, reported as a percentile interval, and separately a
-**tissue-clustered bootstrap** under the same resampling scheme. A peptide carrying more than one gene
+**length-standardized** risk ratio and, as the primary detection-opportunity-adjusted analysis, the
+risk ratio directly standardized on peptide length × cancer-detection-breadth bins (1, 2, 3, 4,
+5+ distinct cancer-type labels). Only strata containing both groups contribute; their pooled
+distribution supplies the common standard. Exact unbinned breadth is a sensitivity analysis. A
+**tissue-clustered bootstrap** is reported separately under the same resampling scheme. A peptide carrying more than one gene
 or tissue label (§1) is assigned to a single cluster deterministically — the lexicographically minimal
 label in its set — so no peptide is counted in more than one cluster and no resampling draw can
 double-count it. A two-proportion *z*-test is **not** valid here (the observations are clustered) and is
 not used.
+
+**External processed-table crosswalk.** PRIDE's project and file APIs were queried for PXD038782.
+All 37 files categorized `SEARCH` whose names contained `_benign_` were streamed and parsed; inline
+parenthetical modifications were removed and sequences were uppercased and deduplicated before exact
+intersection with the IEAtlas cancer catalogue. Tissue label and preparation class were parsed from
+the deposited filename (`W6-32`, HLA-I preparation; `Tue39L243`, HLA-II preparation). The 37 tables
+contained 219,760 valid peptide rows, all labelled `Found By = PEAKS DB`. Counts are therefore
+reported as processed-table recurrence. No raw-spectrum re-search, spectrum-level USI verification,
+donor-allele match, or source-locus inference was performed.
 
 ### Class strata
 
@@ -921,9 +1045,32 @@ double-counts the 546 sequences carrying both.
 ### Class-specific FDR identifiability
 
 Derivation of Θ_N(*q*, *f*) and its sharpness **given *q* and *f*** in the Supplement. The underlying
-phenomenon is not new (Woo et al. 2014 measured it empirically); the closed-form bound itself is this
-paper's own elementary derivation, absent from Woo et al. 2014. Stated here because IEAtlas reports
-*q* but not *f*.
+phenomenon is not new (Woo et al. 2014 measured it empirically), and neither is the bound's general
+form (a Manski-style partial-identification bound, Manski 1989); the closed-form instantiation
+for class-conditional FDR is absent from Woo et al. 2014. Stated here because IEAtlas reports *q* but
+not *f*.
+
+### ImmunoVerse recurrence and raw-lineage pilot
+
+We used the 2025-07-07 versions of ImmunoVerse Supplementary Tables S7 (`ORF_antigen`) and S3
+(study, raw file, biological label and reported HLA genotype). Peptide sequences and biological labels
+were joined exactly. HLA strings were normalized only by uppercasing and removing `HLA-` and `*`.
+Sequence recurrence was counted first across Table S7 sample/condition labels and then bounded across
+Table S3's published source-study identifiers. For a label mapping to several studies, the minimum and
+maximum compatible study counts were retained; no study was selected by convention. The primary
+peptide–HLA sensitivity included published strong and weak binding predictions. The conservative ratio
+divided the minimum compatible sequence-study recurrence by the maximum compatible recurrence of the
+best predicted peptide–HLA. Peptides were ranked by decreasing sample/condition recurrence, then
+lexicographically by sequence, with a prespecified top 1,000 and a tie-complete sensitivity analysis.
+
+For raw linkage, we exhaustively matched the historical BLCA and DLBC Table S7 sequences to the
+authors' current consolidated `msmsScans` tables, then used Table S3 to map raw filenames to biological
+labels and reported genotypes. Exact sequence recovery, label-set recovery, PSM-count agreement,
+current `Identified` status and `Reverse` flags were retained separately. The scan tables post-date the
+historical supplement, so current acceptance decisions were **not** treated as reproducing the
+historical consolidation policy. An empty intersection of complete reported HLA genotypes rules out
+one common allomorph across those contexts; it does not identify the presenting allele in any context,
+resolve the source locus, establish independent-patient recurrence, or estimate catalogue-level FDR.
 
 ### Reproducibility
 
@@ -971,9 +1118,26 @@ Erhard F, Halenius A, Zimmermann C, L'Hernault A, Kowalewski DJ, Weekes MP, Stev
 Dölken L. Improved Ribo-seq enables identification of cryptic translation events. *Nature Methods*.
 2018;15(5):363–366. doi:10.1038/nmeth.4631.
 
+Freestone J, Short T, Noble WS, Keich U. Group-walk, a rigorous approach to group-wise false discovery
+rate analysis by target-decoy competition. *Bioinformatics*. 2022;38(Suppl 2):ii82–ii88.
+doi:10.1093/bioinformatics/btac471.
+
+Hoenisch Gravel N, Nelde A, Bauer J, et al. TOFIMS mass spectrometry-based immunopeptidomics refines
+tumor antigen identification. *Nature Communications*. 2023;14:7472.
+doi:10.1038/s41467-023-42692-7.
+
 Laumont CM, et al.; Perreault C. Global proteogenomic analysis of human MHC class I-associated
 peptides derived from non-canonical reading frames. *Nature Communications*.
 2016;7:10238. doi:10.1038/ncomms10238.
+
+Lill JR, van Veelen PA, Tenzer S, et al. Minimal Information About an Immuno-Peptidomics Experiment
+(MIAIPE). *Proteomics*. 2018;18:e1800110. doi:10.1002/pmic.201800110.
+
+Li G, Guzmán-Bringas OU, et al. A pan-cancer atlas of therapeutic T cell targets. *bioRxiv*.
+2025. doi:10.1101/2025.01.22.634237.
+
+Manski CF. Anatomy of the selection problem. *Journal of Human Resources*. 1989;24(3):343–360.
+doi:10.2307/145818.
 
 Nesvizhskii AI, Aebersold R. Interpretation of shotgun proteomic data: the protein inference problem.
 *Molecular & Cellular Proteomics*. 2005;4(10):1419–1440. doi:10.1074/mcp.R500012-MCP200.
@@ -988,13 +1152,29 @@ immunopeptidome in cancer. *Nature Biotechnology*.
 Raja R, Mangalaparthi KK, Madugundu AK, et al. Immunogenic cryptic peptides dominate the antigenic
 landscape of ovarian cancer. *Science Advances*. 2025;11(8):eads7405. doi:10.1126/sciadv.ads7405.
 
+Ruiz Cuevas MV, Hardy M-P, Larouche J-D, et al.; Perreault C, Ehx G. BamQuery: a proteogenomic tool
+to explore the immunopeptidome and prioritize actionable tumor antigens. *Genome Biology*.
+2023;24:188. doi:10.1186/s13059-023-03029-1.
+
+Vizcaíno JA, Mayer G, Perkins S, et al. The mzIdentML Data Standard Version 1.2, Supporting Advances
+in Proteome Informatics. *Molecular & Cellular Proteomics*. 2017;16(7):1275–1285.
+doi:10.1074/mcp.M117.068429.
+
 Wacholder A, Carvunis A-R. Biological factors and statistical limitations prevent detection of most
 noncanonical proteins by mass spectrometry. *PLOS Biology*. 2023;21(12):e3002409.
 doi:10.1371/journal.pbio.3002409.
 
+Wen B, Freestone J, Riffle M, MacCoss MJ, Noble WS, Keich U. Assessment of false discovery rate
+control in tandem mass spectrometry analysis using entrapment. *Nature Methods*.
+2025;22:1454–1463. doi:10.1038/s41592-025-02719-x.
+
 Woo S, Cha SW, Na S, et al. Proteogenomic strategies for identification of aberrant cancer peptides
 using large-scale next-generation sequencing data. *Proteomics*.
 2014;14(23–24):2719–2730. doi:10.1002/pmic.201400206.
+
+Wu Q, Zhou X, Feng Q, et al. TIPs: a deep learning-guided proteogenomic framework to expand the
+landscape of transposable element-derived antigens with immunopeptidomics. *Genome Biology*.
+2026. doi:10.1186/s13059-026-04191-y.
 
 Zhang B, Bassani-Sternberg M. Current perspectives on mass spectrometry-based immunopeptidomics: the
 computational angle to tumor antigen discovery. *Journal for ImmunoTherapy of Cancer*.

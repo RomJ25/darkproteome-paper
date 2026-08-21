@@ -1,11 +1,13 @@
 # Supplement
 
-Companion to the main manuscript. Two items sit here rather than in the main text, for two different
+Companion to the main manuscript. Three items sit here rather than in the main text, for three different
 reasons: **S1** is presented as an **exploratory supplementary analysis**, not a headline result;
 **S2** is an
 elementary derivation of a phenomenon Woo et al. 2014 established empirically — the closed form
 itself is not established prior art (checked directly against Woo et al. 2014) — included because
-the main text depends on its exact form.
+the main text depends on its exact form; **S3** is a frozen, version-specific worked example from a
+separate atlas, included to test whether sequence recurrence survives aggregation into a peptide–HLA
+recurrence claim.
 
 ---
 
@@ -241,3 +243,106 @@ plausible class fractions.
 The scarcer the class, the less a pooled threshold says about it — which is the entire point of Woo et
 al. 2014, restated here only because the resource under audit does not report the quantity that would
 resolve it.
+
+---
+
+## S3. Recurrence and scan-level provenance in a frozen ImmunoVerse pilot
+
+### Scope and estimand
+
+This is a **worked external example**, not a pan-atlas prevalence estimate and not an audit of the
+live 2026 ImmunoVerse portal. The catalogue and sample map are frozen to the 2025-07-07 preprint
+supplements: Table S7 (`ORF_antigen`) and Table S3 (source study, raw file, biological label and
+reported HLA genotype). Table S7 contains 17,741 source rows representing **7,770 distinct peptides**.
+The current raw-result release post-dates those tables and is used only to
+test evidence recoverability in two bounded cancer subsets.
+
+Recurrence is reported at four distinct units: sample/condition label, published source-study
+identifier, peptide sequence, and predicted or genotype-compatible peptide–HLA. A source-study label
+is not assumed to be an independent patient, cohort or experiment. Table S7's HLA entries are binding
+predictions, not direct allele assignments.
+
+### Catalogue-to-study lineage
+
+Table S3 contains **1,771 rows**, **1,679 distinct raw-file names**, **498 biological labels**, and
+**47 source-study identifiers**. All **451 / 451** biological labels used by Table S7, and all
+**465 / 465** cancer–label pairs, joined exactly to Table S3. Six used labels map to more than one
+source study; their study recurrences were bounded rather than resolved by convention. Two labels
+carry conflicting reported genotype variants. After formatting normalization, 33,707 Table S7
+prediction entries match every reported genotype for their label, 41 match some but not every
+reported genotype variant, and none mismatch all reported genotypes.
+
+| Quantity, top 1,000 sequence-recurrent peptides | Result |
+|---|---:|
+| median sample/condition-label recurrence | **11** |
+| median compatible source-study recurrence | **7–7** |
+| median conservative label/source-study ratio | **1.667** |
+| label recurrence exceeds the study upper bound | **97.2%** |
+| median conservative sequence-study/best-predicted-pHLA-study ratio | **1.250** |
+| conservative pHLA ratio > 1 | **72.2%** |
+| conservative pHLA ratio ≥ 2 | **16.3%** |
+
+**Table S5.** Source-study normalization under the primary strong-or-weak predicted-binder rule. The
+conservative pHLA ratio divides the minimum compatible sequence-study recurrence by the maximum
+compatible study recurrence of the best predicted pHLA.
+
+The top-1,000 boundary cuts through a 240-peptide tie at seven labels. In the tie-complete set
+(*n* = 1,184), the median conservative pHLA ratio remains 1.250 and 72.1% remain above one. In the
+732-peptide exact-study-mapping subset, the median sequence recurrence is 6 studies, the best predicted
+pHLA recurs in 5, the median ratio is 1.333, and 81.6% exceed one. Under strong binders alone, 913 of
+the top 1,000 have a predicted pHLA; the median conservative ratio is 1.333 and 73.8% exceed one.
+
+### Current raw-result recovery: a positive control
+
+The current release publishes MaxQuant, rescoring and consolidated scan outputs separately from the
+catalogue. In BLCA, the consolidated table contains 106,026 scan rows. Every historical Table S7
+sequence and count was recoverable:
+
+| BLCA recovery check | Result |
+|---|---:|
+| exact sequence recovery | **16 / 16 peptides** |
+| historical total `n_psm` / current exact-sequence rows | **18 / 18** |
+| exact biological-label-set recovery | **16 / 16 peptides** |
+| exact per-peptide PSM-count agreement | **16 / 16 peptides** |
+| at least one current `Identified = +` scan | **15 / 16 peptides** |
+| at least one current `Reverse = +` scan | **1 / 16 peptides** |
+
+**Table S6.** BLCA positive-control recovery. Current decision flags are reported as current state,
+not assumed to reproduce the historical acceptance policy.
+
+This complete recovery shows why ImmunoVerse is a useful positive implementation example: the
+catalogue itself projects away the evidence joins, but the separately released raw-result chain makes
+them reconstructible.
+
+### DLBC: recurrence of a sequence is not recurrence of one pHLA
+
+The current DLBC consolidated table contains **51,446 scan rows**. Of 73 historical DLBC Table S7
+peptides, **72 / 73** were recovered by exact sequence and exact biological-label set. Historical
+`n_psm` summed to **194**, compared with **199** current exact-sequence scan rows; 68 / 73 peptides had
+exact per-peptide count agreement, 64 / 73 had at least one current `Identified = +` scan, and 11 / 73
+had at least one current `Reverse = +` scan. These differences are decision/version provenance, not
+evidence that the historical catalogue was wrong.
+
+All three multi-label sequences were recovered in every catalogue-listed label. Their complete
+reported genotype intersections and their common predicted-binder intersections were empty:
+
+| peptide | Table S7 labels | historical `n_psm` | current exact-sequence rows | current identified rows by label | common reported HLA |
+|---|---|---:|---:|---|---|
+| `AEGPDHHSL` | DOHH2, SUDHL4 | 5 | 5 | DOHH2: 4; SUDHL4: 1 | **none** |
+| `VPHTRPVSL` | DOHH2, HBL1, SUDHL4 | 24 | 24 | DOHH2: 6; HBL1: 7; SUDHL4: 7 | **none** |
+| `LASPHSPIL` | DOHH2, HBL1, SUDHL4 | 13 | 15 | DOHH2: 0; HBL1: 0; SUDHL4: 0 | **none** |
+
+**Table S7.** Raw-linked recurrent DLBC sequences. `AEGPDHHSL` and `VPHTRPVSL` each have a current
+accepted scan in every listed cell line, but the cell lines share no reported HLA allele. Conditional
+on those reported genotypes, one fixed peptide–HLA allomorph cannot explain recurrence across all
+contexts. `LASPHSPIL` is retained as a decision-version example: exact scans remain, but none carries
+the current consolidated acceptance flag.
+
+### Limits
+
+This pilot does not establish independent-patient recurrence, the presenting allele for an individual
+scan, source-locus identity, malignant-cell specificity, T-cell recognition, safety, efficacy, or a
+catalogue-level FDR. It does establish the narrower estimand correction: a peptide sequence can recur
+across contexts in which one common pHLA target is impossible under the published genotypes. The
+separately published scan evidence makes this correction auditable; it should be propagated into the
+catalogue rather than left for every downstream user to reconstruct.

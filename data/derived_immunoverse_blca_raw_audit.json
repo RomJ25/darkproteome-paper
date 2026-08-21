@@ -1,0 +1,1265 @@
+{
+  "analysis_author": "Rom Jan",
+  "generated_by": "src/darkproteome/immunoverse_blca_raw_audit.py",
+  "limitations": [
+    "The consolidated scan table post-dates the historical S7 catalogue.",
+    "Current Identified/Reverse/engine flags are not assumed to reproduce historical policy.",
+    "A single-cancer subset cannot establish pan-cancer behavior.",
+    "Exact sequence recovery confirms evidence linkage, not biological source-locus identity."
+  ],
+  "result": {
+    "consolidated_exact_sequence_scan_rows": 18,
+    "peptide_records": [
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "C12:03"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-human-biopsy": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": true,
+            "identified_tesorai": false,
+            "identified_vanilla": false,
+            "pep": 0.0730171634328369,
+            "proteins": "ENST00000423777.6_1_19:50432412-50434160:+|nuORF;ENST00000596658.1_1_19:50433558-50434160:+|nuORF;ENST00000597227.5_1_19:50432514-50434160:+|nuORF",
+            "qval_rescore": 0.0082172204358699,
+            "qval_vanilla": null,
+            "raw_file": "Seq48519_QE2",
+            "reverse_flag": false,
+            "scan_number": 26964,
+            "score": 43.85829265575387,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-human-biopsy": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48519_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-human-biopsy"
+        ],
+        "peptide": "AASPVAISA",
+        "predicted_binder_alleles_by_label": {
+          "P7-human-biopsy": [
+            "C12:03"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-human-biopsy": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-human-biopsy"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": true,
+            "identified_tesorai": false,
+            "identified_vanilla": false,
+            "pep": 0.0766141955709334,
+            "proteins": "ENST00000534938.6_2_14:75179894-75180224:+|nuORF",
+            "qval_rescore": 0.000935453695042,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 57002,
+            "score": 38.17557092003332,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "DVIRPLFGW",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 0
+        },
+        "currently_identified_scan_rows": 0,
+        "every_expected_label_has_current_identified_scan": false,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": false,
+            "identified_rescore": false,
+            "identified_tesorai": false,
+            "identified_vanilla": false,
+            "pep": 0.2261865535738784,
+            "proteins": "ENST00000360057.7_1_7:144320275-144380050:-|nuORF",
+            "qval_rescore": 0.0279279279279279,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 50486,
+            "score": 19.256988751693697,
+            "tesorai_sequence_exact": false
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": false,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "DVSSFQLLI",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01",
+          "C12:03"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": false,
+            "identified_tesorai": true,
+            "identified_vanilla": false,
+            "pep": 0.7370085441200394,
+            "proteins": "ENST00000435469.2_1_17:66099171-66110645:+|nuORF",
+            "qval_rescore": null,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 36635,
+            "score": 0.0833504608790944,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "EAINDKISW",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "C12:03"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01",
+          "B38:01"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": true,
+            "identified_tesorai": false,
+            "identified_vanilla": false,
+            "pep": 0.0539667733666078,
+            "proteins": "ENST00000323374.8_2_17:74381110-74381553:+|nuORF",
+            "qval_rescore": 0.004510599909788,
+            "qval_vanilla": 0.0252324037184594,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 29426,
+            "score": 19.361941925380144,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "ELRAGDTATW",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B38:01"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01",
+          "C12:03"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": false,
+            "identified_tesorai": true,
+            "identified_vanilla": false,
+            "pep": 0.7606560140460221,
+            "proteins": "ENST00000492940.1_1_7:35930257-35938044:+|nuORF;ENST00000425198.1_1_7:35872473-35938044:+|nuORF",
+            "qval_rescore": null,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": true,
+            "scan_number": 49753,
+            "score": 5.230669730166228,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": true,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "EVISLISHL",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "C12:03"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01",
+          "C12:03"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": true,
+            "identified_tesorai": false,
+            "identified_vanilla": false,
+            "pep": 0.071222629432431,
+            "proteins": "ENST00000378078.4_1_9:35750334-35750711:+|nuORF",
+            "qval_rescore": 0.000935453695042,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 26904,
+            "score": 45.69961567697781,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "EVRGASVSF",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "C12:03"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": true,
+            "identified_tesorai": false,
+            "identified_vanilla": false,
+            "pep": 0.078310904578602,
+            "proteins": "ENST00000508564.1_1_12:54519960-54520374:+|nuORF",
+            "qval_rescore": 0.0057603686635944,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 41043,
+            "score": 36.04419817259434,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "HAIAPTLSW",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01",
+          "C12:03"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": false,
+            "identified_tesorai": true,
+            "identified_vanilla": false,
+            "pep": 0.2508527959657275,
+            "proteins": "ENST00000339020.7_1_5:60454855-60455020:-|nuORF",
+            "qval_rescore": null,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 48319,
+            "score": 9.347437153973935,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "HVVVIFNTF",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "C12:03"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 2,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 2
+        },
+        "currently_identified_scan_rows": 2,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": true,
+            "identified_tesorai": false,
+            "identified_vanilla": false,
+            "pep": 0.0318276942661588,
+            "proteins": "ENST00000330720.6_1_19:48892924-48894655:-|nuORF",
+            "qval_rescore": 0.004510599909788,
+            "qval_vanilla": 0.0124416796267496,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 25201,
+            "score": 56.17704186161178,
+            "tesorai_sequence_exact": false
+          },
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": true,
+            "identified_tesorai": false,
+            "identified_vanilla": true,
+            "pep": 0.0009582297444769,
+            "proteins": "ENST00000330720.6_1_19:48892924-48894655:-|nuORF",
+            "qval_rescore": 0.0044568245125348,
+            "qval_vanilla": 0.0,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 25331,
+            "score": 85.64151623876279,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 2
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "HVYEGGLHSL",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 2,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "B38:01"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": true,
+            "identified_tesorai": false,
+            "identified_vanilla": false,
+            "pep": 0.2508527959657275,
+            "proteins": "ENST00000348411.2_1_X:48334565-48334706:+|nuORF",
+            "qval_rescore": 0.0079623597538906,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 34474,
+            "score": 26.88365393820708,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "IHDAEFATL",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "B38:01"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "B38:01"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": true,
+            "identified_tesorai": false,
+            "identified_vanilla": false,
+            "pep": 0.7150818908331888,
+            "proteins": "ENST00000609928.5_3_1:179834858-179834918:-|nuORF",
+            "qval_rescore": 0.0054031587697423,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 30173,
+            "score": 7.846045518447754,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "IHDQEDSARFF",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "B38:01"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": false,
+            "identified_tesorai": true,
+            "identified_vanilla": false,
+            "pep": 0.525123614795304,
+            "proteins": "ENST00000416202.5_1_22:46452749-46452818:+|nuORF",
+            "qval_rescore": null,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 48161,
+            "score": 10.823927491677226,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "MEFAVLPRF",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01",
+          "C12:03"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": false,
+            "identified_tesorai": true,
+            "identified_vanilla": false,
+            "pep": null,
+            "proteins": "ENST00000492639.5_1_1:95699771-95702959:+|nuORF",
+            "qval_rescore": null,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 37319,
+            "score": null,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "NVAEELHSW",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "C12:03"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "A25:01"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 1,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "currently_identified_scan_rows": 1,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": false,
+            "identified_tesorai": true,
+            "identified_vanilla": false,
+            "pep": 0.2369652142166989,
+            "proteins": "ENST00000329047.12_1_17:75315924-75316227:+|nuORF",
+            "qval_rescore": null,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 26096,
+            "score": 21.53697664764585,
+            "tesorai_sequence_exact": true
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 1
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "QTYDQHMEMW",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 1,
+        "s7_source_row_count": 1
+      },
+      {
+        "common_predicted_binder_alleles_across_expected_labels": [
+          "B38:01"
+        ],
+        "common_reported_hla_alleles_across_expected_labels": [
+          "A25:01",
+          "B18:01",
+          "B38:01",
+          "C12:03"
+        ],
+        "consolidated_exact_sequence_scan_rows": 2,
+        "current_identified_scan_rows_by_label": {
+          "P7-PDX": 2
+        },
+        "currently_identified_scan_rows": 2,
+        "every_expected_label_has_current_identified_scan": true,
+        "every_expected_label_has_exact_sequence_scan": true,
+        "evidence": [
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": false,
+            "identified_tesorai": true,
+            "identified_vanilla": false,
+            "pep": 0.1743819736419072,
+            "proteins": "ENST00000305366.7_1_3:149095174-149095441:-|nuORF",
+            "qval_rescore": 0.0116478245974648,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 41489,
+            "score": 21.74664581756881,
+            "tesorai_sequence_exact": true
+          },
+          {
+            "final_identity": "nuORF",
+            "identified_current_consolidated": true,
+            "identified_rescore": true,
+            "identified_tesorai": false,
+            "identified_vanilla": false,
+            "pep": 0.1743819736419072,
+            "proteins": "ENST00000305366.7_1_3:149095174-149095441:-|nuORF",
+            "qval_rescore": 0.0057603686635944,
+            "qval_vanilla": null,
+            "raw_file": "Seq48520_QE2",
+            "reverse_flag": false,
+            "scan_number": 41635,
+            "score": 21.74664581756881,
+            "tesorai_sequence_exact": false
+          }
+        ],
+        "exact_biological_label_set_match": true,
+        "exact_psm_count_match": true,
+        "exact_sequence_scan_rows_by_label": {
+          "P7-PDX": 2
+        },
+        "expected_labels_without_reported_hla": [],
+        "final_identities": [
+          "nuORF"
+        ],
+        "has_current_identified_scan": true,
+        "has_reverse_flagged_scan": false,
+        "observed_raw_files": [
+          "Seq48520_QE2"
+        ],
+        "observed_s3_biological_labels": [
+          "P7-PDX"
+        ],
+        "peptide": "VHDASDILW",
+        "predicted_binder_alleles_by_label": {
+          "P7-PDX": [
+            "B38:01"
+          ]
+        },
+        "reported_hla_alleles_by_label": {
+          "P7-PDX": [
+            "A25:01",
+            "B18:01",
+            "B38:01",
+            "C12:03"
+          ]
+        },
+        "s7_expected_sample_condition_labels": [
+          "P7-PDX"
+        ],
+        "s7_n_psm": 2,
+        "s7_source_row_count": 1
+      }
+    ],
+    "peptides_all_matched_rows_final_identity_nuorf": 16,
+    "peptides_with_current_identified_scan": 15,
+    "peptides_with_exact_biological_label_set_match": 16,
+    "peptides_with_exact_psm_count_match": 16,
+    "peptides_with_exact_sequence_recovery": 16,
+    "peptides_with_reverse_flagged_scan": 1,
+    "recurrent_multi_label_peptides": 0,
+    "recurrent_peptides_with_complete_genotypes_and_no_common_reported_hla_allele": 0,
+    "recurrent_peptides_with_complete_reported_hla_genotypes": 0,
+    "recurrent_peptides_with_current_identified_scan_in_every_expected_label": 0,
+    "recurrent_peptides_with_current_identified_scan_in_every_label_and_no_common_reported_hla": 0,
+    "recurrent_peptides_with_exact_biological_label_set_match": 0,
+    "recurrent_peptides_with_exact_sequence_scan_in_every_expected_label": 0,
+    "recurrent_peptides_with_no_common_predicted_binder_allele": 0,
+    "s7_peptide_count": 16,
+    "s7_total_n_psm": 18,
+    "scan_source_rows": 106026
+  },
+  "schema_version": 1,
+  "scope": {
+    "cancer": "BLCA",
+    "historical_catalogue_version": "bioRxiv supplements dated 2025-07-07",
+    "scan_table_version": "current consolidated release, last modified 2026-01-23"
+  },
+  "sources": {
+    "consolidated_scan_table": {
+      "path": "data/external/immunoverse/raw_ms_result/consolidated/BLCA/msmsScans_all_add_tesorai.txt",
+      "server_last_modified": "11:50 (directory listing)",
+      "sha256": "34ba14c434048b211ba3261f9ed11b6cedf9d9c4ee5ee118a68468a11100fbd6",
+      "size_bytes": 66634640,
+      "url": "https://genome.med.nyu.edu/public/yarmarkovichlab/ImmunoVerse/raw_MS_result/consolidated/BLCA/msmsScans_all_add_tesorai.txt"
+    },
+    "table_s3": {
+      "path": "data/external/immunoverse/media-3_table_s3.xlsx",
+      "sha256": "1a0f2cde079efd1d9764cef8c3d0f511d6359ab45db2cdb752178873c7290016"
+    },
+    "table_s7": {
+      "path": "data/external/immunoverse/media-7_table_s7.xlsx",
+      "sha256": "d7ea303458278c32249ee495f67d81cb8571ccb2c5b62cab87763e47072fa8b4"
+    }
+  }
+}

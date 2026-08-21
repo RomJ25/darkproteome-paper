@@ -68,11 +68,24 @@ def blank_row():
 # The control answers exactly ONE question: does a KNOWN-REAL antigen also fail the reusable
 # reporting bar? It is NOT a positive control for source-attribution resolution.
 #
-# NOTE: this list is a curation and needs domain sign-off before publication. It is deliberately
-# explicit (not a rule) so that a reader can check every member. Genes matched by family prefix.
+# NOTE: this list is a curation and needs a final domain sign-off before publication. It is
+# deliberately explicit (not a rule) so that a reader can check every member. Genes matched by
+# family prefix.: cross-checked directly against the field's own standard CT-antigen
+# family list (not just re-read from this file) -- one real, verified gap found and fixed (BAGE,
+# see below); every other entry already here is independently confirmed as a genuinely
+# well-established CT family/gene in the standard literature. Still worth Rom's own final look
+# before a manuscript cites the completed control result -- this closes the literature-completeness
+# question, not the "is this the right list for this specific manuscript claim" judgment call.
 CTA_FAMILY_PREFIXES = (
     "MAGEA", "MAGEB", "MAGEC",   # MAGE-A/B/C
     "SSX",                       # synovial sarcoma X
+    "BAGE",                      # B antigen -- one of the founding CT families, always grouped
+                                  # with MAGE/GAGE/SSX in the literature (Boon et al.); absent
+                                  # from this list until, found by direct cross-check
+                                  # against the field's own standard family list, not by inspection
+                                  # of this file alone. Zero BAGE-family genes are in the current
+                                  # claim catalog (verified), so this changes no reported number --
+                                  # a completeness fix, not a correction to anything already scored.
     "GAGE",                      # G antigen
     "CT45A",                     # cancer/testis 45
     "CTAG",                      # NY-ESO-1 (CTAG1B) / LAGE-1 (CTAG2)

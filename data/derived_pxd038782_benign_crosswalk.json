@@ -1,0 +1,301 @@
+{
+  "project": "PXD038782",
+  "project_title": "TOFIMS mass spectrometry-based immunopeptidomics refines tumor antigen identification",
+  "submission_type": "PARTIAL",
+  "submission_date": "2022-12-13",
+  "publication_date": "2023-11-21",
+  "license": "Creative Commons Public Domain (CC0)",
+  "source_apis": [
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD038782",
+    "https://www.ebi.ac.uk/pride/ws/archive/v3/projects/PXD038782/files"
+  ],
+  "analysis_unit": "unique unmodified peptide sequence in deposited benign processed tables",
+  "n_benign_search_tables": 37,
+  "n_valid_processed_rows": 219760,
+  "found_by_values": [
+    "PEAKS DB"
+  ],
+  "n_ieatlas_cancer_sequences_recurrent": 15171,
+  "n_recurrent_exact_canonical_compatible": 15170,
+  "n_recurrent_already_ieatlas_normal": 8927,
+  "n_recurrent_absent_ieatlas_normal": 6244,
+  "preparation_class_counts": {
+    "class_I": 10923,
+    "class_II": 6219,
+    "both": 1971
+  },
+  "tissue_breadth": {
+    "n_unique_labels": 20,
+    "n_at_least_2": 7035,
+    "n_at_least_5": 1130,
+    "maximum": 17
+  },
+  "limitations": [
+    "processed-table crosswalk, not a raw-spectrum re-search or USI-level validation",
+    "PXD038782 is a PARTIAL submission",
+    "deposited results derive from a canonical-proteome PEAKS DB search, not joint canonical/ncORF competition",
+    "preparation antibody supports a class-level label, but donor HLA alleles are unavailable here",
+    "recurrence establishes sequence-list agreement, not source-locus provenance"
+  ],
+  "files": [
+    {
+      "file_name": "210827_NHG_benign_UDN01_Skin_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 28441,
+      "sha1_from_pride": "436dd328f565e67f273f1378da28696ac34ad710",
+      "tissue_label": "Skin",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "210827_NHG_benign_UDN04_Cerebellum_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 548897,
+      "sha1_from_pride": "203065b84a78fdbe1ec93c4d034ebd1ec0ac97a1",
+      "tissue_label": "Cerebellum",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "210827_NHG_benign_UDN04_Skin_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 783147,
+      "sha1_from_pride": "322d1a5d8ac60545a697d84f400eab2f2a075344",
+      "tissue_label": "Skin",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "210827_NHG_benign_UDN04_Smallintestine_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 2480714,
+      "sha1_from_pride": "45f84b40918420cba52974036f34418ac93f7379",
+      "tissue_label": "Smallintestine",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "210827_NHG_benign_UDN04_Smallintestine_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 2039437,
+      "sha1_from_pride": "d6aa3328808c31ca7b09bc6b87e614d2650854db",
+      "tissue_label": "Smallintestine",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "210831_NHG_benign_UDN04_Stomach_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 2214692,
+      "sha1_from_pride": "6d4b48ed4f3d26046767d62a37ad162f259b1ff7",
+      "tissue_label": "Stomach",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "210831_NHG_benign_UDN04_Thyroid_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 377582,
+      "sha1_from_pride": "92f5d2498c0c74cdde2b6e14fbc66b893386472a",
+      "tissue_label": "Thyroid",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "210903_NHG_benign_UDN04_Esophagus_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1461352,
+      "sha1_from_pride": "a437546522dfb59d076344ada97b13587cc76197",
+      "tissue_label": "Esophagus",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "210915_NHG_benign_UDN04_Trachea_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 106327,
+      "sha1_from_pride": "1cf97ded498fc956713fc21c7a3aa5d2a37d6f87",
+      "tissue_label": "Trachea",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "210915_NHG_benign_UDN08_Thyroid_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1241892,
+      "sha1_from_pride": "1f06b2bb47d04be316fc5853a3ebc120520d5b94",
+      "tissue_label": "Thyroid",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "210918_NHG_benign_UDN01_Kidney_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 129157,
+      "sha1_from_pride": "3eeedade78ea760c5e0f738b127a5d7ad53d9fb5",
+      "tissue_label": "Kidney",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211017_NHG_benign_UDN01_Aorta_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1917247,
+      "sha1_from_pride": "ee24c32d9ffd9babeeead62ebb065543e560a45a",
+      "tissue_label": "Aorta",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211017_NHG_benign_UDN01_Cerebellum_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 897647,
+      "sha1_from_pride": "2d987af204035629613888f31e2609740da0f9cd",
+      "tissue_label": "Cerebellum",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "211017_NHG_benign_UDN01_Stomach_W6-32_20_3RepsCoprocessed_peptide.csv",
+      "size_bytes": 1791819,
+      "sha1_from_pride": "22f798a9c2a0a982f62889440cf39bcc1d145e40",
+      "tissue_label": "Stomach",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "211017_NHG_benign_UDN22_PBMC_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1778255,
+      "sha1_from_pride": "85d5ebf8a0e30db2d927fe36726a6433a69d6eee",
+      "tissue_label": "PBMC",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211021_NHG_benign_UDN02_Liver_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 692339,
+      "sha1_from_pride": "5b6ab8cd3cf0bb842b8a4c9a67e085f73f633952",
+      "tissue_label": "Liver",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "211021_NHG_benign_UDN02_Pancreas_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1276665,
+      "sha1_from_pride": "13f5829835b172ce42f8f73538307e8d20aeda68",
+      "tissue_label": "Pancreas",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211021_NHG_benign_UDN02_Spleen_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 304588,
+      "sha1_from_pride": "73ff178f0fe3fb144677b438f0d346839d5c3753",
+      "tissue_label": "Spleen",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "211021_NHG_benign_UDN02_Uterus_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1097046,
+      "sha1_from_pride": "e3941e693e941b3339ffd01a8c3a18c4237dfc33",
+      "tissue_label": "Uterus",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211021_NHG_benign_UDN08_Bladder_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1315021,
+      "sha1_from_pride": "ab42312cdfddca51f84e14ea40133cc41755de99",
+      "tissue_label": "Bladder",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "211021_NHG_benign_UDN27_PBMC_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1192710,
+      "sha1_from_pride": "4fd05d4831e1374b9ae569bf9a1a1000e7ff99d3",
+      "tissue_label": "PBMC",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "211027_NHG_benign_UDN01_Thyroid_W6-32_20_3RepsCoprocessed_peptide.csv",
+      "size_bytes": 850632,
+      "sha1_from_pride": "b57cf7beab65a4b4aefbb3ce38bac5c77b37d77d",
+      "tissue_label": "Thyroid",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "211027_NHG_benign_UDN02_Ovary_Tue39L243_20_3RepsCoprocessed_peptide.csv",
+      "size_bytes": 2193343,
+      "sha1_from_pride": "8080ab253ee9ed47f13999a793dc197d98c89f17",
+      "tissue_label": "Ovary",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211027_NHG_benign_UDN08_Colon_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1721967,
+      "sha1_from_pride": "34fcbac5acc9513d997749a8e53f8005bb8f6fda",
+      "tissue_label": "Colon",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211027_NHG_benign_UDN08_Jejunum_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 2436210,
+      "sha1_from_pride": "24f697549abbfcc5a311bd5f0a15ec0ef2fe1f25",
+      "tissue_label": "Jejunum",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211027_NHG_benign_UDN08_Jejunum_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1392437,
+      "sha1_from_pride": "9c660190d183502af4d047e6486cf88c41fb7b75",
+      "tissue_label": "Jejunum",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "211027_NHG_benign_UDN08_Testis_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1408572,
+      "sha1_from_pride": "e442663ed2dbeec50ac74ef133478fad181d4a82",
+      "tissue_label": "Testis",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211027_NHG_benign_UDN28_PBMC_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1230142,
+      "sha1_from_pride": "5815c7a8d1909c97b94d6abeb4c28d6353c12ebf",
+      "tissue_label": "PBMC",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211106_NHG_benign_UDN08_Skin_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1431521,
+      "sha1_from_pride": "897e50d6f3bc9465db6b2cf9e3a64e9ec6d7f032",
+      "tissue_label": "Skin",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "211106_NHG_benign_UDN25_PBMC_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1765952,
+      "sha1_from_pride": "722d6cdf8be48676d04d22de34820f5eb1204e5c",
+      "tissue_label": "PBMC",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "211106_NHG_benign_UDN26_PBMC_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1260869,
+      "sha1_from_pride": "0efd8bd0d3e338e6d8ec7509eb6e646673b546fb",
+      "tissue_label": "PBMC",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211106_NHG_benign_UDN33_PBMC_Tue39L243_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1014880,
+      "sha1_from_pride": "54090bc47fcda59016806ce12b5bb3b5bca22f08",
+      "tissue_label": "PBMC",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "211106_NHG_benign_UDN34_PBMC_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1369052,
+      "sha1_from_pride": "a1d0cd75c027cbbcce232b993ae912b0208934a6",
+      "tissue_label": "PBMC",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "220315_NHG_benign_UDN11_Bladder_W6-32_20_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 608013,
+      "sha1_from_pride": "18fa12788b6a4b06da3ef21c5c621a9c853cb051",
+      "tissue_label": "Bladder",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "220404_NHG_benign_UDN07_Lung_Tue39L243_17_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 1630574,
+      "sha1_from_pride": "93430ea66231d9d5aa159ee27b148bad5332a62b",
+      "tissue_label": "Lung",
+      "preparation_class": "II"
+    },
+    {
+      "file_name": "220404_NHG_benign_UDN10_Liver_W6-32_17_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 2241772,
+      "sha1_from_pride": "00c8293f98cf683fef09197c8f1e110b350e50a3",
+      "tissue_label": "Liver",
+      "preparation_class": "I"
+    },
+    {
+      "file_name": "220404_NHG_benign_UDN31_PBMC_W6-32_17_3RepsCoProcessed_peptide.csv",
+      "size_bytes": 3425706,
+      "sha1_from_pride": "1c3125a5bdc296a59f20effc76d1c47fd298ea27",
+      "tissue_label": "PBMC",
+      "preparation_class": "I"
+    }
+  ]
+}

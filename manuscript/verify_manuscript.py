@@ -48,6 +48,12 @@ LAM = os.path.join(REPO, "data", "derived_library_ambiguity.json")
 PSG = os.path.join(REPO, "data", "derived_pseudogene_parent.json")
 ABD = os.path.join(REPO, "data", "derived_abundance_direct.json")
 P2SPLIT = os.path.join(REPO, "data", "derived_p2_pseudogene_split.json")
+IL = os.path.join(REPO, "data", "derived_ieatlas_il_equivalence.json")
+PXD038782 = os.path.join(REPO, "data", "derived_pxd038782_benign_crosswalk.json")
+IMM_REC = os.path.join(REPO, "data", "derived_immunoverse_phla_recurrence.json")
+IMM_LIN = os.path.join(REPO, "data", "derived_immunoverse_lineage_audit.json")
+IMM_BLCA = os.path.join(REPO, "data", "derived_immunoverse_blca_raw_audit.json")
+IMM_DLBC = os.path.join(REPO, "data", "derived_immunoverse_dlbc_raw_audit.json")
 SUPP = os.path.join(REPO, "manuscript", "supplement_v2.md")
 ATL = os.path.join(REPO, "data", "external", "atlases")
 IE_CANCER = os.path.join(ATL, "IEAtlas_Epitopes_In_Cancer_Tissues.txt")
@@ -90,6 +96,7 @@ BANNED = [
 ]
 
 REQUIRED = [
+    ("Rom Jan", "manuscript author name"),
     ("Bedran", "the criterion + the metric (Cancer Immunol Res 2023)"),
     ("Woo et al. 2014", "class-specific FDR under-control is prior art"),
     ("Aggarwal et al. 2022", "'most shared peptides should be dropped' is prior art"),
@@ -104,6 +111,14 @@ REQUIRED = [
     # and the PSM-vs-peptide FDR unit mismatch is load-bearing for R4/S2's reporting-gap argument.
     ("## References", "a manuscript citing ~16 works by author-year needs a bibliography"),
     ("peptide spectrum match false discovery rate", "the PSM-level FDR quote grounding the R4/S2 unit-mismatch caveat"),
+    ("MIAIPE", "existing immunopeptidomics reporting standard must be acknowledged"),
+    ("mzIdentML", "existing evidence data model must be acknowledged"),
+    ("Group-walk", "group-aware FDR control prior art must be acknowledged"),
+    ("Reconstructibility is not statistical control", "the class-decoy ledger is an audit object, not sufficient control"),
+    ("Li et al. 2025", "the external ImmunoVerse recurrence pilot must cite its source"),
+    ("Wu et al. 2026", "the prospective TIPs calibration audit must cite its source"),
+    ("Wen et al. 2025", "the proposed entrapment gate must cite the valid-estimator framework"),
+    ("not evidence of a confidence-propagation failure", "the preregistered TIPs audit is not an empirical FDR result"),
 ]
 
 
@@ -120,12 +135,19 @@ def flex(s):
 
 
 def main():
-    for p in (TIER1, SCALED, SCORED, R3, BIAS, ERA, SDB, UNI, LAM, MS, P2SPLIT):
+    for p in (TIER1, SCALED, SCORED, R3, BIAS, ERA, SDB, UNI, LAM, MS, P2SPLIT, IL,
+              PXD038782, IMM_REC, IMM_LIN, IMM_BLCA, IMM_DLBC):
         if not os.path.exists(p):
             sys.exit(f"missing required artifact: {p}\n"
                      "(regenerate it with the analysis script that emits it)")
 
     r3 = json.load(open(R3))
+    il = json.load(open(IL))
+    pxd = json.load(open(PXD038782))
+    imm_rec = json.load(open(IMM_REC))
+    imm_lin = json.load(open(IMM_LIN))
+    imm_blca = json.load(open(IMM_BLCA))
+    imm_dlbc = json.load(open(IMM_DLBC))
     bias = json.load(open(BIAS))
     p2split = json.load(open(P2SPLIT))
     era = json.load(open(ERA))
@@ -164,6 +186,43 @@ def main():
         (f"{facts['cryptic'][0]:,} / {facts['cryptic'][1]:,}", "CrypticProteinDB n/N"),
         ("0.026%", "CrypticProteinDB rate"),
         (f"{facts['raja'][0]:,} / {facts['raja'][1]:,}", "Raja n/N"),
+        (f"{il['n_il_equivalent_compatible']:,} / {il['n_total']:,}", "IEAtlas I/L-equivalent overlap n/N"),
+        (f"{il['pct_il_equivalent_compatible']}%", "IEAtlas I/L-equivalent overlap rate"),
+        (f"{il['n_additional_il_equivalent']}", "additional I/L-equivalent compatible sequences"),
+        (f"{il['delta_percentage_points']} percentage points", "I/L-equivalent increase in percentage points"),
+    ]
+
+    # --- Aggregation / recurrence estimand: frozen ImmunoVerse catalogue-to-study audit and
+    # current raw-linked worked example. These are deliberately bounded checks, not evidence of a
+    # catalogue-level FDR failure or of irretrievable provenance loss. ---
+    lin_inv = imm_lin["result"]["lineage_inventory"]
+    lin_top = imm_lin["result"]["sensitivities"]["strong_or_weak_predicted_binder"][
+        "top_n_by_sample_condition_recurrence"]
+    blca = imm_blca["result"]
+    dlbc = imm_dlbc["result"]
+    dlbc_records = {r["peptide"]: r for r in dlbc["peptide_records"]}
+    for peptide in ("AEGPDHHSL", "VPHTRPVSL"):
+        if not dlbc_records[peptide]["every_expected_label_has_current_identified_scan"]:
+            sys.exit(f"FATAL: {peptide} no longer has a current identified scan in every expected "
+                     "DLBC label; withdraw the raw-linked recurrence example.")
+        if dlbc_records[peptide]["common_reported_hla_alleles_across_expected_labels"]:
+            sys.exit(f"FATAL: {peptide} now has a common reported HLA allele across DLBC labels; "
+                     "withdraw the disjoint-genotype claim.")
+    checks += [
+        (f"{lin_top['median_sequence_recurrence_sample_condition_labels']:.0f} sample/condition labels",
+         "ImmunoVerse median top-1000 label recurrence"),
+        (f"{lin_top['median_sequence_recurrence_source_studies_lower']:.0f} source studies",
+         "ImmunoVerse median top-1000 source-study recurrence"),
+        (f"{lin_top['median_conservative_sequence_study_to_best_predicted_phla_ratio']:.2f}×",
+         "ImmunoVerse conservative sequence-study/pHLA-study recurrence ratio"),
+        (f"{100 * lin_top['fraction_conservatively_above_one']:.1f}%",
+         "ImmunoVerse top-1000 fraction with conservative pHLA ratio above one"),
+        ("AEGPDHHSL", "raw-linked DLBC recurrent peptide example 1"),
+        ("VPHTRPVSL", "raw-linked DLBC recurrent peptide example 2"),
+        (f"{blca['s7_peptide_count']} / {blca['s7_peptide_count']}",
+         "BLCA exact historical-sequence recovery"),
+        (f"{blca['s7_total_n_psm']} / {blca['consolidated_exact_sequence_scan_rows']}",
+         "BLCA historical/current exact scan-row recovery"),
     ]
 
     # R2 -- measured TWICE, over different k-mer windows. The paper must report BOTH. These were
@@ -364,6 +423,26 @@ def main():
         (f"[{r3['ci95'][0]}, {r3['ci95'][1]}]", "gene-clustered bootstrap 95% CI"),
         (f"{r3['n_clusters']:,}", "source-gene clusters resampled"),
         (f"{r3['bootstrap_B']:,}", "bootstrap iterations B"),
+    ]
+    adj = r3["detection_breadth_adjustment"]
+    checks += [
+        (f"{adj['common_support_n']:,}", "length+breadth common-support sequences"),
+        (f"{adj['rr_length_breadth_standardized']}×", "length+breadth-standardized risk ratio"),
+        (f"[{adj['ci95_gene_clustered'][0]:.2f}, {adj['ci95_gene_clustered'][1]:.2f}]",
+         "gene-clustered CI for length+breadth-standardized risk ratio"),
+        (f"{adj['exact_breadth_sensitivity']['rr']}×", "exact-breadth sensitivity risk ratio"),
+    ]
+
+    # --- bounded external recurrence: processed tables only, with the limitation retained ---
+    checks += [
+        (f"{pxd['n_benign_search_tables']}", "PXD038782 benign processed tables"),
+        (f"{pxd['n_valid_processed_rows']:,}", "PXD038782 valid processed peptide rows"),
+        (f"{pxd['n_ieatlas_cancer_sequences_recurrent']:,}", "IEAtlas sequences recurring in PXD038782 benign tables"),
+        (f"{pxd['n_recurrent_exact_canonical_compatible']:,}", "PXD038782 recurrences exact canonical-compatible"),
+        (f"{pxd['n_recurrent_absent_ieatlas_normal']:,}", "PXD038782 recurrences absent IEAtlas normal export"),
+        (f"{pxd['tissue_breadth']['n_at_least_2']:,}", "PXD038782 recurrences in at least two tissue labels"),
+        ("processed-table recurrence", "PXD038782 result must not be upgraded to raw-spectrum validation"),
+        ("No raw-spectrum re-search", "PXD038782 limitation must remain explicit"),
     ]
 
     # --- R3 additions found by a fresh-review pass: the "both"/mixed stratum RR and the
@@ -615,6 +694,45 @@ def main():
             bad.append("S1's Null B is now ALSO degenerate (0 permutable items) -- the supplement's "
                        "claim that it is a real, small-n test no longer holds; revert to the old framing.")
         checks += supp_checks
+
+    # S3's numbers come from four linked artifacts. Validate them independently of S1's optional
+    # pseudogene artifact so the recurrence supplement cannot silently escape the build gate.
+    if os.path.exists(SUPP):
+        supp = open(SUPP, encoding="utf-8").read()
+        phla_all = imm_rec["result"]["sensitivities"]["strong_or_weak_predicted_binder"]["all_peptides"]
+        exact = lin_top["exact_mapping_subset"]
+        s3_checks = [
+            (f"{lin_inv['s3_source_rows']:,} rows", "S3 source-row inventory"),
+            (f"{lin_inv['s3_distinct_raw_file_names']:,} distinct raw-file names", "S3 raw-file inventory"),
+            (f"{lin_inv['s3_biological_labels']:,} biological labels", "S3 biological-label inventory"),
+            (f"{lin_inv['s3_source_study_identifiers']} source-study identifiers", "S3 study inventory"),
+            (f"{lin_inv['s7_labels_with_exact_s3_match']} / {lin_inv['s7_used_biological_labels']}",
+             "S3/S7 exact biological-label join"),
+            (f"{lin_inv['s7_cancer_label_pairs_with_exact_s3_match']} / {lin_inv['s7_cancer_label_pairs']}",
+             "S3/S7 exact cancer-label join"),
+            (f"{lin_top['median_sequence_label_to_study_ratio_lower_bound']:.3f}",
+             "S3 median label/study recurrence ratio"),
+            (f"{100 * lin_top['fraction_with_label_recurrence_exceeding_study_upper_bound']:.1f}%",
+             "S3 fraction whose label recurrence exceeds study upper bound"),
+            (f"{100 * lin_top['fraction_conservatively_at_least_two']:.1f}%",
+             "S3 conservative pHLA ratio at least two"),
+            (f"{exact['peptide_count']}-peptide exact-study-mapping subset", "S3 exact-mapping subset size"),
+            (f"{phla_all['peptide_count']:,} distinct peptides", "S3 catalogue distinct-peptide count"),
+            (f"{blca['peptides_with_exact_sequence_recovery']} / {blca['s7_peptide_count']} peptides",
+             "S3 BLCA exact-sequence recovery"),
+            (f"{blca['peptides_with_current_identified_scan']} / {blca['s7_peptide_count']} peptides",
+             "S3 BLCA current-identified recovery"),
+            (f"{dlbc['scan_source_rows']:,} scan rows", "S3 DLBC scan-table size"),
+            (f"{dlbc['peptides_with_exact_sequence_recovery']} / {dlbc['s7_peptide_count']}",
+             "S3 DLBC exact-sequence recovery"),
+            (f"{dlbc['s7_total_n_psm']}", "S3 DLBC historical total n_psm"),
+            (f"{dlbc['consolidated_exact_sequence_scan_rows']}", "S3 DLBC current exact-sequence rows"),
+            ("LASPHSPIL", "S3 DLBC decision-version example"),
+        ]
+        for needle, lab in s3_checks:
+            if not re.search(flex(needle), supp):
+                bad.append(f"{lab}: supplement does not contain {needle!r}")
+        checks += s3_checks
 
     # --- The ban swept ONLY the manuscript. That is the hole that let ERROR #18 live on in
     # abundance_bias.py's docstring and in ONEPAGER.md after the paper itself was fixed -- and it is
