@@ -116,7 +116,7 @@ notice instead of output, so their numbers cannot be quoted.
 manuscript/manuscript_v2.md      the paper      (manuscript.md is SUPERSEDED — see REVISION_NOTICE.md)
 manuscript/supplement_v2.md      S1 pseudogene homology · S2 the class-FDR derivation
 manuscript/verify_manuscript.py  regenerates every headline number; fails on drift
-manuscript/figures_v2/           Figures 1–3
+manuscript/figures_v2/           Figures 1–4
 scripts/                         one script per result — each reproduces its own numbers
 data/                            derived tables + the JSON artifacts the paper is verified against
 src/darkproteome/                the analysis package (stdlib-only core)
