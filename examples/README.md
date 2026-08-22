@@ -46,8 +46,9 @@ convention, and the input SHA-256 for provenance.
   class requires the class map from a database rebuild (the natural next study); the deposit alone cannot do it.
   **So 3.95% is not "Raja's cryptic FDR"** — do not read it as a finding about that cohort's biology.
 - **Computability, not calibration.** `(D+1)/T` is what the target-decoy record *implies*; whether it is
-  well-calibrated for an inflated, often non-tryptic cryptic search space needs a *matched entrapment check*
-  (manuscript Table 1, paired row). The ledger reports the computable estimate and says so.
+  well-calibrated for an inflated, often non-tryptic cryptic search space needs a *matched entrapment
+  check*, not yet run (see `manuscript_v2.md`'s Discussion, the preregistered TIPs falsification
+  benchmark). The ledger reports the computable estimate and says so.
 - **This example is one deposited run** — the tool itself runs per-file. A separate pooled check across
   all 5 deposited PXD055609 samples (T1–T5, not just T5) confirms the broad noncanonical class-FDR is
   stable cohort-wide (3.99% pooled vs. 3.95% T5-only); the caveat above (broad, not

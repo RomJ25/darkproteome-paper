@@ -3,8 +3,7 @@
 **An audit of a public non-canonical HLA-peptide atlas, and of the search library that feeds it.**
 
 Code, derived data tables, and manuscript source accompanying *"Extensive canonical-sequence overlap
-and unresolved source attribution in a public non-canonical HLA-peptide atlas and its search library"*
-(Rom Jan).
+and unresolved source attribution in a public non-canonical HLA-peptide atlas"* (Rom Jan).
 
 The thesis, in one line: **before you trust a catalogue of candidate antigens, check whether its
 entries can even be attributed to the source it names them for.**
@@ -24,7 +23,7 @@ entries can even be attributed to the source it names them for.**
 > **The principles it applies are not ours, and it says so in its first paragraph.** That a peptide
 > matching a canonical protein does not identify a non-canonical source, and should be **excluded**, is
 > **Bedran et al. 2023** (*Cancer Immunol Res*), who also measured four catalogues at 1.4–5%. That
-> *"most shared peptides should be dropped"* is **Kumar et al. 2022** (*Brief. Bioinform.*). The
+> *"most shared peptides should be dropped"* is **Aggarwal et al. 2022** (*Brief. Bioinform.*). The
 > underlying protein-inference problem is **Nesvizhskii & Aebersold**. That a pooled FDR under-controls
 > a minority class is **Woo et al. 2014**.
 >
@@ -38,13 +37,14 @@ canonical protein and a non-canonical ORF, the spectrum does not choose between 
 
 **1 — Most of IEAtlas's cancer-catalogued sequences also occur in canonical proteins.**
 **98,193 of 174,465 unique sequences (56.3%)** exactly match at least one protein in a frozen reviewed
-human reference. Three ways of trying to make that go away all fail:
+human reference. Four ways of trying to make that go away all fail:
 
 | robustness check | result |
 |---|---:|
 | headline (current reviewed reference) | **56.3%** |
+| **I/L-equivalent** (nested MS-equivalence sensitivity) | **56.5%** (+353 sequences) |
 | **era-correct** — Swiss-Prot **2022_01**, the release IEAtlas actually searched | **56.2%** |
-| **length-standardized** | **56.3%** |
+| **by length** (18 strata, 8-25 aa) | **46.2-65.2%**, high throughout, not one band |
 | if the atlas contained **no pseudogene ORFs at all** | **55.8%** |
 
 Only **231 sequences (0.24%)** are overlaps a February-2022 analyst could not have seen, so the audit is
@@ -62,13 +62,16 @@ measured here, under one pipeline). But the library is **not sufficient** — Ou
 the *same* nuORFdb and published a catalogue at 3%, so the exclusion step does the work — and it is not
 the whole story: the catalogued rate *exceeds* the library's, and that excess arises **during
 detection**. Canonical-overlapping sequences are detected across more cancer types (holding in 18 of 18
-peptide-length strata), and ribosomal-gene ORFs are **2.51×** enriched among them in the catalogue while
-being slightly **depleted** (0.91×) in the library they were drawn from.
+peptide-length strata), and ribosomal-gene ORFs are **2.51×** enriched among them in the catalogue
+against **1.07×** in the library they were drawn from (human-only convention, this paper's primary
+baseline throughout), a **2.34×** excess that is not robust to library-composition choice, though the
+catalogue's enrichment exceeding its own search space's holds under every variant measured.
 
 **3 — The consequence is observable inside the resource.** Canonical-overlapping sequences appear in
 IEAtlas's **own normal-tissue export** at **22.4%**, versus **9.1%** for the non-overlapping sequences of
-the same catalogue — **length-standardized risk ratio 2.42×**, gene-clustered bootstrap **95% CI
-[2.32, 2.52]**. **22,003 unique sequences — 12.6% of the cancer catalogue — are both canonical-compatible
+the same catalogue. Length-standardized alone, the risk ratio is 2.42×, gene-clustered bootstrap 95% CI
+[2.32, 2.52]; standardizing further for cancer-detection breadth, the **headline risk ratio is 1.72×**,
+gene-clustered bootstrap **95% CI [1.66, 1.80]**. **22,003 unique sequences — 12.6% of the cancer catalogue — are both canonical-compatible
 and already present in the atlas's own normal export.** No external reference is needed to see this.
 
 This is *consistent with, but not specific to*, greater detectability or expression of
@@ -98,7 +101,7 @@ python3 scripts/library_ambiguity.py            # nuORFdb 34.1% vs GENCODE 1.0-2
 python3 scripts/ouspenskaia_verify.py           # the published remedy, verified at source
 ```
 
-`verify_manuscript.py` **fails the build on drift**. It also fails if the paper asserts any of **23
+`verify_manuscript.py` **fails the build on drift**. It also fails if the paper asserts any of **28
 retracted phrasings or stale values**, drops its required prior-art citations, or if the ORF-class strata
 fail to partition. The large public inputs (atlas exports, proteome FASTAs) are **not redistributed**; on
 a clean checkout the checks that need them are reported as *skipped* rather than crashing. See
